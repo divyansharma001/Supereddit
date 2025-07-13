@@ -255,4 +255,27 @@ export class AuthController {
       res.status(500).json({ error: 'Failed to connect Reddit account' });
     }
   }
+
+  /**
+   * List all Reddit accounts for the authenticated user's client
+   */
+  static async getRedditAccounts(req: Request, res: Response): Promise<void> {
+    try {
+      const { clientId } = req.user!;
+      const accounts = await prisma.redditAccount.findMany({
+        where: { clientId },
+        select: {
+          id: true,
+          reddit_username: true,
+          token_expires_at: true,
+          createdAt: true,
+          updatedAt: true
+        }
+      });
+      res.json({ accounts });
+    } catch (error) {
+      console.error('Get Reddit accounts error:', error);
+      res.status(500).json({ error: 'Failed to fetch Reddit accounts' });
+    }
+  }
 } 

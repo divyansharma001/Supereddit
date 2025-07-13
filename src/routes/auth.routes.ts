@@ -32,4 +32,11 @@ router.post('/reddit/oauth/connect', authenticateToken, AuthController.getReddit
  */
 router.get('/reddit/oauth/callback', authenticateToken, AuthController.handleRedditCallback);
 
+/**
+ * @route GET /api/reddit/accounts
+ * @desc List all Reddit accounts for the authenticated user's client
+ * @access Private
+ */
+router.get('/reddit/accounts', authenticateToken, AuthController.getRedditAccounts);
+
 export default router; 

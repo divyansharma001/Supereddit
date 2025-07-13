@@ -247,7 +247,7 @@ export class PostController {
   static async schedulePost(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const { scheduled_at, redditAccountId } = req.body;
+      const { scheduled_at, redditAccountId } = req.body || {};
       const { clientId } = req.user!;
 
       if (!id) {
@@ -256,7 +256,10 @@ export class PostController {
       }
 
       if (!scheduled_at) {
-        res.status(400).json({ error: 'Scheduled time is required' });
+        res.status(400).json({ 
+          error: 'Scheduled time is required',
+          message: 'Please provide scheduled_at in the request body'
+        });
         return;
       }
 

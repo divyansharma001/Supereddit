@@ -16,7 +16,7 @@ export class AIController {
       throw new Error('OPENAI_API_KEY is required');
     }
 
-    this.openai = new OpenAI({
+    AIController.openai = new OpenAI({
       apiKey
     });
   }
@@ -40,8 +40,8 @@ export class AIController {
         return;
       }
 
-      if (!this.openai) {
-        this.initializeOpenAI();
+      if (!AIController.openai) {
+        AIController.initializeOpenAI();
       }
 
       // Construct prompt based on tone
@@ -61,7 +61,7 @@ export class AIController {
       }
 
       // Call OpenAI API
-      const completion = await this.openai.chat.completions.create({
+      const completion = await AIController.openai.chat.completions.create({
         model: 'gpt-3.5-turbo',
         messages: [
           {
