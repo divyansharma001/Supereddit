@@ -1,0 +1,94 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  CLIENT_USER
+}
+
+enum PostStatus {
+  Draft
+  Scheduled
+  Posted
+  Error
+}
+
+model Client {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users           User[]
+  redditAccounts  RedditAccount[]
+  posts           Post[]
+
+  @@map("clients")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  role      Role     @default(CLIENT_USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  client   Client @relation(fields: [clientId], references: [id])
+  clientId String
+
+  posts Post[]
+
+  @@map("users")
+}
+
+model RedditAccount {
+  id                String    @id @default(cuid())
+  reddit_username   String
+  access_token      String    // Encrypted
+  refresh_token     String    // Encrypted
+  token_expires_at  DateTime
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  client   Client @relation(fields: [clientId], references: [id])
+  clientId String
+
+  posts Post[]
+
+  @@map("reddit_accounts")
+}
+
+model Post {
+  id              String     @id @default(cuid())
+  title           String
+  body            String
+  subreddit       String
+  status          PostStatus @default(Draft)
+  scheduled_at    DateTime?
+  posted_at       DateTime?
+  reddit_post_id  String?
+  error_message   String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  author   User @relation(fields: [authorId], references: [id])
+  authorId String
+
+  client   Client @relation(fields: [clientId], references: [id])
+  clientId String
+
+  redditAccount   RedditAccount? @relation(fields: [redditAccountId], references: [id])
+  redditAccountId String?
+
+  @@map("posts")
+} 
