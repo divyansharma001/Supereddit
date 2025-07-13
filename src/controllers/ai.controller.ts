@@ -1,28 +1,27 @@
 import { Request, Response } from 'express';
-import OpenAI from 'openai';
+import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
+import { ChatPromptTemplate } from '@langchain/core/prompts';
+import { RunnableSequence } from '@langchain/core/runnables';
 
 /**
- * Controller for AI-related endpoints
+ * Controller for AI-related endpoints (now using LangChain + Gemini)
  */
 export class AIController {
-  private static openai: OpenAI;
+  private static gemini: ChatGoogleGenerativeAI;
 
   /**
-   * Initialize OpenAI client
+   * Initialize Gemini client
    */
-  static initializeOpenAI(): void {
-    const apiKey = process.env.OPENAI_API_KEY;
+  static initializeGemini(): void {
+    const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      throw new Error('OPENAI_API_KEY is required');
+      throw new Error('GEMINI_API_KEY is required');
     }
-
-    AIController.openai = new OpenAI({
-      apiKey
-    });
+    AIController.gemini = new ChatGoogleGenerativeAI({ apiKey, model: 'gemini-2.5-flash' });
   }
 
   /**
-   * Generate a Reddit post draft using AI
+   * Generate a Reddit post draft using Gemini via LangChain
    */
   static async generateDraft(req: Request, res: Response): Promise<void> {
     try {
@@ -40,47 +39,48 @@ export class AIController {
         return;
       }
 
-      if (!AIController.openai) {
-        AIController.initializeOpenAI();
+      if (!AIController.gemini) {
+        AIController.initializeGemini();
       }
 
       // Construct prompt based on tone
       let prompt: string;
       switch (tone) {
         case 'story':
-          prompt = `Generate a Reddit post about "${keywords}". Write it as a personal story or anecdote. The post should be engaging, relatable, and encourage discussion. Format the response as JSON with "title" and "body" fields. Keep the title under 300 characters and the body between 200-2000 characters.`;
+          prompt = `Generate a Reddit post about "${keywords}". Write it as a personal story or anecdote. The post should be engaging, relatable, and encourage discussion. Format the response as JSON with "title" and "body" fields. Keep the title under 300 characters and the body between 200-2000 characters. The body should be at least 100 words.`;
           break;
         case 'question':
-          prompt = `Generate a Reddit post about "${keywords}". Write it as an engaging question that encourages community discussion. The post should be thought-provoking and invite responses. Format the response as JSON with "title" and "body" fields. Keep the title under 300 characters and the body between 200-2000 characters.`;
+          prompt = `Generate a Reddit post about "${keywords}". Write it as an engaging question that encourages community discussion. The post should be thought-provoking and invite responses. Format the response as JSON with "title" and "body" fields. Keep the title under 300 characters and the body between 200-2000 characters. The body should be at least 100 words.`;
           break;
         case 'experience':
-          prompt = `Generate a Reddit post about "${keywords}". Write it as a personal experience or observation that others can relate to. The post should be authentic and encourage sharing of similar experiences. Format the response as JSON with "title" and "body" fields. Keep the title under 300 characters and the body between 200-2000 characters.`;
+          prompt = `Generate a Reddit post about "${keywords}". Write it as a personal experience or observation that others can relate to. The post should be authentic and encourage sharing of similar experiences. Format the response as JSON with "title" and "body" fields. Keep the title under 300 characters and the body between 200-2000 characters. The body should be at least 100 words.`;
           break;
         default:
-          prompt = `Generate a Reddit post about "${keywords}". Write it in a conversational tone that encourages engagement. Format the response as JSON with "title" and "body" fields. Keep the title under 300 characters and the body between 200-2000 characters.`;
+          prompt = `Generate a Reddit post about "${keywords}". Write it in a conversational tone that encourages engagement. Format the response as JSON with "title" and "body" fields. Keep the title under 300 characters and the body between 200-2000 characters. The body should be at least 100 words.`;
       }
 
-      // Call OpenAI API
-      const completion = await AIController.openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a helpful assistant that generates Reddit posts. Always respond with valid JSON containing "title" and "body" fields. Make the content engaging and appropriate for Reddit communities.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
+      // Use LangChain's prompt template and Gemini LLM
+      const chatPrompt = ChatPromptTemplate.fromMessages([
+        [
+          'system',
+          'You are a helpful assistant that generates Reddit posts. Always respond with valid JSON containing "title" and "body" fields. Make the content engaging and appropriate for Reddit communities.'
         ],
-        temperature: 0.7,
-        max_tokens: 1000
-      });
+        ['user', prompt]
+      ]);
 
-      const responseText = completion.choices[0]?.message?.content;
-      if (!responseText) {
-        res.status(500).json({ error: 'Failed to generate content' });
-        return;
+      const chain = RunnableSequence.from([
+        chatPrompt,
+        AIController.gemini
+      ]);
+
+      const response = await chain.invoke({});
+      let responseText = '';
+      if (typeof response === 'string') {
+        responseText = response;
+      } else if (Array.isArray(response) && response.length > 0 && typeof response[0].text === 'string') {
+        responseText = response[0].text;
+      } else if (response?.content && typeof response.content === 'string') {
+        responseText = response.content;
       }
 
       // Parse JSON response
@@ -93,14 +93,14 @@ export class AIController {
         }
         parsedResponse = JSON.parse(jsonMatch[0]);
       } catch (error) {
-        console.error('Failed to parse AI response:', error);
-        res.status(500).json({ error: 'Failed to parse AI response' });
+        console.error('Failed to parse Gemini response:', error);
+        res.status(500).json({ error: 'Failed to parse Gemini response' });
         return;
       }
 
       // Validate response structure
       if (!parsedResponse.title || !parsedResponse.body) {
-        res.status(500).json({ error: 'Invalid response structure from AI' });
+        res.status(500).json({ error: 'Invalid response structure from Gemini' });
         return;
       }
 
@@ -108,12 +108,15 @@ export class AIController {
       const title = parsedResponse.title.trim();
       const body = parsedResponse.body.trim();
 
+      // Log the generated body for debugging
+      console.log('Generated body:', body, 'Length:', body.length);
+
       if (title.length > 300) {
         res.status(500).json({ error: 'Generated title is too long' });
         return;
       }
 
-      if (body.length < 50 || body.length > 2000) {
+      if (body.length < 50 || body.length > 4000) {
         res.status(500).json({ error: 'Generated body is not within acceptable length' });
         return;
       }
@@ -125,13 +128,8 @@ export class AIController {
         tone
       });
     } catch (error) {
-      console.error('AI draft generation error:', error);
-      
-      if (error instanceof Error && error.message.includes('API key')) {
-        res.status(500).json({ error: 'OpenAI API not configured properly' });
-      } else {
-        res.status(500).json({ error: 'Failed to generate draft' });
-      }
+      console.error('Gemini draft generation error:', error);
+      res.status(500).json({ error: 'Failed to generate draft with Gemini' });
     }
   }
 
