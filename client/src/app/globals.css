@@ -88,35 +88,27 @@
     }
   }
 
-  .animate-bounce-slow {
-    animation: bounceSlow 2.2s infinite cubic-bezier(0.4,0,0.2,1);
-  }
-  @keyframes bounceSlow {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(18px); }
-  }
-
   /* Bento grid animations */
   .bento-card {
     transform: translateY(0);
-    transition: all 0.4s cubic-bezier(0.17, 0.67, 0.3, 0.96);
+    transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;
     opacity: 0;
-    filter: saturate(0.95);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    will-change: transform, box-shadow;
   }
 
   .bento-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 16px 30px rgba(0, 0, 0, 0.08);
-    filter: saturate(1.05);
+    transform: translateY(-5px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
   }
 
   /* Animation delay for staggered entrance */
-  .bento-card:nth-child(1) { animation: bentoFadeIn 0.6s 0.1s forwards ease-out; }
-  .bento-card:nth-child(2) { animation: bentoFadeIn 0.6s 0.2s forwards ease-out; }
-  .bento-card:nth-child(3) { animation: bentoFadeIn 0.6s 0.3s forwards ease-out; }
-  .bento-card:nth-child(4) { animation: bentoFadeIn 0.6s 0.4s forwards ease-out; }
-  .bento-card:nth-child(5) { animation: bentoFadeIn 0.6s 0.5s forwards ease-out; }
-  .bento-card:nth-child(6) { animation: bentoFadeIn 0.6s 0.6s forwards ease-out; }
+  .bento-card:nth-child(1) { animation: bentoFadeIn 0.5s 0.1s forwards ease-out; }
+  .bento-card:nth-child(2) { animation: bentoFadeIn 0.5s 0.15s forwards ease-out; }
+  .bento-card:nth-child(3) { animation: bentoFadeIn 0.5s 0.2s forwards ease-out; }
+  .bento-card:nth-child(4) { animation: bentoFadeIn 0.5s 0.25s forwards ease-out; }
+  .bento-card:nth-child(5) { animation: bentoFadeIn 0.5s 0.3s forwards ease-out; }
+  .bento-card:nth-child(6) { animation: bentoFadeIn 0.5s 0.35s forwards ease-out; }
 
   @keyframes bentoFadeIn {
     0% {
@@ -131,7 +123,7 @@
 
   /* Subtle hover effects for bento card elements */
   .bento-card .bento-icon {
-    transition: transform 0.3s ease;
+    transition: transform 0.2s ease;
   }
   
   .bento-card:hover .bento-icon {
@@ -139,25 +131,25 @@
   }
 
   .bento-card .bento-title {
-    transition: color 0.3s ease;
+    transition: color 0.2s ease;
   }
 
   .bento-card .bento-badge {
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
   }
   
   .bento-card:hover .bento-badge {
-    opacity: 0.95;
+    background-color: rgba(255, 69, 0, 0.15);
   }
 
   .bento-card .bento-btn {
-    transition: all 0.25s ease;
+    transition: all 0.2s ease;
     transform: translateY(0);
   }
   
   .bento-card:hover .bento-btn {
     transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.07);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
   }
 
   /* Shine effect for bento cards */
@@ -179,124 +171,11 @@
       rgba(255, 255, 255, 0.03) 100%
     );
     transform: rotate(30deg);
-    transition: transform 0.6s ease-out;
+    transition: transform 0.5s ease-out;
     pointer-events: none;
   }
   
   .bento-shine:hover::after {
     transform: rotate(30deg) translate(5%, 5%);
-  }
-  
-  /* FAQ Section Animations */
-  @keyframes faqItemFadeIn {
-    0% {
-      opacity: 0;
-      transform: translateY(15px);
-    }
-    100% {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
-  #faq > div > div:nth-child(1) { animation: faqItemFadeIn 0.5s 0.1s forwards ease-out; opacity: 0; }
-  #faq > div > div:nth-child(2) { animation: faqItemFadeIn 0.5s 0.2s forwards ease-out; opacity: 0; }
-  #faq > div > div:nth-child(3) { animation: faqItemFadeIn 0.5s 0.3s forwards ease-out; opacity: 0; }
-  #faq > div > div:nth-child(4) { animation: faqItemFadeIn 0.5s 0.4s forwards ease-out; opacity: 0; }
-  #faq > div > div:nth-child(5) { animation: faqItemFadeIn 0.5s 0.5s forwards ease-out; opacity: 0; }
-  
-  /* Smooth hover effect for FAQ items */
-  #faq > div > div {
-    transition: all 0.3s cubic-bezier(0.17, 0.67, 0.3, 0.96);
-  }
-  
-  #faq > div > div:hover {
-    transform: translateY(-2px);
-  }
-  
-  /* Pulse animation for the FAQ "Got Questions?" badge */
-  @keyframes softPulse {
-    0% {
-      box-shadow: 0 0 0 0 rgba(255, 69, 0, 0.1);
-    }
-    70% {
-      box-shadow: 0 0 0 8px rgba(255, 69, 0, 0);
-    }
-    100% {
-      box-shadow: 0 0 0 0 rgba(255, 69, 0, 0);
-    }
-  }
-  
-  #faq span.bg-\[\#FF4500\]\/5 {
-    animation: softPulse 2s infinite;
-  }
-  
-  /* How It Works Section Animations */
-  @keyframes howItWorksItemFadeIn {
-    0% {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    100% {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
-  #how-it-works > div:last-of-type > div:nth-child(1) { animation: howItWorksItemFadeIn 0.6s 0.1s forwards ease-out; opacity: 0; }
-  #how-it-works > div:last-of-type > div:nth-child(2) { animation: howItWorksItemFadeIn 0.6s 0.3s forwards ease-out; opacity: 0; }
-  #how-it-works > div:last-of-type > div:nth-child(3) { animation: howItWorksItemFadeIn 0.6s 0.5s forwards ease-out; opacity: 0; }
-  #how-it-works > div:last-of-type > div:nth-child(4) { animation: howItWorksItemFadeIn 0.6s 0.7s forwards ease-out; opacity: 0; }
-  
-  /* Floating animation for emoji icons */
-  @keyframes floatEmoji {
-    0%, 100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-5px);
-    }
-  }
-  
-  #how-it-works .group:hover span[role='img'] {
-    animation: floatEmoji 2s ease-in-out infinite;
-  }
-  
-  /* Number counter animation for How It Works section */
-  @keyframes counterFadeIn {
-    0% {
-      opacity: 0;
-      transform: scale(0.8) translateY(10px);
-    }
-    70% {
-      transform: scale(1.1) translateY(-5px);
-    }
-    100% {
-      opacity: 1;
-      transform: scale(1) translateY(0);
-    }
-  }
-  
-  #how-it-works .group:hover .w-8.h-8 {
-    animation: counterFadeIn 0.5s forwards;
-  }
-  
-  /* Pulse animation for the How It Works badge */
-  #how-it-works span.bg-\[\#FF4500\]\/5 {
-    animation: softPulse 2s infinite;
-  }
-  
-  /* Glow effect for How It Works CTA button */
-  @keyframes buttonGlow {
-    0%, 100% {
-      box-shadow: 0 0 5px rgba(255, 69, 0, 0.3);
-    }
-    50% {
-      box-shadow: 0 0 15px rgba(255, 69, 0, 0.5);
-    }
-  }
-  
-  #how-it-works a.bg-\[\#FF4500\]:hover {
-    animation: buttonGlow 2s infinite;
   }
 }
