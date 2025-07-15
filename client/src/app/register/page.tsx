@@ -1,27 +1,35 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/axios";
+import { useAuth } from "@/lib/auth";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { user, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [clientName, setClientName] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.replace("/dashboard");
+    }
+  }, [user, loading, router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    setLoading(true);
+    setSubmitting(true);
     try {
       await api.post("/api/auth/register", { email, password, clientName });
       router.push("/login");
     } catch (err: any) {
       setError(err.response?.data?.error || err.message || "Registration failed");
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   }
 
@@ -62,10 +70,10 @@ export default function RegisterPage() {
           <button
             type="submit"
             className="bg-[#FF4500] text-white font-bold rounded-xl px-6 py-3 mt-2 shadow hover:bg-[#FF6B35] transition-all text-lg"
-            disabled={loading}
+            disabled={submitting}
             style={{fontFamily: 'Plus Jakarta Sans'}}
           >
-            {loading ? "Registering..." : "Register"}
+            {submitting ? "Registering..." : "Register"}
           </button>
         </form>
         <div className="text-center text-slate-600 text-base">

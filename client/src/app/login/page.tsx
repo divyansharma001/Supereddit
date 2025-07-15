@@ -1,27 +1,36 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/axios";
+import { useAuth } from "@/lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { user, loading, login: authLogin } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.replace("/dashboard");
+    }
+  }, [user, loading, router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    setLoading(true);
+    setSubmitting(true);
     try {
       const { data }: { data: any } = await api.post("/api/auth/login", { email, password });
       localStorage.setItem("token", data.token);
+      await authLogin(data.token); // update global user state
       router.push("/dashboard");
     } catch (err: any) {
       setError(err.response?.data?.error || err.message || "Login failed");
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   }
 
@@ -52,10 +61,10 @@ export default function LoginPage() {
           <button
             type="submit"
             className="bg-[#FF4500] text-white font-bold rounded-xl px-6 py-3 mt-2 shadow hover:bg-[#FF6B35] transition-all text-lg"
-            disabled={loading}
+            disabled={submitting}
             style={{fontFamily: 'Plus Jakarta Sans'}}
           >
-            {loading ? "Logging in..." : "Login"}
+            {submitting ? "Logging in..." : "Login"}
           </button>
         </form>
         <div className="text-center text-slate-600 text-base">
