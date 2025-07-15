@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import React from "react"; // Added missing import for React
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -20,8 +21,8 @@ export default function Home() {
           <a href="#" className="text-[17px] font-semibold text-slate-700 hover:text-[#FF4500] transition-colors duration-200">Blog</a>
         </div>
         <div className="flex items-center gap-4">
-          <a href="#" className="text-[16px] text-slate-700 mr-1 font-semibold hover:text-[#FF4500] transition-colors duration-200">Login</a>
-          <a href="#" className="bg-[#FF4500] font-bold rounded-2xl px-7 py-3 text-base border-2 border-transparent hover:border-[#FF6B35] shadow-[0_4px_16px_rgba(255,69,0,0.12)] hover:shadow-[0_8px_24px_rgba(255,69,0,0.18)] transition-all duration-200 relative text-white">Sign up</a>
+          <Link href="/login" className="text-[16px] text-slate-700 mr-1 font-semibold hover:text-[#FF4500] transition-colors duration-200">Login</Link>
+          <Link href="/register" className="bg-[#FF4500] font-bold rounded-2xl px-7 py-3 text-base border-2 border-transparent hover:border-[#FF6B35] shadow-[0_4px_16px_rgba(255,69,0,0.12)] hover:shadow-[0_8px_24px_rgba(255,69,0,0.18)] transition-all duration-200 relative text-white">Sign up</Link>
         </div>
       </nav>
       {/* Main Hero Content */}
@@ -53,7 +54,7 @@ export default function Home() {
             </button>
           </div>
         </form>
-        <a href="#" className="mt-8 text-lg font-semibold text-[#FF4500] hover:text-[#FF6B35] hover:underline transition-colors duration-200 animate-fade-slide" style={{fontFamily: 'Plus Jakarta Sans', animationDelay: '0.3s'}}>Already have an account? Login</a>
+        <Link href="/login" className="mt-8 text-lg font-semibold text-[#FF4500] hover:text-[#FF6B35] hover:underline transition-colors duration-200 animate-fade-slide" style={{fontFamily: 'Plus Jakarta Sans', animationDelay: '0.3s'}}>Already have an account? Login</Link>
         {/* Animated Down Arrow */}
         <div className="mt-16 flex justify-center animate-bounce-slow">
           <DownArrowSVG />

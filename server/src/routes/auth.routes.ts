@@ -19,6 +19,13 @@ router.post('/register', AuthController.register);
 router.post('/login', AuthController.login);
 
 /**
+ * @route GET /api/auth/me
+ * @desc Get current authenticated user info
+ * @access Private
+ */
+router.get('/me', authenticateToken, AuthController.me);
+
+/**
  * @route POST /api/auth/reddit/oauth/connect
  * @desc Get Reddit OAuth URL
  * @access Private

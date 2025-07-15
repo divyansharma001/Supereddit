@@ -278,4 +278,35 @@ export class AuthController {
       res.status(500).json({ error: 'Failed to fetch Reddit accounts' });
     }
   }
+
+  /**
+   * Get current authenticated user info
+   */
+  static async me(req: Request, res: Response): Promise<void> {
+    try {
+      const { userId } = req.user!;
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        include: {
+          client: { select: { id: true, name: true } }
+        }
+      });
+      if (!user) {
+        res.status(404).json({ error: 'User not found' });
+        return;
+      }
+      res.json({
+        user: {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          clientId: user.clientId,
+          clientName: user.client.name
+        }
+      });
+    } catch (error) {
+      console.error('Get current user error:', error);
+      res.status(500).json({ error: 'Failed to fetch user info' });
+    }
+  }
 } 
