@@ -6,55 +6,72 @@ import Link from "next/link";
 export default function Home() {
   return (
     <main className="flex flex-col items-center justify-center min-h-screen w-full bg-gradient-to-br from-[#fff7f0] via-[#fff] to-[#f0f4ff] p-0 max-w-none mx-0 relative overflow-hidden border-0 shadow-none">
-      {/* Navbar */}
-      <nav className="w-full flex items-center justify-between py-8 px-10 bg-white/80 backdrop-blur-lg shadow-sm fixed top-0 left-0 z-30 border-b border-slate-100">
-        <div className="flex items-center gap-8">
-          <span className="flex items-center gap-2">
-            <span className="bg-gradient-to-tr from-[#FF4500] via-[#FF6B35] to-[#FF4500] h-[32px] w-[32px] rounded-2xl flex items-center justify-center text-2xl font-extrabold shadow-[0_4px_16px_rgba(255,69,0,0.12)] mr-1"></span>
-            <span className="font-extrabold text-2xl ml-2 tracking-tight text-slate-900" style={{fontFamily: 'Plus Jakarta Sans'}}>RedditMVP</span>
-          </span>
-          <a href="#" className="text-[17px] font-semibold text-slate-700 hover:text-[#FF4500] transition-colors duration-200">Explore</a>
-          <a href="#" className="relative text-[17px] font-semibold text-slate-700 hover:text-[#FF4500] transition-colors duration-200 flex items-center">Features
-            <span className="absolute -top-3 left-8 text-[10px] rounded-full bg-[#FF4500] text-white px-2 py-0.5 font-bold">NEW!</span>
-          </a>
-          <a href="#" className="text-[17px] font-semibold text-slate-700 hover:text-[#FF4500] transition-colors duration-200">About</a>
-          <a href="#" className="text-[17px] font-semibold text-slate-700 hover:text-[#FF4500] transition-colors duration-200">Blog</a>
-        </div>
-        <div className="flex items-center gap-4">
-          <Link href="/login" className="text-[16px] text-slate-700 mr-1 font-semibold hover:text-[#FF4500] transition-colors duration-200">Login</Link>
-          <Link href="/register" className="bg-[#FF4500] font-bold rounded-2xl px-7 py-3 text-base border-2 border-transparent hover:border-[#FF6B35] shadow-[0_4px_16px_rgba(255,69,0,0.12)] hover:shadow-[0_8px_24px_rgba(255,69,0,0.18)] transition-all duration-200 relative text-white">Sign up</Link>
-        </div>
-      </nav>
+      
       {/* Main Hero Content */}
-      <section className="relative flex flex-col w-full justify-center items-center flex-1 min-h-screen pt-36 pb-16 z-10 px-4 bg-transparent overflow-visible">
-        {/* Decorative SVG background */}
-        <div className="absolute inset-0 pointer-events-none -z-10">
-          <HeroBlobSVG />
+      <section className="relative flex flex-col w-full justify-center items-center flex-1 min-h-screen pt-32 pb-20 z-10 px-6 bg-white overflow-visible">
+        {/* Subtle background elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-br from-[#FF4500]/5 to-transparent rounded-full blur-3xl"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-br from-[#FF6B35]/3 to-transparent rounded-full blur-3xl"></div>
         </div>
-        <div className="flex gap-4 mb-12 flex-wrap justify-center animate-fade-slide">
-          <button className="bg-white/90 border border-slate-200 rounded-full px-6 py-3 text-base font-semibold shadow hover:shadow-lg flex items-center gap-2 transition-all duration-200 hover:scale-105 text-slate-700 hover:text-[#FF4500]">AI-Powered Content Creation <span className="ml-1 text-xl font-bold text-[#FF4500]">▶</span></button>
-          <button className="bg-white/90 border border-slate-200 rounded-full px-6 py-3 text-base font-semibold shadow hover:shadow-lg flex items-center gap-2 transition-all duration-200 hover:scale-105 text-slate-700 hover:text-[#FF4500]">Smart Community Management <span className="ml-1 text-xl font-bold text-[#FF4500]">▶</span></button>
-        </div>
-        <h1 className="text-[2.5rem] sm:text-[4rem] md:text-[5rem] lg:text-[5.5rem] xl:text-[6rem] font-extrabold leading-[1.05] text-center relative max-w-6xl text-slate-900 drop-shadow-sm animate-fade-slide" style={{fontFamily: 'Plus Jakarta Sans'}}>
-          Build the <span className="relative bg-clip-text text-transparent bg-gradient-to-r from-[#FF4500] via-[#FF6B35] to-[#FF4500] font-extrabold italic drop-shadow-md" style={{WebkitTextStroke:'1px transparent'}}>next</span> great<br className="hidden sm:block"/> Reddit community.
-        </h1>
-        <p className="mt-10 text-slate-600 text-2xl sm:text-3xl font-medium text-center max-w-3xl leading-relaxed px-4 animate-fade-slide" style={{fontFamily: 'Plus Jakarta Sans', animationDelay: '0.1s'}}>RedditMVP helps you create engaging content, manage communities, and grow your Reddit presence with AI-powered tools and analytics.</p>
-        {/* Signup/search */}
-        <form className="flex flex-col items-center mt-12 w-full max-w-2xl px-4 animate-fade-slide" style={{animationDelay: '0.2s'}}>
-          <div className="flex items-center w-full bg-white/90 border border-slate-200 rounded-2xl px-8 py-5 shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <span className="text-slate-400 text-2xl font-medium ml-2 select-none">redditmvp.com/</span>
-            <input
-              type="text"
-              placeholder="your-community"
-              className="flex-1 bg-transparent outline-none text-slate-900 font-bold text-2xl px-3 placeholder:font-normal placeholder:text-slate-400 min-w-0"
-              style={{fontFamily: 'Plus Jakarta Sans'}}
-            />
-            <button type="submit" className="ml-4 mr-2 font-bold text-[18px] px-7 py-3 rounded-2xl shadow border-[2.7px] border-transparent bg-[#FF4500] relative transition-all duration-200 hover:shadow-lg hover:scale-105 flex-shrink-0 text-white">
-              Get Started
-            </button>
+        
+        <div className="w-full max-w-4xl flex flex-col items-center text-center animate-fade-slide relative z-10">
+          {/* Professional badge */}
+          <div className="mb-6 inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 shadow-sm">
+            <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
+            <span className="text-sm font-medium text-slate-700">Trusted by 10,000+ communities</span>
           </div>
-        </form>
-        <Link href="/login" className="mt-8 text-lg font-semibold text-[#FF4500] hover:text-[#FF6B35] hover:underline transition-colors duration-200 animate-fade-slide" style={{fontFamily: 'Plus Jakarta Sans', animationDelay: '0.3s'}}>Already have an account? Login</Link>
+          
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] text-slate-900 mb-6 tracking-tight" style={{fontFamily: 'Plus Jakarta Sans'}}>
+            Build thriving Reddit communities with{' '}
+            <span className="bg-gradient-to-r from-[#FF4500] via-[#FF6B35] to-[#FF4500] bg-clip-text text-transparent font-bold">
+              AI-powered tools
+            </span>
+          </h1>
+          
+          <p className="mt-4 text-slate-600 text-lg sm:text-xl font-normal max-w-2xl mx-auto leading-relaxed" style={{fontFamily: 'Plus Jakarta Sans'}}>
+            Create engaging content, automate moderation, and grow your community with intelligent analytics. Everything you need to succeed on Reddit, simplified.
+          </p>
+          
+          {/* Social proof */}
+          <div className="mt-8 flex items-center gap-6 text-sm text-slate-500">
+            <div className="flex items-center gap-1">
+              <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+              <span>4.9/5 rating</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <svg className="w-4 h-4 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <span>No credit card required</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <svg className="w-4 h-4 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+              </svg>
+              <span>SOC 2 compliant</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row gap-4 mt-10 mb-8 w-full max-w-md justify-center animate-fade-slide" style={{animationDelay: '0.1s'}}>
+          <Link href="/register" className="flex-1 bg-[#FF4500] hover:bg-[#FF6B35] text-white font-semibold rounded-xl px-6 py-3 text-sm shadow-lg hover:shadow-xl transition-all duration-200 text-center border-2 border-transparent hover:border-[#FF6B35] focus:outline-none focus:ring-2 focus:ring-[#FF4500] focus:ring-offset-2 transform hover:scale-105">
+            Start building for free
+          </Link>
+          <Link href="/ai" className="flex-1 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl px-6 py-3 text-sm shadow-lg hover:shadow-xl transition-all duration-200 text-center hover:border-slate-400 transform hover:scale-105">
+            View demo
+          </Link>
+        </div>
+        
+        <div className="text-center animate-fade-slide" style={{animationDelay: '0.3s'}}>
+          <p className="text-sm text-slate-500 mb-2">Already have an account?</p>
+          <Link href="/login" className="text-base font-medium text-[#FF4500] hover:text-[#FF6B35] hover:underline transition-colors duration-200">
+            Sign in →
+          </Link>
+        </div>
+        
         {/* Animated Down Arrow */}
         <div className="mt-16 flex justify-center animate-bounce-slow">
           <DownArrowSVG />

@@ -32,17 +32,17 @@ function UserMenu() {
 
 export default function Navbar() {
   return (
-    <nav className="w-full flex items-center justify-between py-8 px-10 bg-white/80 backdrop-blur-lg shadow-sm fixed top-0 left-0 z-30 border-b border-slate-100">
-      <div className="flex items-center gap-8">
+    <nav className="w-full flex items-center justify-between py-3 px-6 bg-white/70 backdrop-blur-md shadow-sm fixed top-0 left-0 z-30 border-b border-slate-100">
+      <div className="flex items-center gap-5">
         <span className="flex items-center gap-2">
-          <span className="bg-gradient-to-tr from-[#FF4500] via-[#FF6B35] to-[#FF4500] h-[32px] w-[32px] rounded-2xl flex items-center justify-center text-2xl font-extrabold shadow-[0_4px_16px_rgba(255,69,0,0.12)] mr-1"></span>
-          <span className="font-extrabold text-2xl ml-2 tracking-tight text-slate-900" style={{fontFamily: 'Plus Jakarta Sans'}}>RedditMVP</span>
+          <span className="bg-gradient-to-tr from-[#FF4500] via-[#FF6B35] to-[#FF4500] h-[26px] w-[26px] rounded-xl flex items-center justify-center text-xl font-extrabold shadow-[0_2px_8px_rgba(255,69,0,0.10)] mr-1"></span>
+          <span className="font-extrabold text-lg ml-2 tracking-tight text-slate-900" style={{fontFamily: 'Plus Jakarta Sans'}}>RedditMVP</span>
         </span>
-        <Link href="/posts" className="text-[17px] font-semibold text-slate-700 hover:text-[#FF4500] transition-colors duration-200">Posts</Link>
-        <Link href="/ai" className="text-[17px] font-semibold text-slate-700 hover:text-[#FF4500] transition-colors duration-200">AI</Link>
-        <Link href="/reddit-connect" className="text-[17px] font-semibold text-slate-700 hover:text-[#FF4500] transition-colors duration-200">Reddit Connect</Link>
+        <Link href="/posts" className="text-[15px] font-medium text-slate-700 hover:text-[#FF4500] transition-colors duration-200">Posts</Link>
+        <Link href="/ai" className="text-[15px] font-medium text-slate-700 hover:text-[#FF4500] transition-colors duration-200">AI</Link>
+        <Link href="/reddit-connect" className="text-[15px] font-medium text-slate-700 hover:text-[#FF4500] transition-colors duration-200">Reddit Connect</Link>
       </div>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         <UserMenu />
       </div>
     </nav>
