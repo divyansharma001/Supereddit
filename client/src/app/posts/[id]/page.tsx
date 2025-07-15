@@ -3,238 +3,272 @@ import React, { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import api from "@/lib/axios";
+import Link from "next/link";
 
+// --- Improvement: Type-safe data model based on your API docs ---
+type PostStatus = "Draft" | "Scheduled" | "Posted" | "Error";
+
+interface Post {
+  id: string;
+  title: string;
+  body: string;
+  subreddit: string;
+  status: PostStatus;
+  scheduled_at?: string;
+  posted_at?: string;
+  createdAt: string;
+  updatedAt: string;
+  author: {
+    email: string;
+  };
+  redditAccount?: {
+    reddit_username: string;
+  };
+}
+
+// --- Improvement: Reusable Status Badge Component ---
+const StatusBadge = ({ status }: { status: PostStatus }) => {
+  const statusStyles: Record<PostStatus, string> = {
+    Draft: "bg-slate-100 text-slate-800",
+    Scheduled: "bg-yellow-100 text-yellow-800",
+    Posted: "bg-green-100 text-green-800",
+    Error: "bg-red-100 text-red-800",
+  };
+  return (
+    <span
+      className={`px-2.5 py-0.5 text-xs font-semibold rounded-full ${statusStyles[status]}`}
+    >
+      {status}
+    </span>
+  );
+};
+
+// --- Main Page Component ---
 export default function PostDetailPage() {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const params = useParams();
   const postId = params?.id as string;
 
-  const [post, setPost] = useState<any>(null);
-  const [edit, setEdit] = useState(false);
-  const [form, setForm] = useState({ title: "", body: "", subreddit: "", status: "Draft" });
+  const [post, setPost] = useState<Post | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [form, setForm] = useState({ title: "", body: "", subreddit: "" });
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [loadingPost, setLoadingPost] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [scheduling, setScheduling] = useState(false);
-  const [scheduleAt, setScheduleAt] = useState("");
+  const [loading, setLoading] = useState(true);
+  
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isScheduling, setIsScheduling] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!authLoading && !user) {
       router.replace("/login");
     }
-  }, [user, loading, router]);
+  }, [user, authLoading, router]);
 
   useEffect(() => {
     if (!user || !postId) return;
-    setLoadingPost(true);
+
     const fetchPost = async () => {
+      setLoading(true);
+      setError("");
       try {
-        const res: any = await api.get(`/api/posts/${postId}`);
+        const res = await api.get<{ post: Post }>(`/api/posts/${postId}`);
         setPost(res.data.post);
         setForm({
           title: res.data.post.title,
           body: res.data.post.body,
           subreddit: res.data.post.subreddit,
-          status: res.data.post.status,
         });
-      } catch {
-        setError("Failed to load post");
+      } catch (err: any) {
+        setError(err.response?.data?.error || "Failed to load the post.");
       } finally {
-        setLoadingPost(false);
+        setLoading(false);
       }
     };
     fetchPost();
   }, [user, postId]);
 
-  async function handleSave(e: React.FormEvent) {
+  const handleSaveChanges = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSaving(true);
     setError("");
     setSuccess("");
-    setSaving(true);
     try {
-      const res: any = await api.put(`/api/posts/${postId}`, form);
+      const res = await api.put<{ post: Post }>(`/api/posts/${postId}`, form);
       setPost(res.data.post);
       setSuccess("Post updated successfully!");
-      setEdit(false);
+      setIsEditing(false);
     } catch (err: any) {
-      setError(err.response?.data?.error || err.message || "Failed to update post");
+      setError(err.response?.data?.error || "Failed to update the post.");
     } finally {
-      setSaving(false);
+      setIsSaving(false);
     }
-  }
-
-  async function handleDelete() {
-    if (!window.confirm("Are you sure you want to delete this post?")) return;
-    setDeleting(true);
+  };
+  
+  const handleDelete = async () => {
+    if (!window.confirm("Are you sure you want to permanently delete this post?")) return;
+    setIsDeleting(true);
     setError("");
     try {
       await api.delete(`/api/posts/${postId}`);
-      router.push("/posts");
+      router.push("/posts?deleted=true");
     } catch (err: any) {
-      setError(err.response?.data?.error || err.message || "Failed to delete post");
-    } finally {
-      setDeleting(false);
+      setError(err.response?.data?.error || "Failed to delete the post.");
+      setIsDeleting(false);
     }
-  }
+  };
 
-  async function handleSchedule(e: React.FormEvent) {
+  const handleSchedule = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setScheduling(true);
+    const scheduledAt = (e.currentTarget.elements.namedItem("scheduleAt") as HTMLInputElement).value;
+    if (!scheduledAt) {
+        setError("Please select a date and time to schedule the post.");
+        return;
+    }
+
+    setIsScheduling(true);
     setError("");
+    setSuccess("");
     try {
-      const res: any = await api.post(`/api/posts/${postId}/schedule`, {
-        scheduled_at: new Date(scheduleAt).toISOString(),
+      const res = await api.post<{ post: Post }>(`/api/posts/${postId}/schedule`, {
+        scheduled_at: new Date(scheduledAt).toISOString(),
       });
       setPost(res.data.post);
       setSuccess("Post scheduled successfully!");
-    } catch (err: any) {
-      setError(err.response?.data?.error || err.message || "Failed to schedule post");
+    } catch (err: any)      {
+      setError(err.response?.data?.error || "Failed to schedule the post.");
     } finally {
-      setScheduling(false);
+      setIsScheduling(false);
     }
-  }
+  };
 
-  if (loading || !user || loadingPost) {
+  if (authLoading || loading) {
     return (
-      <main className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#fff7f0] via-[#fff] to-[#f0f4ff]">
-        <div className="text-xl text-slate-600 font-semibold animate-fade-slide">Loading post...</div>
+      <main className="flex items-center justify-center min-h-screen bg-slate-50">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <div className="text-lg text-slate-600 font-medium">Loading Post...</div>
+        </div>
       </main>
     );
   }
+
   if (!post) {
     return (
-      <main className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#fff7f0] via-[#fff] to-[#f0f4ff]">
-        <div className="text-xl text-red-600 font-semibold animate-fade-slide">{error || "Post not found."}</div>
-      </main>
+        <main className="flex items-center justify-center min-h-screen bg-slate-50">
+            <div className="text-center p-8 bg-white rounded-lg shadow-md border border-red-200">
+                <h2 className="text-xl font-bold text-red-600">Error</h2>
+                <p className="text-slate-700 mt-2">{error || "Post not found."}</p>
+                <Link href="/posts" className="mt-4 inline-block bg-blue-600 text-white font-semibold rounded-lg px-4 py-2 hover:bg-blue-700 transition-colors">
+                    Back to Posts
+                </Link>
+            </div>
+        </main>
     );
   }
 
   const canEdit = post.status !== "Posted";
 
   return (
-    <main className="flex flex-col items-center min-h-screen bg-gradient-to-br from-[#fff7f0] via-[#fff] to-[#f0f4ff] px-4 pt-32">
-      <div className="w-full max-w-xl bg-white rounded-3xl shadow-2xl border border-slate-200 p-8 flex flex-col gap-6 animate-fade-slide">
-        <h1 className="text-3xl font-extrabold text-slate-900 text-center" style={{fontFamily: 'Plus Jakarta Sans'}}>Post Details</h1>
-        {error && <div className="text-red-600 text-sm text-center font-semibold">{error}</div>}
-        {success && <div className="text-green-600 text-sm text-center font-semibold">{success}</div>}
-        {edit && canEdit ? (
-          <form className="flex flex-col gap-5" onSubmit={handleSave}>
-            <input
-              type="text"
-              className="px-5 py-3 rounded-xl border border-slate-200 bg-slate-50 text-lg focus:outline-none focus:ring-2 focus:ring-[#FF4500]"
-              value={form.title}
-              onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-              required
-              style={{fontFamily: 'Plus Jakarta Sans'}}
-            />
-            <textarea
-              className="px-5 py-3 rounded-xl border border-slate-200 bg-slate-50 text-lg min-h-[120px] focus:outline-none focus:ring-2 focus:ring-[#FF4500]"
-              value={form.body}
-              onChange={e => setForm(f => ({ ...f, body: e.target.value }))}
-              required
-              style={{fontFamily: 'Plus Jakarta Sans'}}
-            />
-            <input
-              type="text"
-              className="px-5 py-3 rounded-xl border border-slate-200 bg-slate-50 text-lg focus:outline-none focus:ring-2 focus:ring-[#FF4500]"
-              value={form.subreddit}
-              onChange={e => setForm(f => ({ ...f, subreddit: e.target.value }))}
-              required
-              style={{fontFamily: 'Plus Jakarta Sans'}}
-            />
-            <select
-              className="px-5 py-3 rounded-xl border border-slate-200 bg-slate-50 text-lg focus:outline-none focus:ring-2 focus:ring-[#FF4500]"
-              value={form.status}
-              onChange={e => setForm(f => ({ ...f, status: e.target.value }))}
-              disabled={!canEdit}
-              style={{fontFamily: 'Plus Jakarta Sans'}}
-            >
-              <option value="Draft">Draft</option>
-              <option value="Scheduled">Scheduled</option>
-            </select>
-            <button
-              type="submit"
-              className="bg-[#FF4500] text-white font-bold rounded-xl px-6 py-3 mt-2 shadow hover:bg-[#FF6B35] transition-all text-lg"
-              disabled={saving}
-              style={{fontFamily: 'Plus Jakarta Sans'}}
-            >
-              {saving ? "Saving..." : "Save Changes"}
-            </button>
-            <button
-              type="button"
-              className="bg-slate-200 text-slate-700 font-bold rounded-xl px-6 py-3 mt-2 shadow hover:bg-slate-300 transition-all text-lg"
-              onClick={() => setEdit(false)}
-            >
-              Cancel
-            </button>
-          </form>
-        ) : (
-          <div className="flex flex-col gap-4">
-            <div>
-              <span className="font-bold text-slate-700">Title:</span> <span className="text-slate-900">{post.title}</span>
+    <main className="min-h-screen bg-slate-50">
+      {/* Header with Breadcrumbs */}
+      <div className="bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center gap-2 text-sm">
+             <Link href="/dashboard" className="text-slate-500 hover:text-blue-600">Dashboard</Link>
+             <span className="text-slate-400">/</span>
+             <Link href="/posts" className="text-slate-500 hover:text-blue-600">Posts</Link>
+             <span className="text-slate-400">/</span>
+             <span className="font-semibold text-slate-800 truncate">{post.title}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Alerts for success and error messages */}
+        {success && <div className="mb-4 p-4 text-sm text-green-800 bg-green-100 border border-green-200 rounded-lg">{success}</div>}
+        {error && <div className="mb-4 p-4 text-sm text-red-800 bg-red-100 border border-red-200 rounded-lg">{error}</div>}
+      
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content (Left Column) */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200">
+                {isEditing && canEdit ? (
+                    <form onSubmit={handleSaveChanges}>
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <label htmlFor="title" className="block text-sm font-medium text-slate-700 mb-1">Title</label>
+                                <input id="title" type="text" value={form.title} onChange={e => setForm(f => ({...f, title: e.target.value}))} className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                            </div>
+                            <div>
+                                <label htmlFor="subreddit" className="block text-sm font-medium text-slate-700 mb-1">Subreddit (r/)</label>
+                                <input id="subreddit" type="text" value={form.subreddit} onChange={e => setForm(f => ({...f, subreddit: e.target.value}))} className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                            </div>
+                             <div>
+                                <label htmlFor="body" className="block text-sm font-medium text-slate-700 mb-1">Body</label>
+                                <textarea id="body" value={form.body} onChange={e => setForm(f => ({...f, body: e.target.value}))} className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[250px]" required />
+                            </div>
+                        </div>
+                        <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-3">
+                            <button type="button" onClick={() => setIsEditing(false)} className="px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50">Cancel</button>
+                            <button type="submit" disabled={isSaving} className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-slate-400 flex items-center">
+                                {isSaving && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>}
+                                {isSaving ? 'Saving...' : 'Save Changes'}
+                            </button>
+                        </div>
+                    </form>
+                ) : (
+                    <div className="p-6">
+                        <h1 className="text-2xl font-bold text-slate-900">{post.title}</h1>
+                        <p className="text-sm text-slate-500 mt-1">in <span className="font-semibold">r/{post.subreddit}</span></p>
+                        <div className="mt-6 prose prose-slate max-w-none whitespace-pre-line">
+                            {post.body}
+                        </div>
+                    </div>
+                )}
             </div>
-            <div>
-              <span className="font-bold text-slate-700">Body:</span>
-              <div className="bg-slate-50 rounded-xl p-4 mt-1 text-slate-800 whitespace-pre-line">{post.body}</div>
-            </div>
-            <div>
-              <span className="font-bold text-slate-700">Subreddit:</span> <span className="text-slate-900">{post.subreddit}</span>
-            </div>
-            <div>
-              <span className="font-bold text-slate-700">Status:</span> <span className="px-3 py-1 rounded-full text-xs font-bold" style={{background: post.status === 'Draft' ? '#f3f4f6' : post.status === 'Scheduled' ? '#fef3c7' : post.status === 'Posted' ? '#d1fae5' : '#fee2e2', color: post.status === 'Error' ? '#b91c1c' : '#374151'}}>{post.status}</span>
-            </div>
-            <div>
-              <span className="font-bold text-slate-700">Scheduled At:</span> <span className="text-slate-900">{post.scheduled_at ? new Date(post.scheduled_at).toLocaleString() : '-'}</span>
-            </div>
-            <div>
-              <span className="font-bold text-slate-700">Posted At:</span> <span className="text-slate-900">{post.posted_at ? new Date(post.posted_at).toLocaleString() : '-'}</span>
-            </div>
-            <div>
-              <span className="font-bold text-slate-700">Author:</span> <span className="text-slate-900">{post.author?.email}</span>
-            </div>
-            <div className="flex gap-3 mt-4">
-              {canEdit && (
-                <button
-                  className="bg-[#FF4500] text-white font-bold rounded-xl px-6 py-3 shadow hover:bg-[#FF6B35] transition-all text-lg"
-                  onClick={() => setEdit(true)}
-                >
-                  Edit
-                </button>
-              )}
-              <button
-                className="bg-red-500 text-white font-bold rounded-xl px-6 py-3 shadow hover:bg-red-600 transition-all text-lg"
-                onClick={handleDelete}
-                disabled={deleting}
-              >
-                {deleting ? "Deleting..." : "Delete"}
-              </button>
+          </div>
+          
+          {/* Sidebar (Right Column) */}
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+              <h3 className="text-lg font-semibold text-slate-900 mb-4">Post Status</h3>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-slate-600">Status</span>
+                <StatusBadge status={post.status} />
+              </div>
+              <ul className="mt-4 space-y-2 text-sm text-slate-600 border-t border-slate-200 pt-4">
+                 <li><strong>Created:</strong> {new Date(post.createdAt).toLocaleString()}</li>
+                 <li><strong>Last Updated:</strong> {new Date(post.updatedAt).toLocaleString()}</li>
+                 <li><strong>Scheduled for:</strong> {post.scheduled_at ? new Date(post.scheduled_at).toLocaleString() : 'N/A'}</li>
+                 <li><strong>Posted at:</strong> {post.posted_at ? new Date(post.posted_at).toLocaleString() : 'N/A'}</li>
+              </ul>
             </div>
             {canEdit && (
-              <form className="flex flex-col gap-2 mt-6" onSubmit={handleSchedule}>
-                <label className="text-slate-700 font-semibold">Schedule Post:</label>
-                <input
-                  type="datetime-local"
-                  className="px-5 py-3 rounded-xl border border-slate-200 bg-slate-50 text-lg focus:outline-none focus:ring-2 focus:ring-[#FF4500]"
-                  value={scheduleAt}
-                  onChange={e => setScheduleAt(e.target.value)}
-                  style={{fontFamily: 'Plus Jakarta Sans'}}
-                />
-                <button
-                  type="submit"
-                  className="bg-[#FF4500] text-white font-bold rounded-xl px-6 py-3 mt-2 shadow hover:bg-[#FF6B35] transition-all text-lg"
-                  disabled={scheduling}
-                  style={{fontFamily: 'Plus Jakarta Sans'}}
-                >
-                  {scheduling ? "Scheduling..." : "Schedule"}
-                </button>
-              </form>
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <h3 className="text-lg font-semibold text-slate-900 mb-4">Actions</h3>
+                    <div className="space-y-3">
+                        {!isEditing && <button onClick={() => setIsEditing(true)} className="w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">Edit Post</button>}
+                        <form onSubmit={handleSchedule} className="space-y-2">
+                             <input name="scheduleAt" type="datetime-local" className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                             <button type="submit" disabled={isScheduling} className="w-full px-4 py-2 font-semibold text-white bg-purple-600 rounded-lg hover:bg-purple-700 disabled:bg-slate-400 flex items-center justify-center">
+                                {isScheduling && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>}
+                                {isScheduling ? 'Scheduling...' : 'Schedule'}
+                             </button>
+                        </form>
+                        <button onClick={handleDelete} disabled={isDeleting} className="w-full px-4 py-2 font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:bg-slate-400 flex items-center justify-center">
+                            {isDeleting && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>}
+                            {isDeleting ? 'Deleting...' : 'Delete Post'}
+                        </button>
+                    </div>
+                </div>
             )}
           </div>
-        )}
+        </div>
       </div>
     </main>
   );
-} 
+}

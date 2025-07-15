@@ -1,152 +1,225 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useEffect, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import api from "@/lib/axios";
 import Link from "next/link";
 
-const statusOptions = ["All", "Draft", "Scheduled", "Posted", "Error"];
+// --- Improvement: Type-safe data models ---
+type PostStatus = "Draft" | "Scheduled" | "Posted" | "Error";
 
-export default function PostsPage() {
-  const { user, loading } = useAuth();
+interface Post {
+  id: string;
+  title: string;
+  subreddit: string;
+  status: PostStatus;
+  scheduled_at?: string;
+}
+
+interface RedditAccount {
+  id: string;
+  reddit_username: string;
+}
+
+// --- Improvement: Reusable Status Badge Component ---
+const StatusBadge = ({ status }: { status: PostStatus }) => {
+  const statusStyles: Record<PostStatus, string> = {
+    Draft: "bg-slate-100 text-slate-800",
+    Scheduled: "bg-yellow-100 text-yellow-800",
+    Posted: "bg-green-100 text-green-800",
+    Error: "bg-red-100 text-red-800",
+  };
+  return (
+    <span
+      className={`px-2.5 py-0.5 text-xs font-semibold rounded-full ${statusStyles[status]}`}
+    >
+      {status}
+    </span>
+  );
+};
+
+// --- Main Page Component ---
+function PostsPageContent() {
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
-  const [accounts, setAccounts] = useState<any[] | null>(null);
-  const [fetchingAccounts, setFetchingAccounts] = useState(true);
-  const [posts, setPosts] = useState<any[]>([]);
+  const searchParams = useSearchParams();
+
+  const [accounts, setAccounts] = useState<RedditAccount[] | null>(null);
+  const [posts, setPosts] = useState<Post[]>([]);
+  
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [status, setStatus] = useState("All");
-  const [fetching, setFetching] = useState(false);
+
+  const [loading, setLoading] = useState(true);
+  const [successMessage, setSuccessMessage] = useState("");
+
+  const statusOptions = ["All", "Draft", "Scheduled", "Posted", "Error"];
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!authLoading && !user) {
       router.replace("/login");
     }
-  }, [user, loading, router]);
+  }, [user, authLoading, router]);
 
+  // Check for success message from query params
+  useEffect(() => {
+    if (searchParams.get("deleted") === "true") {
+      setSuccessMessage("Post deleted successfully.");
+      // Clean up URL
+      router.replace("/posts", { scroll: false });
+    }
+  }, [searchParams, router]);
+
+  // This effect now combines account fetching and the initial post fetch.
   useEffect(() => {
     if (!user) return;
-    setFetchingAccounts(true);
-    const fetchAccounts = async () => {
+    
+    const fetchData = async () => {
+      setLoading(true);
       try {
-        const res: any = await api.get("/api/auth/reddit/accounts");
-        setAccounts(res.data.accounts);
-      } catch {
-        setAccounts([]);
-      } finally {
-        setFetchingAccounts(false);
-      }
-    };
-    fetchAccounts();
-  }, [user]);
+        // First, check for connected Reddit accounts
+        const accountsRes = await api.get<{ accounts: RedditAccount[] }>("/api/auth/reddit/accounts");
+        if (accountsRes.data.accounts.length === 0) {
+          router.replace("/reddit-connect");
+          return;
+        }
+        setAccounts(accountsRes.data.accounts);
 
-  useEffect(() => {
-    if (!fetchingAccounts && accounts && accounts.length === 0) {
-      router.replace("/reddit-connect");
-    }
-  }, [fetchingAccounts, accounts, router]);
-
-  useEffect(() => {
-    if (!user || !accounts || accounts.length === 0) return;
-    setFetching(true);
-    const fetchPosts = async () => {
-      try {
-        const res: any = await api.get("/api/posts", {
-          params: {
-            page,
-            limit,
-            ...(status !== "All" ? { status } : {}),
-          },
+        // Then, fetch posts
+        const postsRes = await api.get("/api/posts", {
+          params: { page, limit: 10, ...(status !== "All" && { status }) },
         });
-        setPosts(res.data.posts);
-        setTotalPages(res.data.pagination.pages);
-      } catch {
-        setPosts([]);
+        const responseData = postsRes.data as { posts: Post[]; pagination: { pages: number } };
+        setPosts(responseData.posts);
+        setTotalPages(responseData.pagination.pages);
+
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+        setPosts([]); // Clear posts on error
       } finally {
-        setFetching(false);
+        setLoading(false);
       }
     };
-    fetchPosts();
-  }, [user, accounts, page, limit, status]);
 
-  if (loading || !user || fetchingAccounts || accounts === null) {
+    fetchData();
+  }, [user, page, status, router]);
+
+
+  if (authLoading || accounts === null) {
     return (
-      <main className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#fff7f0] via-[#fff] to-[#f0f4ff]">
-        <div className="text-xl text-slate-600 font-semibold animate-fade-slide">Loading posts...</div>
+      <main className="flex items-center justify-center min-h-screen bg-slate-50">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <div className="text-lg text-slate-600 font-medium">Loading...</div>
+        </div>
       </main>
     );
   }
 
   return (
-    <main className="flex flex-col items-center min-h-screen bg-gradient-to-br from-[#fff7f0] via-[#fff] to-[#f0f4ff] px-4 pt-32">
-      <div className="w-full max-w-5xl flex flex-col gap-6">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
-          <h1 className="text-3xl font-extrabold text-slate-900" style={{fontFamily: 'Plus Jakarta Sans'}}>Your Posts</h1>
-          <Link href="/posts/new" className="bg-[#FF4500] text-white font-bold rounded-xl px-6 py-3 shadow hover:bg-[#FF6B35] transition-all text-lg">+ New Post</Link>
+    <main className="min-h-screen bg-slate-50">
+      {/* Header */}
+      <div className="bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Your Posts</h1>
+            <p className="text-slate-600 mt-1">Manage, edit, and schedule all your content.</p>
+          </div>
+          <Link href="/posts/new" className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
+            + New Post
+          </Link>
         </div>
-        <div className="flex items-center gap-3 mb-4">
-          <span className="font-semibold text-slate-700">Status:</span>
-          <select
-            className="px-4 py-2 rounded-lg border border-slate-200 bg-slate-50 text-base focus:outline-none focus:ring-2 focus:ring-[#FF4500]"
-            value={status}
-            onChange={e => { setStatus(e.target.value); setPage(1); }}
-          >
-            {statusOptions.map(opt => (
-              <option key={opt} value={opt}>{opt}</option>
-            ))}
-          </select>
-        </div>
-        <div className="overflow-x-auto rounded-2xl shadow border border-slate-200 bg-white">
-          <table className="min-w-full divide-y divide-slate-100">
-            <thead>
-              <tr className="bg-slate-50">
-                <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Title</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Subreddit</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Scheduled</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {fetching ? (
-                <tr><td colSpan={5} className="text-center py-8 text-slate-400">Loading...</td></tr>
-              ) : posts.length === 0 ? (
-                <tr><td colSpan={5} className="text-center py-8 text-slate-400">No posts found.</td></tr>
-              ) : posts.map(post => (
-                <tr key={post.id} className="hover:bg-slate-50 transition">
-                  <td className="px-6 py-4 font-semibold text-slate-900 max-w-xs truncate">{post.title}</td>
-                  <td className="px-6 py-4 text-slate-700">{post.subreddit}</td>
-                  <td className="px-6 py-4">
-                    <span className="px-3 py-1 rounded-full text-xs font-bold" style={{background: post.status === 'Draft' ? '#f3f4f6' : post.status === 'Scheduled' ? '#fef3c7' : post.status === 'Posted' ? '#d1fae5' : '#fee2e2', color: post.status === 'Error' ? '#b91c1c' : '#374151'}}>{post.status}</span>
-                  </td>
-                  <td className="px-6 py-4 text-slate-600">{post.scheduled_at ? new Date(post.scheduled_at).toLocaleString() : '-'}</td>
-                  <td className="px-6 py-4 flex gap-2">
-                    <Link href={`/posts/${post.id}`} className="text-[#FF4500] font-bold hover:underline">View</Link>
-                  </td>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {successMessage && <div className="mb-4 p-4 text-sm text-green-800 bg-green-100 border border-green-200 rounded-lg">{successMessage}</div>}
+        
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200">
+          {/* Filter Bar */}
+          <div className="p-4 border-b border-slate-200">
+            <div className="flex items-center gap-4">
+              <label htmlFor="status-filter" className="text-sm font-medium text-slate-700">Filter by status:</label>
+              <select
+                id="status-filter"
+                className="px-3 py-1.5 text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={status}
+                onChange={e => { setStatus(e.target.value); setPage(1); }}
+              >
+                {statusOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+              </select>
+            </div>
+          </div>
+          
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-slate-200">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Title</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Subreddit</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Scheduled</th>
+                  <th className="px-6 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="flex justify-between items-center mt-6">
-          <button
-            className="px-4 py-2 rounded-lg border border-slate-200 bg-slate-50 text-base font-semibold disabled:opacity-50"
-            onClick={() => setPage(p => Math.max(1, p - 1))}
-            disabled={page === 1}
-          >
-            Previous
-          </button>
-          <span className="text-slate-700 font-medium">Page {page} of {totalPages}</span>
-          <button
-            className="px-4 py-2 rounded-lg border border-slate-200 bg-slate-50 text-base font-semibold disabled:opacity-50"
-            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-          >
-            Next
-          </button>
+              </thead>
+              <tbody className="bg-white divide-y divide-slate-200">
+                {loading ? (
+                  <tr><td colSpan={5} className="text-center py-12 text-slate-500">Loading posts...</td></tr>
+                ) : posts.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="text-center py-12">
+                      <h3 className="text-lg font-semibold text-slate-800">No Posts Found</h3>
+                      <p className="text-slate-500 mt-1">Try a different filter or create a new post.</p>
+                      <Link href="/posts/new" className="mt-4 inline-block px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">Create your first post</Link>
+                    </td>
+                  </tr>
+                ) : posts.map(post => (
+                  <tr key={post.id}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 max-w-xs truncate">{post.title}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">r/{post.subreddit}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm"><StatusBadge status={post.status} /></td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{post.scheduled_at ? new Date(post.scheduled_at).toLocaleString() : '—'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
+                      <Link href={`/posts/${post.id}`} className="px-3 py-1.5 text-sm font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">View</Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          {posts.length > 0 && (
+            <div className="p-4 border-t border-slate-200 flex justify-between items-center text-sm">
+                <button
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1 || loading}
+                    className="px-3 py-1.5 font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50"
+                >
+                    Previous
+                </button>
+                <span className="text-slate-700 font-medium">Page {page} of {totalPages}</span>
+                <button
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages || loading}
+                    className="px-3 py-1.5 font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50"
+                >
+                    Next
+                </button>
+            </div>
+          )}
         </div>
       </div>
     </main>
   );
-} 
+}
+
+// Using Suspense for client components that use searchParams
+export default function PostsPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <PostsPageContent />
+        </Suspense>
+    );
+}
