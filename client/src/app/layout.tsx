@@ -1,3 +1,4 @@
+  
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -8,6 +9,7 @@ import Link from "next/link";
 import React from "react";
 import Navbar from "./Navbar";
 import { ThemeProvider } from "@/lib/theme";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -56,6 +58,22 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+  // Hide Navbar on dashboard and connected pages
+  const hideNavbar = [
+    '/dashboard',
+    '/posts',
+    '/posts/',
+    '/posts/new',
+    '/ai',
+    '/reddit-connect',
+    '/reddit-accounts',
+    '/scheduler',
+    '/keywords',
+    '/analytics',
+    '/settings',
+  ].some((route) => pathname.startsWith(route));
+
   return (
     <html lang="en" className={`light ${geistSans.variable} ${geistMono.variable}`}>
       <head>
@@ -67,7 +85,7 @@ export default function RootLayout({
       <body suppressHydrationWarning className="antialiased">
         <ThemeProvider>
           <AuthProvider>
-            <Navbar />
+            {!hideNavbar && <Navbar />}
             <ClientBody>{children}</ClientBody>
           </AuthProvider>
         </ThemeProvider>
