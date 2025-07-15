@@ -43,7 +43,11 @@ function LoginContent() {
       await authLogin(data.token);
       router.push("/dashboard");
     } catch (err: unknown) {
-      setError((err as any)?.response?.data?.error || "Invalid email or password.");
+      setError(
+        (err && typeof err === "object" && "response" in err && err.response && typeof err.response === "object" && "data" in err.response && err.response.data && typeof err.response.data === "object" && "error" in err.response.data)
+          ? (err.response.data.error as string)
+          : (err instanceof Error ? err.message : "Invalid email or password.")
+      );
     } finally {
       setIsSubmitting(false);
     }

@@ -5,10 +5,16 @@ import { useAuth } from "@/lib/auth";
 import api from "@/lib/axios";
 import Link from "next/link";
 
+// --- Add RedditAccount interface ---
+interface RedditAccount {
+  id: string;
+  reddit_username: string;
+}
+
 export default function DashboardPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const [accounts, setAccounts] = useState<any[] | null>(null);
+  const [accounts, setAccounts] = useState<RedditAccount[] | null>(null);
   const [fetchingAccounts, setFetchingAccounts] = useState(true);
   const [stats, setStats] = useState({
     totalPosts: 0,
@@ -28,7 +34,7 @@ export default function DashboardPage() {
     setFetchingAccounts(true);
     const fetchAccounts = async () => {
       try {
-        const res: any = await api.get("/api/auth/reddit/accounts");
+        const res = await api.get<{ accounts: RedditAccount[] }>("/api/auth/reddit/accounts");
         setAccounts(res.data.accounts);
         // Mock stats - replace with actual API calls
         setStats({

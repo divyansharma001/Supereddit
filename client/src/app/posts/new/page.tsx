@@ -1,11 +1,11 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import api from "@/lib/axios";
 import Link from "next/link";
 
-export default function NewPostPage() {
+function NewPostPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams(); // Hook to read URL query params
@@ -64,9 +64,11 @@ export default function NewPostPage() {
       await api.post("/api/posts", payload);
       setSuccess("Post created successfully! Redirecting...");
       setTimeout(() => router.push("/posts"), 1500);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(
-        err.response?.data?.error || err.message || "Failed to create post"
+        (err && typeof err === "object" && "response" in err && err.response && typeof err.response === "object" && "data" in err.response && err.response.data && typeof err.response.data === "object" && "error" in err.response.data)
+          ? (err.response.data.error as string)
+          : (err instanceof Error ? err.message : "Failed to create post")
       );
     } finally {
       setIsSubmitting(false);
@@ -191,5 +193,13 @@ export default function NewPostPage() {
         </form>
       </div>
     </main>
+  );
+}
+
+export default function NewPostPageWithSuspense() {
+  return (
+    <Suspense>
+      <NewPostPage />
+    </Suspense>
   );
 }

@@ -484,7 +484,7 @@ export default function Home() {
               <div className="flex flex-col items-center md:items-start gap-3">
                 <h3 className="font-bold text-slate-800 text-sm">Quick Links</h3>
                 <nav className="flex flex-wrap md:flex-col items-center md:items-start justify-center gap-3 text-sm font-medium text-slate-600">
-                  <a href="/" className="hover:text-[#FF4500] transition-colors">Home</a>
+                  <Link href="/" className="hover:text-[#FF4500] transition-colors">Home</Link>
                   <a href="#how-it-works" className="hover:text-[#FF4500] transition-colors">How It Works</a>
                   <a href="#faq" className="hover:text-[#FF4500] transition-colors">FAQ</a>
                 </nav>

@@ -37,8 +37,12 @@ export default function RegisterPage() {
       await api.post("/api/auth/register", form);
       // --- Improvement: Redirect with a query param for a better user experience on the login page ---
       router.push("/login?registered=true");
-    } catch (err: any) {
-      setError(err.response?.data?.error || "An unknown error occurred during registration.");
+    } catch (err: unknown) {
+      setError(
+        (err && typeof err === "object" && "response" in err && err.response && typeof err.response === "object" && "data" in err.response && err.response.data && typeof err.response.data === "object" && "error" in err.response.data)
+          ? (err.response.data.error as string)
+          : (err instanceof Error ? err.message : "An unknown error occurred during registration.")
+      );
     } finally {
       setIsSubmitting(false);
     }

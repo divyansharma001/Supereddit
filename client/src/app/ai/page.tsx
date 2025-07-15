@@ -63,9 +63,10 @@ export default function AIPage() {
       setResult({ title: res.data.title, body: res.data.body });
     } catch (err: unknown) {
       setError(
-        (err as any)?.response?.data?.error ||
-          (err instanceof Error ? err.message : "An unknown error occurred") ||
-          "An unknown error occurred."
+        (err && typeof err === "object" && "response" in err && err.response && typeof err.response === "object" && "data" in err.response && err.response.data && typeof err.response.data === "object" && "error" in err.response.data)
+          ? (err.response.data.error as string)
+          : (err instanceof Error ? err.message : "An unknown error occurred") ||
+            "An unknown error occurred."
       );
     } finally {
       setGenerating(false);

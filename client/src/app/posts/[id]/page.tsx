@@ -82,8 +82,12 @@ export default function PostDetailPage() {
           body: res.data.post.body,
           subreddit: res.data.post.subreddit,
         });
-      } catch (err: any) {
-        setError(err.response?.data?.error || "Failed to load the post.");
+      } catch (err: unknown) {
+        setError(
+          (err && typeof err === "object" && "response" in err && err.response && typeof err.response === "object" && "data" in err.response && err.response.data && typeof err.response.data === "object" && "error" in err.response.data)
+            ? (err.response.data.error as string)
+            : (err instanceof Error ? err.message : "Failed to load the post.")
+        );
       } finally {
         setLoading(false);
       }
@@ -101,8 +105,12 @@ export default function PostDetailPage() {
       setPost(res.data.post);
       setSuccess("Post updated successfully!");
       setIsEditing(false);
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to update the post.");
+    } catch (err: unknown) {
+      setError(
+        (err && typeof err === "object" && "response" in err && err.response && typeof err.response === "object" && "data" in err.response && err.response.data && typeof err.response.data === "object" && "error" in err.response.data)
+          ? (err.response.data.error as string)
+          : (err instanceof Error ? err.message : "Failed to update the post.")
+      );
     } finally {
       setIsSaving(false);
     }
@@ -115,8 +123,12 @@ export default function PostDetailPage() {
     try {
       await api.delete(`/api/posts/${postId}`);
       router.push("/posts?deleted=true");
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to delete the post.");
+    } catch (err: unknown) {
+      setError(
+        (err && typeof err === "object" && "response" in err && err.response && typeof err.response === "object" && "data" in err.response && err.response.data && typeof err.response.data === "object" && "error" in err.response.data)
+          ? (err.response.data.error as string)
+          : (err instanceof Error ? err.message : "Failed to delete the post.")
+      );
       setIsDeleting(false);
     }
   };
@@ -138,8 +150,12 @@ export default function PostDetailPage() {
       });
       setPost(res.data.post);
       setSuccess("Post scheduled successfully!");
-    } catch (err: any)      {
-      setError(err.response?.data?.error || "Failed to schedule the post.");
+    } catch (err: unknown)      {
+      setError(
+        (err && typeof err === "object" && "response" in err && err.response && typeof err.response === "object" && "data" in err.response && err.response.data && typeof err.response.data === "object" && "error" in err.response.data)
+          ? (err.response.data.error as string)
+          : (err instanceof Error ? err.message : "Failed to schedule the post.")
+      );
     } finally {
       setIsScheduling(false);
     }

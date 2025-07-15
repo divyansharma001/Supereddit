@@ -39,8 +39,12 @@ function RedditConnectContent() {
       try {
         const res = await api.get<{ accounts: RedditAccount[] }>("/api/auth/reddit/accounts");
         setAccounts(res.data.accounts);
-      } catch (err) {
-        setError("Failed to fetch connection status. Please refresh.");
+      } catch (err: unknown) {
+        setError(
+          (err && typeof err === "object" && "response" in err && err.response && typeof err.response === "object" && "data" in err.response && err.response.data && typeof err.response.data === "object" && "error" in err.response.data)
+            ? (err.response.data.error as string)
+            : (err instanceof Error ? err.message : "Failed to fetch connection status. Please refresh.")
+        );
       } finally {
         setIsLoading(false);
       }
@@ -66,8 +70,12 @@ function RedditConnectContent() {
           setSuccess(`Success! Connected as ${res.data.redditUsername}. Redirecting...`);
           // --- Improvement: Redirect to dashboard after success ---
           setTimeout(() => router.push("/dashboard"), 2000);
-        } catch (err: any) {
-          setError(err.response?.data?.error || "Failed to connect Reddit account.");
+        } catch (err: unknown) {
+          setError(
+            (err && typeof err === "object" && "response" in err && err.response && typeof err.response === "object" && "data" in err.response && err.response.data && typeof err.response.data === "object" && "error" in err.response.data)
+              ? (err.response.data.error as string)
+              : (err instanceof Error ? err.message : "Failed to connect Reddit account.")
+          );
         } finally {
           setIsConnecting(false);
         }
@@ -84,8 +92,12 @@ function RedditConnectContent() {
     try {
       const res = await api.post<{ authUrl: string }>("/api/auth/reddit/oauth/connect");
       window.location.href = res.data.authUrl; // Redirect user to Reddit
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Could not initiate connection. Please try again.");
+    } catch (err: unknown) {
+      setError(
+        (err && typeof err === "object" && "response" in err && err.response && typeof err.response === "object" && "data" in err.response && err.response.data && typeof err.response.data === "object" && "error" in err.response.data)
+          ? (err.response.data.error as string)
+          : (err instanceof Error ? err.message : "Could not initiate connection. Please try again.")
+      );
       setIsConnecting(false);
     }
   };

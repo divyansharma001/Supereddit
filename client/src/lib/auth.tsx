@@ -27,8 +27,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const token = localStorage.getItem("token");
     if (token) {
       // Try to fetch user info
-      (api.get("/api/auth/me") as Promise<any>)
-        .then((res: any) => setUser(res.data.user))
+      Promise.resolve(api.get<{ user: User }>("/api/auth/me"))
+        .then((res) => setUser(res.data.user))
         .catch(() => setUser(null))
         .finally(() => setLoading(false));
     } else {
@@ -40,7 +40,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     localStorage.setItem("token", token);
     setLoading(true);
     try {
-      const res: any = await api.get("/api/auth/me");
+      const res = await api.get<{ user: User }>("/api/auth/me");
       setUser(res.data.user);
     } catch {
       setUser(null);
