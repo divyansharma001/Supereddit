@@ -14,10 +14,8 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 const THEME_KEY = 'theme-preference';
 
-function getSystemTheme(): Theme {
-  if (typeof window !== 'undefined' && window.matchMedia) {
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  }
+// Always return light as default
+function getDefaultTheme(): Theme {
   return 'light';
 }
 
@@ -37,11 +35,12 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
-  // On mount: load from localStorage or system
+  // On mount: load from localStorage or use light mode
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const saved = localStorage.getItem(THEME_KEY) as Theme | null;
-    setThemeState(saved || getSystemTheme());
+    // Default to light mode if no preference is saved
+    setThemeState(saved || 'light');
   }, []);
 
   // Apply theme class to <html>
