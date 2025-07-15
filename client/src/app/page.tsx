@@ -5,14 +5,16 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen w-full bg-gradient-to-br from-[#fff7f0] via-[#fff] to-[#f0f4ff] p-0 max-w-none mx-0 relative overflow-hidden border-0 shadow-none">
+    <main className="flex flex-col items-center justify-center min-h-screen w-full bg-gradient-to-br from-[#FFF7F0] via-[#FF6B35]/10 to-[#FFF7F0] p-0 max-w-none mx-0 relative overflow-hidden border-0 shadow-none">
       
       {/* Main Hero Content */}
-      <section className="relative flex flex-col w-full justify-center items-center flex-1 min-h-screen pt-32 pb-20 z-10 px-6 bg-white overflow-visible">
+      <section className="relative flex flex-col w-full justify-center items-center flex-1 min-h-screen pt-32 pb-20 z-10 px-6 bg-gradient-to-b from-[#FFF7F0] via-[#FF6B35]/10 to-[#FFF7F0] overflow-visible">
+        {/* Animated floating shape */}
+        <div className="absolute left-1/2 top-24 -translate-x-1/2 w-[420px] h-[120px] bg-gradient-to-r from-[#FF4500]/20 via-[#FF6B35]/20 to-[#FFF7F0]/0 rounded-full blur-3xl opacity-70 animate-pulse-slow pointer-events-none"></div>
         {/* Subtle background elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-br from-[#FF4500]/5 to-transparent rounded-full blur-3xl"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-br from-[#FF6B35]/3 to-transparent rounded-full blur-3xl"></div>
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-br from-[#FF4500]/10 to-transparent rounded-full blur-3xl"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-br from-[#FF6B35]/10 to-transparent rounded-full blur-3xl"></div>
         </div>
         
         <div className="w-full max-w-4xl flex flex-col items-center text-center animate-fade-slide relative z-10">
@@ -30,7 +32,7 @@ export default function Home() {
           </h1>
           
           <p className="mt-4 text-slate-600 text-lg sm:text-xl font-normal max-w-2xl mx-auto leading-relaxed" style={{fontFamily: 'Plus Jakarta Sans'}}>
-            Create engaging content, automate moderation, and grow your community with intelligent analytics. Everything you need to succeed on Reddit, simplified.
+            Effortlessly <span className="italic decoration-[#FF4500] decoration-2 underline-offset-4 font-semibold">grow</span> and engage your Reddit community with smart content, automated moderation, and actionable analytics—all in one place.
           </p>
           
           {/* Social proof */}
@@ -79,7 +81,7 @@ export default function Home() {
       </section>
       {/* Video Section */}
       <section className="w-full flex flex-col items-center -mt-10 mb-20 px-4 relative z-20">
-        <div className="w-full max-w-5xl bg-gradient-to-br from-white via-[#f7f7fa] to-[#f0f4ff] rounded-3xl shadow-2xl border border-slate-200 p-0 flex flex-col items-center relative overflow-hidden">
+        <div className="w-full max-w-5xl bg-gradient-to-br from-[#FFF7F0] via-[#FF6B35]/10 to-[#FFF7F0] rounded-3xl shadow-2xl border border-slate-200 p-0 flex flex-col items-center relative overflow-hidden">
           <div className="absolute inset-0 pointer-events-none z-0" style={{background: 'radial-gradient(circle at 70% 30%, #FF6B35 0%, transparent 70%)'}}></div>
           <div className="relative z-10 p-12 w-full flex flex-col items-center">
             <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-3 text-center" style={{fontFamily: 'Plus Jakarta Sans'}}>See RedditMVP in Action</h2>
@@ -112,7 +114,7 @@ export default function Home() {
         <div className="grid bento-grid gap-5 w-full max-w-6xl grid-cols-1 sm:grid-cols-2 md:grid-cols-6 auto-rows-[250px]">
           {/* Card 1: AI Content Generator */}
           <div className="bento-card bento-shine col-span-1 sm:col-span-2 md:col-span-3 row-span-2 bg-white rounded-3xl overflow-hidden relative border border-slate-100" style={{fontFamily: 'Plus Jakarta Sans'}}>
-            <div className="absolute inset-0 bg-gradient-to-br from-[#f8f9fc] to-white opacity-80"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-[#FFF7F0] to-white opacity-80"></div>
             <div className="h-full flex flex-col justify-between p-6 sm:p-8 text-slate-800 relative">
               <div className="flex flex-col gap-4">
                 <div className="flex items-start justify-between">
@@ -286,28 +288,38 @@ export default function Home() {
         </div>
       </section>
       {/* How It Works Section */}
-      <section className="w-full flex flex-col items-center px-4 sm:px-6 md:px-8 py-20 bg-gradient-to-b from-white via-[#f7f8fa] to-[#f0f4ff] border-t border-slate-100">
-        <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-slate-900 mb-10 animate-fade-slide" style={{fontFamily: 'Plus Jakarta Sans'}}>
+      <section className="relative w-full flex flex-col items-center px-4 sm:px-6 md:px-8 py-20 bg-gradient-to-b from-[#FFF7F0] via-[#FF6B35]/10 to-[#FFF7F0] border-t border-slate-100 overflow-hidden">
+        {/* Layered background shapes */}
+        <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[700px] h-[200px] bg-gradient-to-r from-[#FF4500]/15 via-[#FF6B35]/10 to-[#FFF7F0]/0 rounded-full blur-3xl opacity-60 pointer-events-none"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-br from-[#FF6B35]/15 to-transparent rounded-full blur-2xl opacity-40 pointer-events-none"></div>
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-slate-900 mb-12 animate-fade-slide relative z-10" style={{fontFamily: 'Plus Jakarta Sans'}}>
           How It Works
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 w-full max-w-5xl">
+        <div className="relative z-10 grid grid-cols-1 md:grid-cols-4 gap-8 w-full max-w-6xl">
+          {/* Step cards: add glassmorphism, shadow, border, hover effect */}
           {/* Step 1 */}
-          <div className="flex flex-col items-center bg-white rounded-2xl border border-slate-100 shadow-sm p-8 bento-shine animate-fade-slide">
-            <div className="mb-4 text-4xl bento-icon">📝</div>
-            <h3 className="font-bold text-lg text-slate-900 mb-2 bento-title">Create or Join a Community</h3>
-            <p className="text-slate-600 text-center text-base">Start your own subreddit or join an existing one to begin building your presence.</p>
+          <div className="flex flex-col items-center bg-white/80 backdrop-blur-md rounded-3xl border border-slate-100 shadow-xl p-8 transition-transform hover:-translate-y-2 hover:shadow-2xl duration-200 animate-fade-slide">
+            <div className="mb-4 text-5xl"><span role='img' aria-label='connect'>🔗</span></div>
+            <h3 className="font-bold text-xl text-slate-900 mb-2" style={{fontFamily: 'Plus Jakarta Sans'}}>Connect Your Reddit</h3>
+            <p className="text-slate-600 text-center text-base">Securely link your Reddit account in seconds to unlock powerful tools.</p>
           </div>
           {/* Step 2 */}
-          <div className="flex flex-col items-center bg-white rounded-2xl border border-slate-100 shadow-sm p-8 bento-shine animate-fade-slide" style={{animationDelay: '0.1s'}}>
-            <div className="mb-4 text-4xl bento-icon">🤖</div>
-            <h3 className="font-bold text-lg text-slate-900 mb-2 bento-title">Leverage AI Tools</h3>
-            <p className="text-slate-600 text-center text-base">Use AI-powered content creation and analytics to engage and grow your community.</p>
+          <div className="flex flex-col items-center bg-white/80 backdrop-blur-md rounded-3xl border border-slate-100 shadow-xl p-8 transition-transform hover:-translate-y-2 hover:shadow-2xl duration-200 animate-fade-slide" style={{animationDelay: '0.1s'}}>
+            <div className="mb-4 text-5xl"><span role='img' aria-label='content'>📝</span></div>
+            <h3 className="font-bold text-xl text-slate-900 mb-2" style={{fontFamily: 'Plus Jakarta Sans'}}>Generate Engaging Content</h3>
+            <p className="text-slate-600 text-center text-base">Use AI to create posts and comments tailored to your community’s interests.</p>
           </div>
           {/* Step 3 */}
-          <div className="flex flex-col items-center bg-white rounded-2xl border border-slate-100 shadow-sm p-8 bento-shine animate-fade-slide" style={{animationDelay: '0.2s'}}>
-            <div className="mb-4 text-4xl bento-icon">🚀</div>
-            <h3 className="font-bold text-lg text-slate-900 mb-2 bento-title">Grow & Succeed</h3>
-            <p className="text-slate-600 text-center text-base">Track your progress, optimize your strategy, and watch your community thrive.</p>
+          <div className="flex flex-col items-center bg-white/80 backdrop-blur-md rounded-3xl border border-slate-100 shadow-xl p-8 transition-transform hover:-translate-y-2 hover:shadow-2xl duration-200 animate-fade-slide" style={{animationDelay: '0.2s'}}>
+            <div className="mb-4 text-5xl"><span role='img' aria-label='moderation'>🤖</span></div>
+            <h3 className="font-bold text-xl text-slate-900 mb-2" style={{fontFamily: 'Plus Jakarta Sans'}}>Automate Moderation</h3>
+            <p className="text-slate-600 text-center text-base">Let smart automations handle spam, rules, and repetitive tasks for you.</p>
+          </div>
+          {/* Step 4 */}
+          <div className="flex flex-col items-center bg-white/80 backdrop-blur-md rounded-3xl border border-slate-100 shadow-xl p-8 transition-transform hover:-translate-y-2 hover:shadow-2xl duration-200 animate-fade-slide" style={{animationDelay: '0.3s'}}>
+            <div className="mb-4 text-5xl"><span role='img' aria-label='analytics'>📈</span></div>
+            <h3 className="font-bold text-xl text-slate-900 mb-2" style={{fontFamily: 'Plus Jakarta Sans'}}>Track Growth</h3>
+            <p className="text-slate-600 text-center text-base">Visualize your community’s progress and optimize with actionable analytics.</p>
           </div>
         </div>
       </section>
@@ -318,90 +330,28 @@ export default function Home() {
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 w-full max-w-6xl">
           {/* Feature 1 */}
-          <div className="flex flex-col items-center bg-gradient-to-br from-[#f7f8fa] to-white rounded-2xl border border-slate-100 shadow-sm p-8 bento-shine animate-fade-slide">
+          <div className="flex flex-col items-center bg-gradient-to-br from-[#FFF7F0] to-white rounded-2xl border border-slate-100 shadow-sm p-8 bento-shine animate-fade-slide">
             <div className="mb-4 text-3xl bento-icon">💡</div>
             <h3 className="font-bold text-lg text-slate-900 mb-2 bento-title">Smart Suggestions</h3>
             <p className="text-slate-600 text-center text-base">Get AI-powered post and comment ideas tailored to your community’s interests.</p>
           </div>
           {/* Feature 2 */}
-          <div className="flex flex-col items-center bg-gradient-to-br from-[#f7f8fa] to-white rounded-2xl border border-slate-100 shadow-sm p-8 bento-shine animate-fade-slide" style={{animationDelay: '0.1s'}}>
+          <div className="flex flex-col items-center bg-gradient-to-br from-[#FFF7F0] to-white rounded-2xl border border-slate-100 shadow-sm p-8 bento-shine animate-fade-slide" style={{animationDelay: '0.1s'}}>
             <div className="mb-4 text-3xl bento-icon">📈</div>
             <h3 className="font-bold text-lg text-slate-900 mb-2 bento-title">Analytics Dashboard</h3>
             <p className="text-slate-600 text-center text-base">Track growth, engagement, and trends with beautiful, easy-to-read analytics.</p>
           </div>
           {/* Feature 3 */}
-          <div className="flex flex-col items-center bg-gradient-to-br from-[#f7f8fa] to-white rounded-2xl border border-slate-100 shadow-sm p-8 bento-shine animate-fade-slide" style={{animationDelay: '0.2s'}}>
+          <div className="flex flex-col items-center bg-gradient-to-br from-[#FFF7F0] to-white rounded-2xl border border-slate-100 shadow-sm p-8 bento-shine animate-fade-slide" style={{animationDelay: '0.2s'}}>
             <div className="mb-4 text-3xl bento-icon">🔗</div>
             <h3 className="font-bold text-lg text-slate-900 mb-2 bento-title">Easy Integrations</h3>
             <p className="text-slate-600 text-center text-base">Connect with your favorite tools and platforms for seamless workflows.</p>
           </div>
           {/* Feature 4 */}
-          <div className="flex flex-col items-center bg-gradient-to-br from-[#f7f8fa] to-white rounded-2xl border border-slate-100 shadow-sm p-8 bento-shine animate-fade-slide" style={{animationDelay: '0.3s'}}>
+          <div className="flex flex-col items-center bg-gradient-to-br from-[#FFF7F0] to-white rounded-2xl border border-slate-100 shadow-sm p-8 bento-shine animate-fade-slide" style={{animationDelay: '0.3s'}}>
             <div className="mb-4 text-3xl bento-icon">🔒</div>
             <h3 className="font-bold text-lg text-slate-900 mb-2 bento-title">Privacy First</h3>
             <p className="text-slate-600 text-center text-base">Your data is secure and private, with full control over your community’s information.</p>
-          </div>
-        </div>
-      </section>
-      {/* Testimonials Section */}
-      <section className="w-full flex flex-col items-center px-4 sm:px-6 md:px-8 py-20 bg-gradient-to-b from-white via-[#f7f8fa] to-[#f0f4ff] border-t border-slate-100">
-        <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-slate-900 mb-10 animate-fade-slide" style={{fontFamily: 'Plus Jakarta Sans'}}>
-          What Our Users Say
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 w-full max-w-6xl">
-          {/* Testimonial 1 */}
-          <div className="flex flex-col bg-white rounded-2xl border border-slate-100 shadow-sm p-8 bento-shine animate-fade-slide">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="h-10 w-10 rounded-full bg-slate-200 flex items-center justify-center text-xl font-bold text-slate-500">A</div>
-              <div>
-                <div className="font-semibold text-slate-900">Alex Kim</div>
-                <div className="text-xs text-slate-400">Community Manager</div>
-              </div>
-            </div>
-            <p className="text-slate-700 text-base mb-2">“RedditMVP’s AI tools helped us grow our subreddit by 300% in just a few months. The analytics are clear and actionable!”</p>
-            <div className="flex items-center gap-2 mt-2">
-              <span className="text-yellow-400 text-lg">★</span>
-              <span className="text-yellow-400 text-lg">★</span>
-              <span className="text-yellow-400 text-lg">★</span>
-              <span className="text-yellow-400 text-lg">★</span>
-              <span className="text-yellow-400 text-lg">★</span>
-            </div>
-          </div>
-          {/* Testimonial 2 */}
-          <div className="flex flex-col bg-white rounded-2xl border border-slate-100 shadow-sm p-8 bento-shine animate-fade-slide" style={{animationDelay: '0.1s'}}>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="h-10 w-10 rounded-full bg-slate-200 flex items-center justify-center text-xl font-bold text-slate-500">J</div>
-              <div>
-                <div className="font-semibold text-slate-900">Jamie Lee</div>
-                <div className="text-xs text-slate-400">Content Creator</div>
-              </div>
-            </div>
-            <p className="text-slate-700 text-base mb-2">“The content suggestions are always on point and save me hours every week. Love the clean, easy-to-use interface!”</p>
-            <div className="flex items-center gap-2 mt-2">
-              <span className="text-yellow-400 text-lg">★</span>
-              <span className="text-yellow-400 text-lg">★</span>
-              <span className="text-yellow-400 text-lg">★</span>
-              <span className="text-yellow-400 text-lg">★</span>
-              <span className="text-yellow-400 text-lg">★</span>
-            </div>
-          </div>
-          {/* Testimonial 3 */}
-          <div className="flex flex-col bg-white rounded-2xl border border-slate-100 shadow-sm p-8 bento-shine animate-fade-slide" style={{animationDelay: '0.2s'}}>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="h-10 w-10 rounded-full bg-slate-200 flex items-center justify-center text-xl font-bold text-slate-500">S</div>
-              <div>
-                <div className="font-semibold text-slate-900">Samira Patel</div>
-                <div className="text-xs text-slate-400">Moderator</div>
-              </div>
-            </div>
-            <p className="text-slate-700 text-base mb-2">“Integrations with our workflow tools are seamless. The support team is responsive and helpful!”</p>
-            <div className="flex items-center gap-2 mt-2">
-              <span className="text-yellow-400 text-lg">★</span>
-              <span className="text-yellow-400 text-lg">★</span>
-              <span className="text-yellow-400 text-lg">★</span>
-              <span className="text-yellow-400 text-lg">★</span>
-              <span className="text-yellow-400 text-lg">★</span>
-            </div>
           </div>
         </div>
       </section>
@@ -416,7 +366,7 @@ export default function Home() {
         <AIPlayground />
       </section>
       {/* FAQ Section */}
-      <section className="w-full flex flex-col items-center px-4 sm:px-6 md:px-8 py-20 bg-gradient-to-b from-white via-[#f7f8fa] to-[#f0f4ff] border-t border-slate-100">
+      <section className="w-full flex flex-col items-center px-4 sm:px-6 md:px-8 py-20 bg-gradient-to-b from-[#FFF7F0] via-[#FF6B35]/10 to-[#FFF7F0] border-t border-slate-100">
         <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-slate-900 mb-10 animate-fade-slide" style={{fontFamily: 'Plus Jakarta Sans'}}>
           Frequently Asked Questions
         </h2>
@@ -482,7 +432,7 @@ function AIPlayground() {
         </button>
       </div>
       {result && (
-        <div className="mt-8 w-full bg-gradient-to-br from-[#f7f8fa] to-white border border-slate-100 rounded-2xl p-6 text-slate-800 shadow-sm animate-fade-slide whitespace-pre-line">
+        <div className="mt-8 w-full bg-gradient-to-br from-[#FFF7F0] to-white border border-slate-100 rounded-2xl p-6 text-slate-800 shadow-sm animate-fade-slide whitespace-pre-line">
           {result}
         </div>
       )}
