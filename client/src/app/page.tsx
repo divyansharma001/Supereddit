@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import React from "react"; // Added missing import for React
 
 export default function Home() {
   return (
@@ -24,17 +25,21 @@ export default function Home() {
         </div>
       </nav>
       {/* Main Hero Content */}
-      <section className="flex flex-col w-full justify-center items-center flex-1 min-h-screen pt-36 pb-16 z-10 px-4 bg-transparent">
-        <div className="flex gap-4 mb-12 flex-wrap justify-center">
+      <section className="relative flex flex-col w-full justify-center items-center flex-1 min-h-screen pt-36 pb-16 z-10 px-4 bg-transparent overflow-visible">
+        {/* Decorative SVG background */}
+        <div className="absolute inset-0 pointer-events-none -z-10">
+          <HeroBlobSVG />
+        </div>
+        <div className="flex gap-4 mb-12 flex-wrap justify-center animate-fade-slide">
           <button className="bg-white/90 border border-slate-200 rounded-full px-6 py-3 text-base font-semibold shadow hover:shadow-lg flex items-center gap-2 transition-all duration-200 hover:scale-105 text-slate-700 hover:text-[#FF4500]">AI-Powered Content Creation <span className="ml-1 text-xl font-bold text-[#FF4500]">▶</span></button>
           <button className="bg-white/90 border border-slate-200 rounded-full px-6 py-3 text-base font-semibold shadow hover:shadow-lg flex items-center gap-2 transition-all duration-200 hover:scale-105 text-slate-700 hover:text-[#FF4500]">Smart Community Management <span className="ml-1 text-xl font-bold text-[#FF4500]">▶</span></button>
         </div>
-        <h1 className="text-[3.2rem] sm:text-[4rem] md:text-[5rem] lg:text-[5.5rem] xl:text-[6rem] font-extrabold leading-[1.05] text-center relative max-w-6xl text-slate-900 drop-shadow-sm" style={{fontFamily: 'Plus Jakarta Sans'}}>
+        <h1 className="text-[2.5rem] sm:text-[4rem] md:text-[5rem] lg:text-[5.5rem] xl:text-[6rem] font-extrabold leading-[1.05] text-center relative max-w-6xl text-slate-900 drop-shadow-sm animate-fade-slide" style={{fontFamily: 'Plus Jakarta Sans'}}>
           Build the <span className="relative bg-clip-text text-transparent bg-gradient-to-r from-[#FF4500] via-[#FF6B35] to-[#FF4500] font-extrabold italic drop-shadow-md" style={{WebkitTextStroke:'1px transparent'}}>next</span> great<br className="hidden sm:block"/> Reddit community.
         </h1>
-        <p className="mt-10 text-slate-600 text-2xl sm:text-3xl font-medium text-center max-w-3xl leading-relaxed px-4" style={{fontFamily: 'Plus Jakarta Sans'}}>RedditMVP helps you create engaging content, manage communities, and grow your Reddit presence with AI-powered tools and analytics.</p>
+        <p className="mt-10 text-slate-600 text-2xl sm:text-3xl font-medium text-center max-w-3xl leading-relaxed px-4 animate-fade-slide" style={{fontFamily: 'Plus Jakarta Sans', animationDelay: '0.1s'}}>RedditMVP helps you create engaging content, manage communities, and grow your Reddit presence with AI-powered tools and analytics.</p>
         {/* Signup/search */}
-        <form className="flex flex-col items-center mt-12 w-full max-w-2xl px-4">
+        <form className="flex flex-col items-center mt-12 w-full max-w-2xl px-4 animate-fade-slide" style={{animationDelay: '0.2s'}}>
           <div className="flex items-center w-full bg-white/90 border border-slate-200 rounded-2xl px-8 py-5 shadow-lg hover:shadow-xl transition-shadow duration-300">
             <span className="text-slate-400 text-2xl font-medium ml-2 select-none">redditmvp.com/</span>
             <input
@@ -48,7 +53,11 @@ export default function Home() {
             </button>
           </div>
         </form>
-        <a href="#" className="mt-8 text-lg font-semibold text-[#FF4500] hover:text-[#FF6B35] hover:underline transition-colors duration-200" style={{fontFamily: 'Plus Jakarta Sans'}}>Already have an account? Login</a>
+        <a href="#" className="mt-8 text-lg font-semibold text-[#FF4500] hover:text-[#FF6B35] hover:underline transition-colors duration-200 animate-fade-slide" style={{fontFamily: 'Plus Jakarta Sans', animationDelay: '0.3s'}}>Already have an account? Login</a>
+        {/* Animated Down Arrow */}
+        <div className="mt-16 flex justify-center animate-bounce-slow">
+          <DownArrowSVG />
+        </div>
       </section>
       {/* Video Section */}
       <section className="w-full flex flex-col items-center -mt-10 mb-20 px-4 relative z-20">
@@ -378,6 +387,170 @@ export default function Home() {
           </div>
         </div>
       </section>
+      {/* AI Content Playground Section */}
+      <section className="w-full flex flex-col items-center px-4 sm:px-6 md:px-8 py-20 bg-white border-t border-slate-100">
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-slate-900 mb-8 animate-fade-slide" style={{fontFamily: 'Plus Jakarta Sans'}}>
+          Try the AI Content Playground
+        </h2>
+        <p className="text-slate-600 text-center max-w-2xl mb-10 animate-fade-slide" style={{animationDelay: '0.1s'}}>
+          Enter a topic and see how RedditMVP’s AI can help you generate engaging posts for your community.
+        </p>
+        <AIPlayground />
+      </section>
+      {/* FAQ Section */}
+      <section className="w-full flex flex-col items-center px-4 sm:px-6 md:px-8 py-20 bg-gradient-to-b from-white via-[#f7f8fa] to-[#f0f4ff] border-t border-slate-100">
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-slate-900 mb-10 animate-fade-slide" style={{fontFamily: 'Plus Jakarta Sans'}}>
+          Frequently Asked Questions
+        </h2>
+        <FAQAccordion />
+      </section>
+      {/* Final Call to Action & Footer */}
+      <section className="w-full flex flex-col items-center px-4 sm:px-6 md:px-8 py-16 bg-white border-t border-slate-100">
+        <div className="flex flex-col items-center max-w-2xl w-full">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-center text-slate-900 mb-4 animate-fade-slide" style={{fontFamily: 'Plus Jakarta Sans'}}>
+            Ready to build your next great Reddit community?
+          </h2>
+          <p className="text-slate-600 text-center mb-8 animate-fade-slide" style={{animationDelay: '0.1s'}}>
+            Sign up now and unlock the power of AI-driven community management.
+          </p>
+          <a href="#" className="bento-btn bg-slate-900 text-white font-bold px-8 py-4 rounded-2xl shadow hover:bg-slate-800 transition-all text-lg animate-fade-slide" style={{animationDelay: '0.2s'}}>Get Started Free</a>
+        </div>
+        <footer className="w-full mt-16 pt-8 border-t border-slate-100 text-center text-slate-400 text-sm animate-fade-slide" style={{animationDelay: '0.3s'}}>
+          &copy; {new Date().getFullYear()} RedditMVP. All rights reserved.
+        </footer>
+      </section>
     </main>
+  );
+}
+
+function AIPlayground() {
+  const [topic, setTopic] = React.useState("");
+  const [result, setResult] = React.useState("");
+  const [loading, setLoading] = React.useState(false);
+
+  function handleGenerate(e: React.FormEvent) {
+    e.preventDefault();
+    if (!topic.trim()) return;
+    setLoading(true);
+    setResult("");
+    setTimeout(() => {
+      setResult(
+        `Here’s a sample post for "${topic}":\n\nHey everyone! Let’s talk about ${topic}. What are your thoughts, tips, or experiences? Share below!`
+      );
+      setLoading(false);
+    }, 900);
+  }
+
+  return (
+    <form
+      onSubmit={handleGenerate}
+      className="flex flex-col items-center w-full max-w-xl mx-auto"
+    >
+      <div className="flex w-full bg-white border border-slate-200 rounded-2xl px-6 py-4 shadow-sm">
+        <input
+          type="text"
+          className="flex-1 bg-transparent outline-none text-slate-900 font-medium text-lg px-2 placeholder:text-slate-400"
+          placeholder="Enter a topic (e.g. productivity, memes, travel)"
+          value={topic}
+          onChange={e => setTopic(e.target.value)}
+          style={{fontFamily: 'Plus Jakarta Sans'}}
+        />
+        <button
+          type="submit"
+          className="ml-4 px-6 py-2 rounded-xl font-bold bg-slate-800 text-white hover:bg-slate-900 transition-all bento-btn"
+          disabled={loading || !topic.trim()}
+        >
+          {loading ? "Generating..." : "Generate"}
+        </button>
+      </div>
+      {result && (
+        <div className="mt-8 w-full bg-gradient-to-br from-[#f7f8fa] to-white border border-slate-100 rounded-2xl p-6 text-slate-800 shadow-sm animate-fade-slide whitespace-pre-line">
+          {result}
+        </div>
+      )}
+    </form>
+  );
+}
+
+function FAQAccordion() {
+  const [open, setOpen] = React.useState<number | null>(null);
+  const faqs = [
+    {
+      q: "What is RedditMVP?",
+      a: "RedditMVP is an AI-powered platform to help you create, manage, and grow Reddit communities with smart tools and analytics."
+    },
+    {
+      q: "Is my data private and secure?",
+      a: "Absolutely. Your data is encrypted and you have full control over your community’s information."
+    },
+    {
+      q: "Can I try RedditMVP for free?",
+      a: "Yes! You can get started for free and explore all the core features. Premium features are available with a free trial."
+    },
+    {
+      q: "Do I need to know coding to use RedditMVP?",
+      a: "No coding required. Everything is designed to be user-friendly and accessible to everyone."
+    },
+    {
+      q: "How do I get support?",
+      a: "Our support team is available via chat and email to help you with any questions or issues."
+    }
+  ];
+  return (
+    <div className="w-full max-w-2xl mx-auto flex flex-col gap-4">
+      {faqs.map((faq, i) => (
+        <div key={i} className="bg-white border border-slate-200 rounded-xl shadow-sm">
+          <button
+            className="w-full flex justify-between items-center px-6 py-5 text-left font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-300 rounded-xl transition-all"
+            onClick={() => setOpen(open === i ? null : i)}
+            aria-expanded={open === i}
+            aria-controls={`faq-panel-${i}`}
+          >
+            <span>{faq.q}</span>
+            <svg
+              className={`w-5 h-5 ml-4 transition-transform duration-200 ${open === i ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          <div
+            id={`faq-panel-${i}`}
+            className={`overflow-hidden transition-all duration-300 px-6 ${open === i ? 'max-h-40 py-2' : 'max-h-0 py-0'}`}
+            aria-hidden={open !== i}
+          >
+            <p className="text-slate-700 text-base">{faq.a}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function HeroBlobSVG() {
+  return (
+    <svg viewBox="0 0 1440 600" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+      <defs>
+        <linearGradient id="hero-gradient" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#FF6B35" stopOpacity="0.08" />
+          <stop offset="100%" stopColor="#23272f" stopOpacity="0.04" />
+        </linearGradient>
+      </defs>
+      <ellipse cx="720" cy="300" rx="700" ry="220" fill="url(#hero-gradient)" />
+      <ellipse cx="400" cy="100" rx="200" ry="80" fill="#FF4500" fillOpacity="0.04" />
+      <ellipse cx="1200" cy="500" rx="180" ry="60" fill="#FF6B35" fillOpacity="0.06" />
+    </svg>
+  );
+}
+
+function DownArrowSVG() {
+  return (
+    <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-slate-400">
+      <circle cx="18" cy="18" r="18" fill="#fff" fillOpacity="0.7" />
+      <path d="M12 16l6 6 6-6" stroke="#FF6B35" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
