@@ -4,6 +4,29 @@ import React from "react"; // Added missing import for React
 import Link from "next/link";
 
 export default function Home() {
+  const [open, setOpen] = React.useState<number | null>(null);
+  const faqs = [
+    {
+      q: "What is RedditMVP?",
+      a: "RedditMVP is an AI-powered platform to help you create, manage, and grow Reddit communities with smart tools and analytics."
+    },
+    {
+      q: "Is my data private and secure?",
+      a: "Absolutely. Your data is encrypted and you have full control over your community’s information."
+    },
+    {
+      q: "Can I try RedditMVP for free?",
+      a: "Yes! You can get started for free and explore all the core features. Premium features are available with a free trial."
+    },
+    {
+      q: "Do I need to know coding to use RedditMVP?",
+      a: "No coding required. Everything is designed to be user-friendly and accessible to everyone."
+    },
+    {
+      q: "How do I get support?",
+      a: "Our support team is available via chat and email to help you with any questions or issues."
+    }
+  ];
   return (
     <main className="flex flex-col items-center justify-center min-h-screen w-full bg-gradient-to-br from-[#FFF7F0] via-[#FF6B35]/10 to-[#FFF7F0] p-0 max-w-none mx-0 relative overflow-hidden border-0 shadow-none">
       
@@ -288,7 +311,7 @@ export default function Home() {
         </div>
       </section>
       {/* How It Works Section */}
-      <section className="relative w-full flex flex-col items-center px-4 sm:px-6 md:px-8 py-20 bg-gradient-to-b from-[#FFF7F0] via-[#FF6B35]/10 to-[#FFF7F0] border-t border-slate-100 overflow-hidden">
+      <section id="how-it-works" className="relative w-full flex flex-col items-center px-4 sm:px-6 md:px-8 py-20 bg-gradient-to-b from-[#FFF7F0] via-[#FF6B35]/10 to-[#FFF7F0] border-t border-slate-100 overflow-hidden">
         {/* Layered background shapes */}
         <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[700px] h-[200px] bg-gradient-to-r from-[#FF4500]/15 via-[#FF6B35]/10 to-[#FFF7F0]/0 rounded-full blur-3xl opacity-60 pointer-events-none"></div>
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-br from-[#FF6B35]/15 to-transparent rounded-full blur-2xl opacity-40 pointer-events-none"></div>
@@ -323,54 +346,47 @@ export default function Home() {
           </div>
         </div>
       </section>
-      {/* Features Overview Section */}
-      <section className="w-full flex flex-col items-center px-4 sm:px-6 md:px-8 py-20 bg-white border-t border-slate-100">
-        <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-slate-900 mb-10 animate-fade-slide" style={{fontFamily: 'Plus Jakarta Sans'}}>
-          Powerful Features
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 w-full max-w-6xl">
-          {/* Feature 1 */}
-          <div className="flex flex-col items-center bg-gradient-to-br from-[#FFF7F0] to-white rounded-2xl border border-slate-100 shadow-sm p-8 bento-shine animate-fade-slide">
-            <div className="mb-4 text-3xl bento-icon">💡</div>
-            <h3 className="font-bold text-lg text-slate-900 mb-2 bento-title">Smart Suggestions</h3>
-            <p className="text-slate-600 text-center text-base">Get AI-powered post and comment ideas tailored to your community’s interests.</p>
-          </div>
-          {/* Feature 2 */}
-          <div className="flex flex-col items-center bg-gradient-to-br from-[#FFF7F0] to-white rounded-2xl border border-slate-100 shadow-sm p-8 bento-shine animate-fade-slide" style={{animationDelay: '0.1s'}}>
-            <div className="mb-4 text-3xl bento-icon">📈</div>
-            <h3 className="font-bold text-lg text-slate-900 mb-2 bento-title">Analytics Dashboard</h3>
-            <p className="text-slate-600 text-center text-base">Track growth, engagement, and trends with beautiful, easy-to-read analytics.</p>
-          </div>
-          {/* Feature 3 */}
-          <div className="flex flex-col items-center bg-gradient-to-br from-[#FFF7F0] to-white rounded-2xl border border-slate-100 shadow-sm p-8 bento-shine animate-fade-slide" style={{animationDelay: '0.2s'}}>
-            <div className="mb-4 text-3xl bento-icon">🔗</div>
-            <h3 className="font-bold text-lg text-slate-900 mb-2 bento-title">Easy Integrations</h3>
-            <p className="text-slate-600 text-center text-base">Connect with your favorite tools and platforms for seamless workflows.</p>
-          </div>
-          {/* Feature 4 */}
-          <div className="flex flex-col items-center bg-gradient-to-br from-[#FFF7F0] to-white rounded-2xl border border-slate-100 shadow-sm p-8 bento-shine animate-fade-slide" style={{animationDelay: '0.3s'}}>
-            <div className="mb-4 text-3xl bento-icon">🔒</div>
-            <h3 className="font-bold text-lg text-slate-900 mb-2 bento-title">Privacy First</h3>
-            <p className="text-slate-600 text-center text-base">Your data is secure and private, with full control over your community’s information.</p>
-          </div>
-        </div>
-      </section>
-      {/* AI Content Playground Section */}
-      <section className="w-full flex flex-col items-center px-4 sm:px-6 md:px-8 py-20 bg-white border-t border-slate-100">
-        <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-slate-900 mb-8 animate-fade-slide" style={{fontFamily: 'Plus Jakarta Sans'}}>
-          Try the AI Content Playground
-        </h2>
-        <p className="text-slate-600 text-center max-w-2xl mb-10 animate-fade-slide" style={{animationDelay: '0.1s'}}>
-          Enter a topic and see how RedditMVP’s AI can help you generate engaging posts for your community.
-        </p>
-        <AIPlayground />
-      </section>
       {/* FAQ Section */}
-      <section className="w-full flex flex-col items-center px-4 sm:px-6 md:px-8 py-20 bg-gradient-to-b from-[#FFF7F0] via-[#FF6B35]/10 to-[#FFF7F0] border-t border-slate-100">
-        <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-slate-900 mb-10 animate-fade-slide" style={{fontFamily: 'Plus Jakarta Sans'}}>
+      <section id="faq" className="relative w-full flex flex-col items-center px-4 sm:px-6 md:px-8 py-20 bg-gradient-to-b from-[#FFF7F0] via-[#FF6B35]/10 to-[#FFF7F0] border-t border-slate-100 overflow-hidden">
+        {/* Decorative background shapes */}
+        <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-[500px] h-[140px] bg-gradient-to-r from-[#FF4500]/15 via-[#FF6B35]/10 to-[#FFF7F0]/0 rounded-full blur-3xl opacity-60 pointer-events-none"></div>
+        <div className="absolute bottom-0 right-0 w-80 h-80 bg-gradient-to-br from-[#FF6B35]/15 to-transparent rounded-full blur-2xl opacity-40 pointer-events-none"></div>
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-slate-900 mb-10 animate-fade-slide relative z-10" style={{fontFamily: 'Plus Jakarta Sans'}}>
           Frequently Asked Questions
         </h2>
-        <FAQAccordion />
+        <div className="w-full max-w-2xl mx-auto flex flex-col gap-6 relative z-10">
+          {faqs.map((faq, i) => (
+            <div key={i} className="bg-white/80 backdrop-blur-md border border-slate-200 rounded-2xl shadow-xl transition-all duration-300 overflow-hidden">
+              <button
+                className="w-full flex justify-between items-center px-6 py-5 text-left font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF6B35] rounded-2xl transition-all group"
+                onClick={() => setOpen(open === i ? null : i)}
+                aria-expanded={open === i}
+                aria-controls={`faq-panel-${i}`}
+              >
+                <span className="flex items-center gap-3">
+                  <svg className={`w-5 h-5 text-[#FF6B35] transition-transform duration-300 ${open === i ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                  {faq.q}
+                </span>
+                <svg
+                  className={`w-5 h-5 ml-4 text-slate-400 transition-transform duration-300 ${open === i ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <div
+                id={`faq-panel-${i}`}
+                className={`transition-all duration-500 px-6 ${open === i ? 'max-h-40 py-4 opacity-100' : 'max-h-0 py-0 opacity-0'}`}
+                aria-hidden={open !== i}
+              >
+                <p className="text-slate-700 text-base leading-relaxed">{faq.a}</p>
+              </div>
+            </div>
+          ))}
+        </div>
       </section>
       {/* Final Call to Action & Footer */}
       <section className="w-full flex flex-col items-center px-4 sm:px-6 md:px-8 py-16 bg-white border-t border-slate-100">
@@ -381,10 +397,61 @@ export default function Home() {
           <p className="text-slate-600 text-center mb-8 animate-fade-slide" style={{animationDelay: '0.1s'}}>
             Sign up now and unlock the power of AI-driven community management.
           </p>
-          <a href="#" className="bento-btn bg-slate-900 text-white font-bold px-8 py-4 rounded-2xl shadow hover:bg-slate-800 transition-all text-lg animate-fade-slide" style={{animationDelay: '0.2s'}}>Get Started Free</a>
+          <a href="/register" className="bento-btn bg-slate-900 text-white font-bold px-8 py-4 rounded-2xl shadow hover:bg-slate-800 transition-all text-lg animate-fade-slide" style={{animationDelay: '0.2s'}}>Get Started Free</a>
         </div>
-        <footer className="w-full mt-16 pt-8 border-t border-slate-100 text-center text-slate-400 text-sm animate-fade-slide" style={{animationDelay: '0.3s'}}>
-          &copy; {new Date().getFullYear()} RedditMVP. All rights reserved.
+        {/* Modern Footer */}
+        <footer className="relative w-full mt-16 pt-10 border-t border-slate-200/50 bg-white text-center animate-fade-slide overflow-hidden" style={{animationDelay: '0.3s'}}>
+          {/* Decorative background shapes removed for minimal look */}
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between max-w-5xl mx-auto px-0 gap-4 pb-0">
+            <div className="flex flex-col items-center md:items-start gap-3 mb-4 md:mb-0">
+              <div className="flex items-center gap-2">
+                <span className="bg-gradient-to-tr from-[#FF4500] via-[#FF6B35] to-[#FF4500] h-8 w-8 rounded-xl flex items-center justify-center text-xl font-extrabold shadow-[0_2px_8px_rgba(255,69,0,0.15)] mr-1"></span>
+                <span className="font-extrabold text-lg tracking-tight text-slate-900" style={{fontFamily: 'Plus Jakarta Sans'}}>RedditMVP</span>
+              </div>
+              <p className="text-xs text-slate-500 max-w-xs text-center md:text-left">Elevate your Reddit community with AI-powered tools and analytics</p>
+            </div>
+            <div className="flex flex-col gap-6 md:flex-row md:items-start">
+              <div className="flex flex-col items-center md:items-start gap-3">
+                <h3 className="font-bold text-slate-800 text-sm">Quick Links</h3>
+                <nav className="flex flex-wrap md:flex-col items-center md:items-start justify-center gap-3 text-sm font-medium text-slate-600">
+                  <a href="/" className="hover:text-[#FF4500] transition-colors">Home</a>
+                  <a href="#how-it-works" className="hover:text-[#FF4500] transition-colors">How It Works</a>
+                  <a href="#faq" className="hover:text-[#FF4500] transition-colors">FAQ</a>
+                </nav>
+              </div>
+              <div className="flex flex-col items-center md:items-start gap-3">
+                <h3 className="font-bold text-slate-800 text-sm">Account</h3>
+                <nav className="flex flex-wrap md:flex-col items-center md:items-start justify-center gap-3 text-sm font-medium text-slate-600">
+                  <a href="/login" className="hover:text-[#FF4500] transition-colors">Login</a>
+                  <a href="/register" className="hover:text-[#FF4500] transition-colors">Register</a>
+                  <a href="/ai" className="hover:text-[#FF4500] transition-colors">AI Playground</a>
+                </nav>
+              </div>
+              <div className="flex flex-col items-center md:items-start gap-3">
+                <h3 className="font-bold text-slate-800 text-sm">Connect</h3>
+                <div className="flex items-center gap-4">
+                  <a href="#" className="text-slate-600 hover:text-[#FF4500] transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/>
+                    </svg>
+                  </a>
+                  <a href="#" className="text-slate-600 hover:text-[#FF4500] transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                    </svg>
+                  </a>
+                  <a href="#" className="text-slate-600 hover:text-[#FF4500] transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm-2 16h-2v-6h2v6zm-1-6.891c-.607 0-1.1-.496-1.1-1.109 0-.612.492-1.109 1.1-1.109s1.1.497 1.1 1.109c0 .613-.493 1.109-1.1 1.109zm8 6.891h-1.998v-2.861c0-1.881-2.002-1.722-2.002 0v2.861h-2v-6h2v1.093c.872-1.616 4-1.736 4 1.548v3.359z"/>
+                    </svg>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="relative z-10 border-t border-slate-200/50 py-6">
+            <div className="text-slate-500 text-xs">&copy; {new Date().getFullYear()} RedditMVP. All rights reserved.</div>
+          </div>
         </footer>
       </section>
     </main>
@@ -437,64 +504,6 @@ function AIPlayground() {
         </div>
       )}
     </form>
-  );
-}
-
-function FAQAccordion() {
-  const [open, setOpen] = React.useState<number | null>(null);
-  const faqs = [
-    {
-      q: "What is RedditMVP?",
-      a: "RedditMVP is an AI-powered platform to help you create, manage, and grow Reddit communities with smart tools and analytics."
-    },
-    {
-      q: "Is my data private and secure?",
-      a: "Absolutely. Your data is encrypted and you have full control over your community’s information."
-    },
-    {
-      q: "Can I try RedditMVP for free?",
-      a: "Yes! You can get started for free and explore all the core features. Premium features are available with a free trial."
-    },
-    {
-      q: "Do I need to know coding to use RedditMVP?",
-      a: "No coding required. Everything is designed to be user-friendly and accessible to everyone."
-    },
-    {
-      q: "How do I get support?",
-      a: "Our support team is available via chat and email to help you with any questions or issues."
-    }
-  ];
-  return (
-    <div className="w-full max-w-2xl mx-auto flex flex-col gap-4">
-      {faqs.map((faq, i) => (
-        <div key={i} className="bg-white border border-slate-200 rounded-xl shadow-sm">
-          <button
-            className="w-full flex justify-between items-center px-6 py-5 text-left font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-300 rounded-xl transition-all"
-            onClick={() => setOpen(open === i ? null : i)}
-            aria-expanded={open === i}
-            aria-controls={`faq-panel-${i}`}
-          >
-            <span>{faq.q}</span>
-            <svg
-              className={`w-5 h-5 ml-4 transition-transform duration-200 ${open === i ? 'rotate-180' : ''}`}
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          <div
-            id={`faq-panel-${i}`}
-            className={`overflow-hidden transition-all duration-300 px-6 ${open === i ? 'max-h-40 py-2' : 'max-h-0 py-0'}`}
-            aria-hidden={open !== i}
-          >
-            <p className="text-slate-700 text-base">{faq.a}</p>
-          </div>
-        </div>
-      ))}
-    </div>
   );
 }
 
