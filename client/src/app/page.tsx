@@ -258,6 +258,126 @@ export default function Home() {
           </div>
         </div>
       </section>
+      {/* How It Works Section */}
+      <section className="w-full flex flex-col items-center px-4 sm:px-6 md:px-8 py-20 bg-gradient-to-b from-white via-[#f7f8fa] to-[#f0f4ff] border-t border-slate-100">
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-slate-900 mb-10 animate-fade-slide" style={{fontFamily: 'Plus Jakarta Sans'}}>
+          How It Works
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 w-full max-w-5xl">
+          {/* Step 1 */}
+          <div className="flex flex-col items-center bg-white rounded-2xl border border-slate-100 shadow-sm p-8 bento-shine animate-fade-slide">
+            <div className="mb-4 text-4xl bento-icon">📝</div>
+            <h3 className="font-bold text-lg text-slate-900 mb-2 bento-title">Create or Join a Community</h3>
+            <p className="text-slate-600 text-center text-base">Start your own subreddit or join an existing one to begin building your presence.</p>
+          </div>
+          {/* Step 2 */}
+          <div className="flex flex-col items-center bg-white rounded-2xl border border-slate-100 shadow-sm p-8 bento-shine animate-fade-slide" style={{animationDelay: '0.1s'}}>
+            <div className="mb-4 text-4xl bento-icon">🤖</div>
+            <h3 className="font-bold text-lg text-slate-900 mb-2 bento-title">Leverage AI Tools</h3>
+            <p className="text-slate-600 text-center text-base">Use AI-powered content creation and analytics to engage and grow your community.</p>
+          </div>
+          {/* Step 3 */}
+          <div className="flex flex-col items-center bg-white rounded-2xl border border-slate-100 shadow-sm p-8 bento-shine animate-fade-slide" style={{animationDelay: '0.2s'}}>
+            <div className="mb-4 text-4xl bento-icon">🚀</div>
+            <h3 className="font-bold text-lg text-slate-900 mb-2 bento-title">Grow & Succeed</h3>
+            <p className="text-slate-600 text-center text-base">Track your progress, optimize your strategy, and watch your community thrive.</p>
+          </div>
+        </div>
+      </section>
+      {/* Features Overview Section */}
+      <section className="w-full flex flex-col items-center px-4 sm:px-6 md:px-8 py-20 bg-white border-t border-slate-100">
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-slate-900 mb-10 animate-fade-slide" style={{fontFamily: 'Plus Jakarta Sans'}}>
+          Powerful Features
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 w-full max-w-6xl">
+          {/* Feature 1 */}
+          <div className="flex flex-col items-center bg-gradient-to-br from-[#f7f8fa] to-white rounded-2xl border border-slate-100 shadow-sm p-8 bento-shine animate-fade-slide">
+            <div className="mb-4 text-3xl bento-icon">💡</div>
+            <h3 className="font-bold text-lg text-slate-900 mb-2 bento-title">Smart Suggestions</h3>
+            <p className="text-slate-600 text-center text-base">Get AI-powered post and comment ideas tailored to your community’s interests.</p>
+          </div>
+          {/* Feature 2 */}
+          <div className="flex flex-col items-center bg-gradient-to-br from-[#f7f8fa] to-white rounded-2xl border border-slate-100 shadow-sm p-8 bento-shine animate-fade-slide" style={{animationDelay: '0.1s'}}>
+            <div className="mb-4 text-3xl bento-icon">📈</div>
+            <h3 className="font-bold text-lg text-slate-900 mb-2 bento-title">Analytics Dashboard</h3>
+            <p className="text-slate-600 text-center text-base">Track growth, engagement, and trends with beautiful, easy-to-read analytics.</p>
+          </div>
+          {/* Feature 3 */}
+          <div className="flex flex-col items-center bg-gradient-to-br from-[#f7f8fa] to-white rounded-2xl border border-slate-100 shadow-sm p-8 bento-shine animate-fade-slide" style={{animationDelay: '0.2s'}}>
+            <div className="mb-4 text-3xl bento-icon">🔗</div>
+            <h3 className="font-bold text-lg text-slate-900 mb-2 bento-title">Easy Integrations</h3>
+            <p className="text-slate-600 text-center text-base">Connect with your favorite tools and platforms for seamless workflows.</p>
+          </div>
+          {/* Feature 4 */}
+          <div className="flex flex-col items-center bg-gradient-to-br from-[#f7f8fa] to-white rounded-2xl border border-slate-100 shadow-sm p-8 bento-shine animate-fade-slide" style={{animationDelay: '0.3s'}}>
+            <div className="mb-4 text-3xl bento-icon">🔒</div>
+            <h3 className="font-bold text-lg text-slate-900 mb-2 bento-title">Privacy First</h3>
+            <p className="text-slate-600 text-center text-base">Your data is secure and private, with full control over your community’s information.</p>
+          </div>
+        </div>
+      </section>
+      {/* Testimonials Section */}
+      <section className="w-full flex flex-col items-center px-4 sm:px-6 md:px-8 py-20 bg-gradient-to-b from-white via-[#f7f8fa] to-[#f0f4ff] border-t border-slate-100">
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-slate-900 mb-10 animate-fade-slide" style={{fontFamily: 'Plus Jakarta Sans'}}>
+          What Our Users Say
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 w-full max-w-6xl">
+          {/* Testimonial 1 */}
+          <div className="flex flex-col bg-white rounded-2xl border border-slate-100 shadow-sm p-8 bento-shine animate-fade-slide">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-10 w-10 rounded-full bg-slate-200 flex items-center justify-center text-xl font-bold text-slate-500">A</div>
+              <div>
+                <div className="font-semibold text-slate-900">Alex Kim</div>
+                <div className="text-xs text-slate-400">Community Manager</div>
+              </div>
+            </div>
+            <p className="text-slate-700 text-base mb-2">“RedditMVP’s AI tools helped us grow our subreddit by 300% in just a few months. The analytics are clear and actionable!”</p>
+            <div className="flex items-center gap-2 mt-2">
+              <span className="text-yellow-400 text-lg">★</span>
+              <span className="text-yellow-400 text-lg">★</span>
+              <span className="text-yellow-400 text-lg">★</span>
+              <span className="text-yellow-400 text-lg">★</span>
+              <span className="text-yellow-400 text-lg">★</span>
+            </div>
+          </div>
+          {/* Testimonial 2 */}
+          <div className="flex flex-col bg-white rounded-2xl border border-slate-100 shadow-sm p-8 bento-shine animate-fade-slide" style={{animationDelay: '0.1s'}}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-10 w-10 rounded-full bg-slate-200 flex items-center justify-center text-xl font-bold text-slate-500">J</div>
+              <div>
+                <div className="font-semibold text-slate-900">Jamie Lee</div>
+                <div className="text-xs text-slate-400">Content Creator</div>
+              </div>
+            </div>
+            <p className="text-slate-700 text-base mb-2">“The content suggestions are always on point and save me hours every week. Love the clean, easy-to-use interface!”</p>
+            <div className="flex items-center gap-2 mt-2">
+              <span className="text-yellow-400 text-lg">★</span>
+              <span className="text-yellow-400 text-lg">★</span>
+              <span className="text-yellow-400 text-lg">★</span>
+              <span className="text-yellow-400 text-lg">★</span>
+              <span className="text-yellow-400 text-lg">★</span>
+            </div>
+          </div>
+          {/* Testimonial 3 */}
+          <div className="flex flex-col bg-white rounded-2xl border border-slate-100 shadow-sm p-8 bento-shine animate-fade-slide" style={{animationDelay: '0.2s'}}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-10 w-10 rounded-full bg-slate-200 flex items-center justify-center text-xl font-bold text-slate-500">S</div>
+              <div>
+                <div className="font-semibold text-slate-900">Samira Patel</div>
+                <div className="text-xs text-slate-400">Moderator</div>
+              </div>
+            </div>
+            <p className="text-slate-700 text-base mb-2">“Integrations with our workflow tools are seamless. The support team is responsive and helpful!”</p>
+            <div className="flex items-center gap-2 mt-2">
+              <span className="text-yellow-400 text-lg">★</span>
+              <span className="text-yellow-400 text-lg">★</span>
+              <span className="text-yellow-400 text-lg">★</span>
+              <span className="text-yellow-400 text-lg">★</span>
+              <span className="text-yellow-400 text-lg">★</span>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }
