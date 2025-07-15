@@ -62,6 +62,10 @@ export default function PostDetailPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isScheduling, setIsScheduling] = useState(false);
 
+  // Add state for accounts and selected account
+  const [accounts, setAccounts] = useState<{ id: string; reddit_username: string }[]>([]);
+  const [selectedAccountId, setSelectedAccountId] = useState("");
+
   useEffect(() => {
     if (!authLoading && !user) {
       router.replace("/login");
@@ -71,28 +75,35 @@ export default function PostDetailPage() {
   useEffect(() => {
     if (!user || !postId) return;
 
-    const fetchPost = async () => {
+    const fetchData = async () => {
       setLoading(true);
       setError("");
       try {
-        const res = await api.get<{ post: Post }>(`/api/posts/${postId}`);
-        setPost(res.data.post);
+        const [postRes, accountsRes] = await Promise.all([
+          api.get<{ post: Post }>(`/api/posts/${postId}`),
+          api.get<{ accounts: { id: string; reddit_username: string }[] }>("/api/auth/reddit/accounts"),
+        ]);
+        setPost(postRes.data.post);
         setForm({
-          title: res.data.post.title,
-          body: res.data.post.body,
-          subreddit: res.data.post.subreddit,
+          title: postRes.data.post.title,
+          body: postRes.data.post.body,
+          subreddit: postRes.data.post.subreddit,
         });
+        setAccounts(accountsRes.data.accounts);
+        if (accountsRes.data.accounts.length > 0) {
+          setSelectedAccountId(accountsRes.data.accounts[0].id);
+        }
       } catch (err: unknown) {
         setError(
           (err && typeof err === "object" && "response" in err && err.response && typeof err.response === "object" && "data" in err.response && err.response.data && typeof err.response.data === "object" && "error" in err.response.data)
             ? (err.response.data.error as string)
-            : (err instanceof Error ? err.message : "Failed to load the post.")
+            : (err instanceof Error ? err.message : "Failed to load data.")
         );
       } finally {
         setLoading(false);
       }
     };
-    fetchPost();
+    fetchData();
   }, [user, postId]);
 
   const handleSaveChanges = async (e: React.FormEvent) => {
@@ -137,20 +148,24 @@ export default function PostDetailPage() {
     e.preventDefault();
     const scheduledAt = (e.currentTarget.elements.namedItem("scheduleAt") as HTMLInputElement).value;
     if (!scheduledAt) {
-        setError("Please select a date and time to schedule the post.");
-        return;
+      setError("Please select a date and time to schedule the post.");
+      return;
     }
-
+    if (!selectedAccountId) {
+      setError("Please select a Reddit account to post with.");
+      return;
+    }
     setIsScheduling(true);
     setError("");
     setSuccess("");
     try {
       const res = await api.post<{ post: Post }>(`/api/posts/${postId}/schedule`, {
         scheduled_at: new Date(scheduledAt).toISOString(),
+        redditAccountId: selectedAccountId,
       });
       setPost(res.data.post);
       setSuccess("Post scheduled successfully!");
-    } catch (err: unknown)      {
+    } catch (err: unknown) {
       setError(
         (err && typeof err === "object" && "response" in err && err.response && typeof err.response === "object" && "data" in err.response && err.response.data && typeof err.response.data === "object" && "error" in err.response.data)
           ? (err.response.data.error as string)
@@ -269,11 +284,28 @@ export default function PostDetailPage() {
                     <div className="space-y-3">
                         {!isEditing && <button onClick={() => setIsEditing(true)} className="w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">Edit Post</button>}
                         <form onSubmit={handleSchedule} className="space-y-2">
-                             <input name="scheduleAt" type="datetime-local" className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                             <button type="submit" disabled={isScheduling} className="w-full px-4 py-2 font-semibold text-white bg-purple-600 rounded-lg hover:bg-purple-700 disabled:bg-slate-400 flex items-center justify-center">
-                                {isScheduling && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>}
-                                {isScheduling ? 'Scheduling...' : 'Schedule'}
-                             </button>
+                          <div>
+                            <label htmlFor="redditAccount" className="block text-sm font-medium text-slate-700 mb-1">Post with Account</label>
+                            <select
+                              id="redditAccount"
+                              value={selectedAccountId}
+                              onChange={e => setSelectedAccountId(e.target.value)}
+                              className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              required
+                            >
+                              <option value="" disabled>Select an account</option>
+                              {accounts.map(acc => (
+                                <option key={acc.id} value={acc.id}>
+                                  {acc.reddit_username}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <input name="scheduleAt" type="datetime-local" className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                          <button type="submit" disabled={isScheduling || !selectedAccountId} className="w-full px-4 py-2 font-semibold text-white bg-purple-600 rounded-lg hover:bg-purple-700 disabled:bg-slate-400 flex items-center justify-center">
+                            {isScheduling && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>}
+                            {isScheduling ? 'Scheduling...' : 'Schedule'}
+                          </button>
                         </form>
                         <button onClick={handleDelete} disabled={isDeleting} className="w-full px-4 py-2 font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:bg-slate-400 flex items-center justify-center">
                             {isDeleting && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>}

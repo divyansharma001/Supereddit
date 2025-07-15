@@ -100,13 +100,14 @@ export class SchedulerService {
       }
 
       // Post to Reddit
-      const success = await this.submitToReddit(post, accessToken);
+      const submissionResult = await this.submitToReddit(post, accessToken);
 
-      if (success) {
+      if (submissionResult.success) {
         await this.updatePostStatus(post.id, 'Posted', null, new Date());
         console.log(`Successfully posted to Reddit: ${post.id}`);
       } else {
-        await this.updatePostStatus(post.id, 'Error', 'Failed to submit to Reddit');
+        const errorMessage = submissionResult.error || 'Failed to submit to Reddit';
+        await this.updatePostStatus(post.id, 'Error', errorMessage);
       }
     } catch (error) {
       console.error(`Error processing post ${post.id}:`, error);
@@ -178,39 +179,63 @@ export class SchedulerService {
   /**
    * Submit post to Reddit
    */
-  private static async submitToReddit(post: any, accessToken: string): Promise<boolean> {
+  private static async submitToReddit(post: any, accessToken: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const response = await axios.post('https://oauth.reddit.com/api/submit',
-        {
-          sr: post.subreddit,
-          title: post.title,
-          text: post.body,
-          kind: 'self'
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'User-Agent': 'RedditPostManager/1.0'
-          }
+        const response = await axios.post('https://oauth.reddit.com/api/submit',
+            new URLSearchParams({
+                sr: post.subreddit,
+                title: post.title,
+                text: post.body,
+                kind: 'self',
+                api_type: 'json' // Request a JSON response to be safe
+            }), // No .toString() needed, Axios handles this
+            {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'User-Agent': 'RedditPostManager/1.0'
+                }
+            }
+        );
+
+        // --- IMPROVED, SAFER LOGIC ---
+        // Safely check the response structure.
+        const redditResponse = response.data;
+
+        if (redditResponse && redditResponse.json && redditResponse.json.errors && redditResponse.json.errors.length === 0) {
+            // Success! Update post with the Reddit ID
+            await prisma.post.update({
+                where: { id: post.id },
+                data: {
+                    reddit_post_id: redditResponse.json.data.name
+                }
+            });
+            return { success: true };
+        } else if (redditResponse && redditResponse.json && redditResponse.json.errors) {
+            // There are errors in the successful response.
+            const errorMessage = redditResponse.json.errors.map((e: any) => `[${e[0]}] ${e[1]}`).join(', ');
+            console.error(`Reddit API reported an error for post ${post.id}:`, errorMessage);
+            return { success: false, error: errorMessage };
+        } else {
+            // The response was successful (2xx) but not in the expected format.
+            console.error(`Unexpected response structure from Reddit for post ${post.id}:`, redditResponse);
+            return { success: false, error: 'Received an unexpected response structure from Reddit.' };
         }
-      );
 
-      if (response.data && response.data.data && response.data.data.name) {
-        // Update post with Reddit post ID
-        await prisma.post.update({
-          where: { id: post.id },
-          data: {
-            reddit_post_id: response.data.data.name
-          }
-        });
-        return true;
-      }
-
-      return false;
     } catch (error) {
-      console.error('Failed to submit to Reddit:', error);
-      return false;
+        // --- IMPROVED LOGGING ---
+        console.error(`!!! An exception occurred in submitToReddit for post ${post.id} !!!`);
+        // Log the full error object to see its type and stack trace
+        console.error(error); 
+        
+        if (axios.isAxiosError(error)) {
+            const errorMessage = `Reddit API request failed: ${error.response?.status} - ${JSON.stringify(error.response?.data)}`;
+            return { success: false, error: errorMessage };
+        }
+        
+        // This will now capture the TypeError and give a more useful message
+        const errorMessage = error instanceof Error ? error.message : 'An unknown internal error occurred.';
+        return { success: false, error: `Internal Server Error: ${errorMessage}` };
     }
   }
 
