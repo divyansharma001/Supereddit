@@ -1,12 +1,15 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
+import api from "@/lib/axios";
 import Link from "next/link";
 
 export default function DashboardPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const [accounts, setAccounts] = useState<any[] | null>(null);
+  const [fetchingAccounts, setFetchingAccounts] = useState(true);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -14,7 +17,29 @@ export default function DashboardPage() {
     }
   }, [user, loading, router]);
 
-  if (loading || !user) {
+  useEffect(() => {
+    if (!user) return;
+    setFetchingAccounts(true);
+    const fetchAccounts = async () => {
+      try {
+        const res: any = await api.get("/api/auth/reddit/accounts");
+        setAccounts(res.data.accounts);
+      } catch {
+        setAccounts([]);
+      } finally {
+        setFetchingAccounts(false);
+      }
+    };
+    fetchAccounts();
+  }, [user]);
+
+  useEffect(() => {
+    if (!fetchingAccounts && accounts && accounts.length === 0) {
+      router.replace("/reddit-connect");
+    }
+  }, [fetchingAccounts, accounts, router]);
+
+  if (loading || !user || fetchingAccounts || accounts === null) {
     return (
       <main className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#fff7f0] via-[#fff] to-[#f0f4ff]">
         <div className="text-xl text-slate-600 font-semibold animate-fade-slide">Loading dashboard...</div>

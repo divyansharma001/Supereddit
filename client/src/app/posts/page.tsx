@@ -10,6 +10,8 @@ const statusOptions = ["All", "Draft", "Scheduled", "Posted", "Error"];
 export default function PostsPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const [accounts, setAccounts] = useState<any[] | null>(null);
+  const [fetchingAccounts, setFetchingAccounts] = useState(true);
   const [posts, setPosts] = useState<any[]>([]);
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
@@ -25,6 +27,28 @@ export default function PostsPage() {
 
   useEffect(() => {
     if (!user) return;
+    setFetchingAccounts(true);
+    const fetchAccounts = async () => {
+      try {
+        const res: any = await api.get("/api/auth/reddit/accounts");
+        setAccounts(res.data.accounts);
+      } catch {
+        setAccounts([]);
+      } finally {
+        setFetchingAccounts(false);
+      }
+    };
+    fetchAccounts();
+  }, [user]);
+
+  useEffect(() => {
+    if (!fetchingAccounts && accounts && accounts.length === 0) {
+      router.replace("/reddit-connect");
+    }
+  }, [fetchingAccounts, accounts, router]);
+
+  useEffect(() => {
+    if (!user || !accounts || accounts.length === 0) return;
     setFetching(true);
     const fetchPosts = async () => {
       try {
@@ -44,9 +68,9 @@ export default function PostsPage() {
       }
     };
     fetchPosts();
-  }, [user, page, limit, status]);
+  }, [user, accounts, page, limit, status]);
 
-  if (loading || !user) {
+  if (loading || !user || fetchingAccounts || accounts === null) {
     return (
       <main className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#fff7f0] via-[#fff] to-[#f0f4ff]">
         <div className="text-xl text-slate-600 font-semibold animate-fade-slide">Loading posts...</div>
