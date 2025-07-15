@@ -31,6 +31,8 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+    --reddit-orange: 16 100% 50%;
+    --reddit-orange-light: 22 100% 60%;
   }
 
   .dark {
@@ -68,5 +70,112 @@
   html, body {
     font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .animate-fade-slide {
+    animation: fadeSlideIn 1.2s cubic-bezier(0.4,0,0.2,1) both;
+  }
+  @keyframes fadeSlideIn {
+    0% {
+      opacity: 0;
+      transform: translateY(40px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Bento grid animations */
+  .bento-card {
+    transform: translateY(0);
+    transition: all 0.4s cubic-bezier(0.17, 0.67, 0.3, 0.96);
+    opacity: 0;
+    filter: saturate(0.95);
+  }
+
+  .bento-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 30px rgba(0, 0, 0, 0.08);
+    filter: saturate(1.05);
+  }
+
+  /* Animation delay for staggered entrance */
+  .bento-card:nth-child(1) { animation: bentoFadeIn 0.6s 0.1s forwards ease-out; }
+  .bento-card:nth-child(2) { animation: bentoFadeIn 0.6s 0.2s forwards ease-out; }
+  .bento-card:nth-child(3) { animation: bentoFadeIn 0.6s 0.3s forwards ease-out; }
+  .bento-card:nth-child(4) { animation: bentoFadeIn 0.6s 0.4s forwards ease-out; }
+  .bento-card:nth-child(5) { animation: bentoFadeIn 0.6s 0.5s forwards ease-out; }
+  .bento-card:nth-child(6) { animation: bentoFadeIn 0.6s 0.6s forwards ease-out; }
+
+  @keyframes bentoFadeIn {
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Subtle hover effects for bento card elements */
+  .bento-card .bento-icon {
+    transition: transform 0.3s ease;
+  }
+  
+  .bento-card:hover .bento-icon {
+    transform: translateY(-3px);
+  }
+
+  .bento-card .bento-title {
+    transition: color 0.3s ease;
+  }
+
+  .bento-card .bento-badge {
+    transition: all 0.3s ease;
+  }
+  
+  .bento-card:hover .bento-badge {
+    opacity: 0.95;
+  }
+
+  .bento-card .bento-btn {
+    transition: all 0.25s ease;
+    transform: translateY(0);
+  }
+  
+  .bento-card:hover .bento-btn {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.07);
+  }
+
+  /* Shine effect for bento cards */
+  .bento-shine {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .bento-shine::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+      to bottom right,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.03) 100%
+    );
+    transform: rotate(30deg);
+    transition: transform 0.6s ease-out;
+    pointer-events: none;
+  }
+  
+  .bento-shine:hover::after {
+    transform: rotate(30deg) translate(5%, 5%);
   }
 }

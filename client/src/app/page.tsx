@@ -70,6 +70,194 @@ export default function Home() {
           </div>
         </div>
       </section>
+      {/* Bento Grid Section */}
+      <section className="w-full flex flex-col justify-center items-center px-4 sm:px-6 md:px-8 pb-28">
+        {/* Animated Heading */}
+        <div className="flex flex-col items-center mb-16">
+          <h2 className="text-4xl sm:text-5xl font-extrabold text-center text-slate-900 animate-fade-slide" style={{fontFamily: 'Plus Jakarta Sans'}}>
+            Discover What You Can Do
+          </h2>
+          <p className="mt-5 max-w-2xl text-center text-slate-600 text-xl animate-fade-slide" style={{animationDelay: '0.2s'}}>
+            Powerful tools to help you build, manage and grow your Reddit community
+          </p>
+        </div>
+        
+        <div className="grid bento-grid gap-5 w-full max-w-6xl grid-cols-1 sm:grid-cols-2 md:grid-cols-6 auto-rows-[250px]">
+          {/* Card 1: AI Content Generator */}
+          <div className="bento-card bento-shine col-span-1 sm:col-span-2 md:col-span-3 row-span-2 bg-white rounded-3xl overflow-hidden relative border border-slate-100" style={{fontFamily: 'Plus Jakarta Sans'}}>
+            <div className="absolute inset-0 bg-gradient-to-br from-[#f8f9fc] to-white opacity-80"></div>
+            <div className="h-full flex flex-col justify-between p-6 sm:p-8 text-slate-800 relative">
+              <div className="flex flex-col gap-4">
+                <div className="flex items-start justify-between">
+                  <span className="text-4xl sm:text-5xl bento-icon">🤖</span>
+                  <span className="bg-[#FF4500]/10 text-[#FF4500] rounded-full px-3 py-1 text-xs font-bold tracking-wide bento-badge">NEW</span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-extrabold bento-title mt-2 text-slate-900">AI Content Generator</h3>
+                <p className="text-base sm:text-lg font-medium text-slate-600 max-w-md">Create engaging posts and comments tailored to your community's interests using advanced AI that learns from successful content.</p>
+              </div>
+              <div className="flex items-center gap-3 mt-4">
+                <button className="bento-btn bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-5 py-2.5 rounded-xl">Try it now</button>
+                <button className="bento-btn bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold px-4 py-2.5 rounded-xl flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                  </svg>
+                  See demo
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          {/* Card 2: Analytics Dashboard */}
+          <div className="bento-card bento-shine col-span-1 sm:col-span-2 md:col-span-3 row-span-2 bg-[#23272f] rounded-3xl overflow-hidden relative" style={{fontFamily: 'Plus Jakarta Sans'}}>
+            <div className="h-full flex flex-col justify-between p-6 sm:p-8 text-white relative z-10">
+              <div className="flex flex-col gap-2">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-xl sm:text-2xl font-extrabold bento-title">Analytics Dashboard</h3>
+                  <span className="bento-icon text-2xl sm:text-3xl">📊</span>
+                </div>
+                <p className="text-white/80 mb-4">Track your community's growth and engagement</p>
+                
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 mt-2">
+                  <div className="bg-white/10 rounded-xl p-3 sm:p-4">
+                    <div className="text-white/70 text-xs sm:text-sm mb-1">New Members</div>
+                    <div className="text-base sm:text-xl font-bold flex items-center">
+                      247
+                      <span className="text-green-400 text-xs sm:text-sm ml-2 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 sm:h-4 sm:w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clipRule="evenodd" />
+                        </svg>
+                        23%
+                      </span>
+                    </div>
+                  </div>
+                  <div className="bg-white/10 rounded-xl p-3 sm:p-4">
+                    <div className="text-white/70 text-xs sm:text-sm mb-1">Engagement</div>
+                    <div className="text-base sm:text-xl font-bold flex items-center">
+                      89%
+                      <span className="text-green-400 text-xs sm:text-sm ml-2 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 sm:h-4 sm:w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clipRule="evenodd" />
+                        </svg>
+                        7%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-4 relative h-12 sm:h-16">
+                  <div className="absolute inset-0">
+                    <svg className="w-full h-full" viewBox="0 0 400 100">
+                      <path d="M0,50 C50,30 100,90 150,50 C200,10 250,50 300,40 C350,30 400,60 400,50" fill="none" stroke="#FF4500" strokeWidth="3" />
+                      <path d="M0,50 C50,30 100,90 150,50 C200,10 250,50 300,40 C350,30 400,60 400,50" fill="none" stroke="#ffffff" strokeWidth="1" strokeOpacity="0.3" strokeDasharray="5,5" />
+                      <circle cx="150" cy="50" r="4" fill="#FF4500" />
+                      <circle cx="300" cy="40" r="4" fill="#FF4500" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <button className="bento-btn bg-white text-slate-900 hover:bg-white/90 font-bold px-5 py-2.5 rounded-xl mt-4 w-fit">View analytics</button>
+            </div>
+          </div>
+          
+          {/* Card 3: Community Builder */}
+          <div className="bento-card bento-shine col-span-1 sm:col-span-2 md:col-span-2 row-span-2 bg-white rounded-3xl overflow-hidden relative border border-slate-100" style={{fontFamily: 'Plus Jakarta Sans'}}>
+            <div className="h-full flex flex-col justify-between p-6 sm:p-8 text-slate-800 relative">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-start justify-between">
+                  <span className="text-3xl sm:text-4xl bento-icon">🏆</span>
+                  <span className="text-xs text-slate-500 font-medium px-2 py-0.5 bg-slate-100 rounded-full">Pro</span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-extrabold bento-title mt-2 text-slate-900">Community Builder</h3>
+                <p className="text-sm sm:text-base text-slate-600 font-medium">Tools and templates to grow your community from scratch with proven strategies.</p>
+                
+                <div className="mt-3 sm:mt-4 bg-slate-50 rounded-xl p-3">
+                  <div className="flex justify-between items-center mb-2">
+                    <h4 className="font-bold text-slate-700 text-sm">Growth Plan</h4>
+                    <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">ACTIVE</span>
+                  </div>
+                  <div className="w-full bg-slate-200 rounded-full h-1.5 sm:h-2">
+                    <div className="bg-slate-700 h-1.5 sm:h-2 rounded-full" style={{ width: '65%' }}></div>
+                  </div>
+                  <div className="flex justify-between text-xs mt-2 text-slate-500">
+                    <span>Step 3 of 5</span>
+                    <span>65% Complete</span>
+                  </div>
+                </div>
+              </div>
+              <button className="bento-btn bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-5 py-2.5 rounded-xl mt-4 w-fit">Continue setup</button>
+            </div>
+          </div>
+          
+          {/* Card 4: Content Calendar */}
+          <div className="bento-card bento-shine col-span-1 sm:col-span-1 md:col-span-2 row-span-1 bg-gradient-to-br from-slate-50 to-slate-100 rounded-3xl overflow-hidden relative border border-slate-100" style={{fontFamily: 'Plus Jakarta Sans'}}>
+            <div className="h-full flex justify-between p-5 sm:p-6 text-slate-800 relative">
+              <div className="flex flex-col gap-2 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl sm:text-2xl bento-icon">📅</span>
+                  <h3 className="text-base sm:text-xl font-extrabold bento-title">Content Calendar</h3>
+                </div>
+                <p className="text-slate-600 text-xs sm:text-sm font-medium mt-1">Schedule and automate posts</p>
+              </div>
+              
+              <div className="flex items-end">
+                <button className="bento-btn bg-slate-700 hover:bg-slate-800 text-white font-medium px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm">View</button>
+              </div>
+            </div>
+          </div>
+          
+          {/* Card 5: Integrations */}
+          <div className="bento-card bento-shine col-span-1 sm:col-span-1 md:col-span-2 row-span-1 bg-white rounded-3xl overflow-hidden border border-slate-100 relative" style={{fontFamily: 'Plus Jakarta Sans'}}>
+            <div className="h-full flex items-center p-5 sm:p-6 text-slate-800 relative">
+              <div className="grid grid-cols-3 gap-2 sm:gap-3 w-full">
+                <div className="flex flex-col items-center">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-50 rounded-lg shadow-sm flex items-center justify-center">
+                    <svg className="h-5 w-5 sm:h-6 sm:w-6 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                  <span className="text-xs mt-1 font-medium">Tasks</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-50 rounded-lg shadow-sm flex items-center justify-center">
+                    <svg className="h-5 w-5 sm:h-6 sm:w-6 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                  </div>
+                  <span className="text-xs mt-1 font-medium">Notes</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-50 rounded-lg shadow-sm flex items-center justify-center">
+                    <svg className="h-5 w-5 sm:h-6 sm:w-6 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                  </div>
+                  <span className="text-xs mt-1 font-medium">Time</span>
+                </div>
+              </div>
+              <div className="absolute top-2 right-3">
+                <span className="text-xs text-slate-500 font-semibold">+ More</span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Card 6: Call to Action */}
+          <div className="bento-card bento-shine col-span-1 sm:col-span-2 md:col-span-4 row-span-1 bg-gradient-to-r from-slate-800 to-slate-900 rounded-3xl overflow-hidden relative" style={{fontFamily: 'Plus Jakarta Sans'}}>
+            <div className="absolute right-0 bottom-0 w-24 h-24 sm:w-28 sm:h-28 opacity-10">
+              <svg viewBox="0 0 24 24" fill="white">
+                <path d="M13 2.05v3.03c3.39.49 6 3.39 6 6.92 0 .9-.18 1.75-.5 2.54l2.6 1.53c.56-1.24.9-2.62.9-4.07 0-5.18-3.95-9.45-9-9.95zM12 19c-3.87 0-7-3.13-7-7 0-3.53 2.61-6.43 6-6.92V2.05c-5.06.5-9 4.76-9 9.95 0 5.52 4.47 10 9.99 10 3.31 0 6.24-1.61 8.06-4.09l-2.6-1.53C16.17 17.98 14.21 19 12 19z" />
+              </svg>
+            </div>
+            <div className="h-full flex items-center justify-between p-5 sm:p-8 text-white relative">
+              <div className="flex flex-col gap-1 max-w-xl">
+                <h3 className="text-lg sm:text-2xl font-extrabold bento-title">Get premium features for 30 days</h3>
+                <p className="text-white/80 text-sm sm:text-base font-medium">Unlock all analytics and premium templates.</p>
+              </div>
+              <button className="bento-btn bg-white text-slate-900 font-bold px-4 sm:px-6 py-2 sm:py-3 rounded-xl hover:bg-opacity-90 transition-all shadow">Try Free</button>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }

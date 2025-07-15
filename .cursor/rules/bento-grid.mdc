@@ -1,0 +1,25 @@
+# Bento Grid UI Rule
+
+- Implement a beautiful, modern bento grid section below the hero and video sections on the homepage.
+- Use 'Plus Jakarta Sans' as the primary font for all grid content (see [plus-jakarta-sans-font.mdc](mdc:plus-jakarta-sans-font.mdc)).
+- The grid should feature visually distinct cards/tiles with varying sizes (e.g., 2x2, 1x2, 2x1) for a dynamic layout.
+- Use soft gradients, subtle shadows, and rounded corners for a sleek, professional look.
+- Each bento card should have a clear purpose (feature, benefit, testimonial, etc.), with bold headings, supporting text, and optional icons or images.
+- Ensure the grid is fully responsive and looks great on all screen sizes.
+- Maintain generous whitespace and consistent spacing between cards.
+- Use Tailwind CSS utility classes for layout and styling.
+- Example grid structure:
+
+```jsx
+<section className="bento-grid ...">
+  <div className="bento-card ...">...</div>
+  <div className="bento-card ...">...</div>
+  ...
+</section>
+```
+
+- Reference this rule when creating or updating the bento grid section.
+description:
+globs:
+alwaysApply: false
+---
