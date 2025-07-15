@@ -311,81 +311,151 @@ export default function Home() {
         </div>
       </section>
       {/* How It Works Section */}
-      <section id="how-it-works" className="relative w-full flex flex-col items-center px-4 sm:px-6 md:px-8 py-20 bg-gradient-to-b from-[#FFF7F0] via-[#FF6B35]/10 to-[#FFF7F0] border-t border-slate-100 overflow-hidden">
+      <section id="how-it-works" className="relative w-full flex flex-col items-center px-4 sm:px-6 md:px-8 py-20 bg-gradient-to-b from-white via-[#FFF7F0] to-white border-t border-slate-100 overflow-hidden">
         {/* Layered background shapes */}
-        <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[700px] h-[200px] bg-gradient-to-r from-[#FF4500]/15 via-[#FF6B35]/10 to-[#FFF7F0]/0 rounded-full blur-3xl opacity-60 pointer-events-none"></div>
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-br from-[#FF6B35]/15 to-transparent rounded-full blur-2xl opacity-40 pointer-events-none"></div>
-        <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-slate-900 mb-12 animate-fade-slide relative z-10" style={{fontFamily: 'Plus Jakarta Sans'}}>
-          How It Works
-        </h2>
-        <div className="relative z-10 grid grid-cols-1 md:grid-cols-4 gap-8 w-full max-w-6xl">
-          {/* Step cards: add glassmorphism, shadow, border, hover effect */}
+        <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[700px] h-[200px] bg-gradient-to-r from-[#FF4500]/10 via-[#FF6B35]/5 to-transparent rounded-full blur-3xl opacity-60 pointer-events-none"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-br from-[#FF6B35]/10 to-transparent rounded-full blur-3xl opacity-40 pointer-events-none"></div>
+        <div className="absolute top-1/3 -right-24 w-64 h-64 bg-gradient-to-br from-[#FF4500]/5 to-transparent rounded-full blur-2xl opacity-30 pointer-events-none"></div>
+        
+        <div className="relative z-10 w-full max-w-4xl mx-auto mb-16">
+          <div className="flex flex-col items-center">
+            <span className="px-4 py-1.5 bg-[#FF4500]/5 text-[#FF4500] rounded-full text-sm font-medium mb-6">Simple Process</span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-center text-slate-900 mb-6 animate-fade-slide" style={{fontFamily: 'Plus Jakarta Sans'}}>
+              How It Works
+            </h2>
+            <p className="text-slate-600 text-center text-lg max-w-2xl">
+              Get started in minutes with our streamlined setup process and intuitive tools
+            </p>
+          </div>
+        </div>
+        
+        <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 w-full max-w-6xl">
           {/* Step 1 */}
-          <div className="flex flex-col items-center bg-white/80 backdrop-blur-md rounded-3xl border border-slate-100 shadow-xl p-8 transition-transform hover:-translate-y-2 hover:shadow-2xl duration-200 animate-fade-slide">
-            <div className="mb-4 text-5xl"><span role='img' aria-label='connect'>🔗</span></div>
-            <h3 className="font-bold text-xl text-slate-900 mb-2" style={{fontFamily: 'Plus Jakarta Sans'}}>Connect Your Reddit</h3>
+          <div className="flex flex-col items-center bg-white backdrop-blur-md rounded-3xl border border-slate-200/60 shadow-lg hover:shadow-xl p-8 transition-all duration-300 hover:-translate-y-2 group">
+            <div className="mb-6 w-16 h-16 flex items-center justify-center bg-gradient-to-br from-[#FF4500]/10 to-[#FF6B35]/5 rounded-2xl text-5xl shadow-sm group-hover:shadow-md transition-all duration-300 relative">
+              <span role='img' aria-label='connect' className="relative z-10">🔗</span>
+              <div className="absolute inset-0 bg-gradient-to-br from-[#FF4500]/5 to-[#FF6B35]/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl"></div>
+            </div>
+            <div className="w-8 h-8 flex items-center justify-center bg-[#FF4500]/10 rounded-full text-[#FF4500] font-bold text-lg mb-4">1</div>
+            <h3 className="font-bold text-xl text-slate-900 mb-3 text-center" style={{fontFamily: 'Plus Jakarta Sans'}}>Connect Your Reddit</h3>
+            <div className="w-12 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-4"></div>
             <p className="text-slate-600 text-center text-base">Securely link your Reddit account in seconds to unlock powerful tools.</p>
           </div>
+          
           {/* Step 2 */}
-          <div className="flex flex-col items-center bg-white/80 backdrop-blur-md rounded-3xl border border-slate-100 shadow-xl p-8 transition-transform hover:-translate-y-2 hover:shadow-2xl duration-200 animate-fade-slide" style={{animationDelay: '0.1s'}}>
-            <div className="mb-4 text-5xl"><span role='img' aria-label='content'>📝</span></div>
-            <h3 className="font-bold text-xl text-slate-900 mb-2" style={{fontFamily: 'Plus Jakarta Sans'}}>Generate Engaging Content</h3>
-            <p className="text-slate-600 text-center text-base">Use AI to create posts and comments tailored to your community’s interests.</p>
+          <div className="flex flex-col items-center bg-white backdrop-blur-md rounded-3xl border border-slate-200/60 shadow-lg hover:shadow-xl p-8 transition-all duration-300 hover:-translate-y-2 group">
+            <div className="mb-6 w-16 h-16 flex items-center justify-center bg-gradient-to-br from-[#FF4500]/10 to-[#FF6B35]/5 rounded-2xl text-5xl shadow-sm group-hover:shadow-md transition-all duration-300 relative">
+              <span role='img' aria-label='content' className="relative z-10">📝</span>
+              <div className="absolute inset-0 bg-gradient-to-br from-[#FF4500]/5 to-[#FF6B35]/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl"></div>
+            </div>
+            <div className="w-8 h-8 flex items-center justify-center bg-[#FF4500]/10 rounded-full text-[#FF4500] font-bold text-lg mb-4">2</div>
+            <h3 className="font-bold text-xl text-slate-900 mb-3 text-center" style={{fontFamily: 'Plus Jakarta Sans'}}>Generate Content</h3>
+            <div className="w-12 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-4"></div>
+            <p className="text-slate-600 text-center text-base">Use AI to create posts and comments tailored to your community's interests.</p>
           </div>
+          
           {/* Step 3 */}
-          <div className="flex flex-col items-center bg-white/80 backdrop-blur-md rounded-3xl border border-slate-100 shadow-xl p-8 transition-transform hover:-translate-y-2 hover:shadow-2xl duration-200 animate-fade-slide" style={{animationDelay: '0.2s'}}>
-            <div className="mb-4 text-5xl"><span role='img' aria-label='moderation'>🤖</span></div>
-            <h3 className="font-bold text-xl text-slate-900 mb-2" style={{fontFamily: 'Plus Jakarta Sans'}}>Automate Moderation</h3>
+          <div className="flex flex-col items-center bg-white backdrop-blur-md rounded-3xl border border-slate-200/60 shadow-lg hover:shadow-xl p-8 transition-all duration-300 hover:-translate-y-2 group">
+            <div className="mb-6 w-16 h-16 flex items-center justify-center bg-gradient-to-br from-[#FF4500]/10 to-[#FF6B35]/5 rounded-2xl text-5xl shadow-sm group-hover:shadow-md transition-all duration-300 relative">
+              <span role='img' aria-label='moderation' className="relative z-10">🤖</span>
+              <div className="absolute inset-0 bg-gradient-to-br from-[#FF4500]/5 to-[#FF6B35]/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl"></div>
+            </div>
+            <div className="w-8 h-8 flex items-center justify-center bg-[#FF4500]/10 rounded-full text-[#FF4500] font-bold text-lg mb-4">3</div>
+            <h3 className="font-bold text-xl text-slate-900 mb-3 text-center" style={{fontFamily: 'Plus Jakarta Sans'}}>Automate Moderation</h3>
+            <div className="w-12 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-4"></div>
             <p className="text-slate-600 text-center text-base">Let smart automations handle spam, rules, and repetitive tasks for you.</p>
           </div>
+          
           {/* Step 4 */}
-          <div className="flex flex-col items-center bg-white/80 backdrop-blur-md rounded-3xl border border-slate-100 shadow-xl p-8 transition-transform hover:-translate-y-2 hover:shadow-2xl duration-200 animate-fade-slide" style={{animationDelay: '0.3s'}}>
-            <div className="mb-4 text-5xl"><span role='img' aria-label='analytics'>📈</span></div>
-            <h3 className="font-bold text-xl text-slate-900 mb-2" style={{fontFamily: 'Plus Jakarta Sans'}}>Track Growth</h3>
-            <p className="text-slate-600 text-center text-base">Visualize your community’s progress and optimize with actionable analytics.</p>
+          <div className="flex flex-col items-center bg-white backdrop-blur-md rounded-3xl border border-slate-200/60 shadow-lg hover:shadow-xl p-8 transition-all duration-300 hover:-translate-y-2 group">
+            <div className="mb-6 w-16 h-16 flex items-center justify-center bg-gradient-to-br from-[#FF4500]/10 to-[#FF6B35]/5 rounded-2xl text-5xl shadow-sm group-hover:shadow-md transition-all duration-300 relative">
+              <span role='img' aria-label='analytics' className="relative z-10">📈</span>
+              <div className="absolute inset-0 bg-gradient-to-br from-[#FF4500]/5 to-[#FF6B35]/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl"></div>
+            </div>
+            <div className="w-8 h-8 flex items-center justify-center bg-[#FF4500]/10 rounded-full text-[#FF4500] font-bold text-lg mb-4">4</div>
+            <h3 className="font-bold text-xl text-slate-900 mb-3 text-center" style={{fontFamily: 'Plus Jakarta Sans'}}>Track Growth</h3>
+            <div className="w-12 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-4"></div>
+            <p className="text-slate-600 text-center text-base">Visualize your community's progress and optimize with actionable analytics.</p>
           </div>
+        </div>
+        
+        <div className="mt-12 flex flex-col items-center relative z-10">
+          <Link href="/register" className="flex items-center gap-2 bg-[#FF4500] hover:bg-[#FF6B35] text-white font-semibold rounded-xl px-6 py-3 text-sm shadow-lg hover:shadow-xl transition-all duration-200 text-center transform hover:scale-105">
+            Get Started Now
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+          </Link>
         </div>
       </section>
       {/* FAQ Section */}
-      <section id="faq" className="relative w-full flex flex-col items-center px-4 sm:px-6 md:px-8 py-20 bg-gradient-to-b from-[#FFF7F0] via-[#FF6B35]/10 to-[#FFF7F0] border-t border-slate-100 overflow-hidden">
+      <section id="faq" className="relative w-full flex flex-col items-center px-4 sm:px-6 md:px-8 py-20 bg-gradient-to-b from-white via-[#FFF7F0] to-white border-t border-slate-100 overflow-hidden">
         {/* Decorative background shapes */}
-        <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-[500px] h-[140px] bg-gradient-to-r from-[#FF4500]/15 via-[#FF6B35]/10 to-[#FFF7F0]/0 rounded-full blur-3xl opacity-60 pointer-events-none"></div>
-        <div className="absolute bottom-0 right-0 w-80 h-80 bg-gradient-to-br from-[#FF6B35]/15 to-transparent rounded-full blur-2xl opacity-40 pointer-events-none"></div>
-        <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-slate-900 mb-10 animate-fade-slide relative z-10" style={{fontFamily: 'Plus Jakarta Sans'}}>
-          Frequently Asked Questions
-        </h2>
-        <div className="w-full max-w-2xl mx-auto flex flex-col gap-6 relative z-10">
+        <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-[600px] h-[180px] bg-gradient-to-r from-[#FF4500]/10 via-[#FF6B35]/5 to-transparent rounded-full blur-3xl opacity-60 pointer-events-none"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-br from-[#FF6B35]/10 to-transparent rounded-full blur-3xl opacity-40 pointer-events-none"></div>
+        <div className="absolute top-1/3 -left-24 w-64 h-64 bg-gradient-to-br from-[#FF4500]/5 to-transparent rounded-full blur-2xl opacity-30 pointer-events-none"></div>
+        
+        <div className="relative z-10 w-full max-w-4xl mx-auto mb-16">
+          <div className="flex flex-col items-center">
+            <span className="px-4 py-1.5 bg-[#FF4500]/5 text-[#FF4500] rounded-full text-sm font-medium mb-6">Got Questions?</span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-center text-slate-900 mb-6 animate-fade-slide" style={{fontFamily: 'Plus Jakarta Sans'}}>
+              Frequently Asked Questions
+            </h2>
+            <p className="text-slate-600 text-center text-lg max-w-2xl">
+              Everything you need to know about RedditMVP and how it can help your community grow.
+            </p>
+          </div>
+        </div>
+        
+        <div className="w-full max-w-3xl mx-auto flex flex-col gap-4 relative z-10">
           {faqs.map((faq, i) => (
-            <div key={i} className="bg-white/80 backdrop-blur-md border border-slate-200 rounded-2xl shadow-xl transition-all duration-300 overflow-hidden">
+            <div 
+              key={i} 
+              className={`bg-white backdrop-blur-md border border-slate-200/60 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden ${open === i ? 'ring-2 ring-[#FF4500]/20' : 'hover:border-slate-300'}`}
+            >
               <button
-                className="w-full flex justify-between items-center px-6 py-5 text-left font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF6B35] rounded-2xl transition-all group"
+                className="w-full flex justify-between items-center px-6 py-5 text-left font-semibold text-slate-800 focus:outline-none transition-all group"
                 onClick={() => setOpen(open === i ? null : i)}
                 aria-expanded={open === i}
                 aria-controls={`faq-panel-${i}`}
               >
-                <span className="flex items-center gap-3">
-                  <svg className={`w-5 h-5 text-[#FF6B35] transition-transform duration-300 ${open === i ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                <span className="flex items-center gap-3 text-lg">
+                  <span className={`flex items-center justify-center w-8 h-8 rounded-full transition-colors duration-300 ${open === i ? 'bg-[#FF4500]/10 text-[#FF4500]' : 'bg-slate-100 text-slate-500 group-hover:bg-[#FF4500]/5 group-hover:text-[#FF4500]'}`}>
+                    {open === i ? (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
+                      </svg>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14m-7-7h14" />
+                      </svg>
+                    )}
+                  </span>
                   {faq.q}
                 </span>
-                <svg
-                  className={`w-5 h-5 ml-4 text-slate-400 transition-transform duration-300 ${open === i ? 'rotate-180' : ''}`}
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                </svg>
               </button>
               <div
                 id={`faq-panel-${i}`}
-                className={`transition-all duration-500 px-6 ${open === i ? 'max-h-40 py-4 opacity-100' : 'max-h-0 py-0 opacity-0'}`}
+                className={`transition-all duration-300 ease-in-out overflow-hidden ${open === i ? 'max-h-[200px] opacity-100' : 'max-h-0 opacity-0'}`}
                 aria-hidden={open !== i}
               >
-                <p className="text-slate-700 text-base leading-relaxed">{faq.a}</p>
+                <div className="px-6 pb-6 pt-1">
+                  <div className="w-full h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-4"></div>
+                  <p className="text-slate-600 text-base leading-relaxed">{faq.a}</p>
+                </div>
               </div>
             </div>
           ))}
+        </div>
+        
+        <div className="mt-12 flex flex-col items-center relative z-10">
+          <p className="text-slate-600 mb-6 text-center">Still have questions?</p>
+          <Link href="/register" className="flex items-center gap-2 bg-[#FF4500]/10 hover:bg-[#FF4500]/15 text-[#FF4500] font-semibold rounded-xl px-6 py-3 text-sm transition-all duration-200 text-center">
+            Contact Support
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+          </Link>
         </div>
       </section>
       {/* Final Call to Action & Footer */}

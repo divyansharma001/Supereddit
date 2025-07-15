@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from "@/lib/auth";
 import Link from "next/link";
 import React from "react";
 import Navbar from "./Navbar";
+import { ThemeProvider } from "@/lib/theme";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -64,10 +65,12 @@ export default function RootLayout({
         />
       </head>
       <body suppressHydrationWarning className="antialiased">
-        <AuthProvider>
-          <Navbar />
-          <ClientBody>{children}</ClientBody>
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <Navbar />
+            <ClientBody>{children}</ClientBody>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
