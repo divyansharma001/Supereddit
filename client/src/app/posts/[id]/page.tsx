@@ -4,6 +4,7 @@ import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import api from "@/lib/axios";
 import Link from "next/link";
+import ReactMarkdown from "react-markdown";
 
 // --- Improvement: Type-safe data model based on your API docs ---
 type PostStatus = "Draft" | "Scheduled" | "Posted" | "Error";
@@ -255,8 +256,8 @@ export default function PostDetailPage() {
                     <div className="p-6">
                         <h1 className="text-2xl font-bold text-slate-900">{post.title}</h1>
                         <p className="text-sm text-slate-500 mt-1">in <span className="font-semibold">r/{post.subreddit}</span></p>
-                        <div className="mt-6 prose prose-slate max-w-none whitespace-pre-line">
-                            {post.body}
+                        <div className="mt-6 prose prose-slate max-w-none">
+                            <ReactMarkdown>{post.body}</ReactMarkdown>
                         </div>
                     </div>
                 )}
