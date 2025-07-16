@@ -6,6 +6,22 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import api from "@/lib/axios";
 import Link from "next/link";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+dayjs.extend(relativeTime);
+
+// --- API types ---
+interface Post {
+  id: string;
+  title: string;
+  body: string;
+  subreddit: string;
+  status: "Draft" | "Scheduled" | "Posted" | "Error";
+  scheduled_at?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  // ... other fields as needed
+}
 
 // --- Add RedditAccount interface ---
 interface RedditAccount {
@@ -24,6 +40,7 @@ export default function DashboardPage() {
     draftPosts: 0,
     aiGeneratedContent: 0
   });
+  const [recentPosts, setRecentPosts] = useState<Post[]>([]);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -34,24 +51,34 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!user) return;
     setFetchingAccounts(true);
-    const fetchAccounts = async () => {
+    const fetchDashboardData = async () => {
       try {
-        const res = await api.get<{ accounts: RedditAccount[] }>("/api/auth/reddit/accounts");
-        setAccounts(res.data.accounts);
-        // Mock stats - replace with actual API calls
-        setStats({
-          totalPosts: 24,
-          scheduledPosts: 3,
-          draftPosts: 7,
-          aiGeneratedContent: 12
-        });
+        const [accountsRes, postsRes] = await Promise.all([
+          api.get<{ accounts: RedditAccount[] }>("/api/auth/reddit/accounts"),
+          api.get<{ posts: any[] }>("/api/posts?limit=20")
+        ]);
+        setAccounts(accountsRes.data.accounts);
+        const posts = postsRes.data.posts || [];
+        // Calculate stats
+        const totalPosts = posts.length;
+        const scheduledPosts = posts.filter(p => p.status === "Scheduled").length;
+        const draftPosts = posts.filter(p => p.status === "Draft").length;
+        const aiGeneratedContent = posts.filter(p => p.body && p.body.includes("AI") || p.title && p.title.includes("AI")).length; // Example logic, adjust as needed
+        setStats({ totalPosts, scheduledPosts, draftPosts, aiGeneratedContent });
+        // Recent activity: sort by created/updated date, take latest 3
+        const sorted = posts
+          .slice()
+          .sort((a, b) => new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime());
+        setRecentPosts(sorted.slice(0, 3));
       } catch {
         setAccounts([]);
+        setStats({ totalPosts: 0, scheduledPosts: 0, draftPosts: 0, aiGeneratedContent: 0 });
+        setRecentPosts([]);
       } finally {
         setFetchingAccounts(false);
       }
     };
-    fetchAccounts();
+    fetchDashboardData();
   }, [user]);
 
   useEffect(() => {
@@ -74,7 +101,7 @@ export default function DashboardPage() {
   return (
     <main className="min-h-screen bg-slate-50">
       {/* Header */}
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 md:pt-28">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 md:pt-28">
         {/* Floating/blurred background shapes */}
         <div className="absolute left-1/2 top-8 -translate-x-1/2 w-[340px] h-[80px] bg-gradient-to-r from-[#FF4500]/20 via-[#FF6B35]/20 to-[#FFF7F0]/0 rounded-full blur-3xl opacity-60 pointer-events-none z-0"></div>
         <div className="absolute top-1/4 left-1/4 w-40 h-40 bg-gradient-to-br from-[#FF4500]/10 to-transparent rounded-full blur-2xl opacity-40 pointer-events-none z-0"></div>
@@ -199,27 +226,23 @@ export default function DashboardPage() {
           </div>
           <div className="p-6">
             <div className="space-y-4">
-              <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-slate-900">Post published successfully</p>
-                  <p className="text-xs text-slate-600">r/productivity • 2 hours ago</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-slate-900">AI content generated</p>
-                  <p className="text-xs text-slate-600">3 new draft posts • 4 hours ago</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
-                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-slate-900">Post scheduled</p>
-                  <p className="text-xs text-slate-600">r/technology • 6 hours ago</p>
-                </div>
-              </div>
+              {recentPosts.length === 0 ? (
+                <div className="text-slate-500 text-sm">No recent activity.</div>
+              ) : (
+                recentPosts.map((post, idx) => (
+                  <div key={post.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                    <div className={`w-2 h-2 rounded-full ${post.status === "Posted" ? "bg-green-500" : post.status === "Scheduled" ? "bg-purple-500" : post.status === "Draft" ? "bg-blue-500" : "bg-slate-400"}`}></div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-slate-900">
+                        {post.status === "Posted" ? "Post published successfully" : post.status === "Scheduled" ? "Post scheduled" : post.status === "Draft" ? "Draft saved" : "Post updated"}
+                      </p>
+                      <p className="text-xs text-slate-600">
+                        {post.subreddit ? `r/${post.subreddit}` : ""} • {dayjs(post.updatedAt || post.createdAt).fromNow()}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>

@@ -119,25 +119,35 @@ function PostsPageContent() {
 
   return (
     <main className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Your Posts</h1>
-            <p className="text-slate-600 mt-1">Manage, edit, and schedule all your content.</p>
+      {/* Header - Dashboard style */}
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 md:pt-28">
+        {/* Floating/blurred background shapes */}
+        <div className="absolute left-1/2 top-8 -translate-x-1/2 w-[340px] h-[80px] bg-gradient-to-r from-[#FF4500]/20 via-[#FF6B35]/20 to-[#FFF7F0]/0 rounded-full blur-3xl opacity-60 pointer-events-none z-0"></div>
+        <div className="absolute top-1/4 left-1/4 w-40 h-40 bg-gradient-to-br from-[#FF4500]/10 to-transparent rounded-full blur-2xl opacity-40 pointer-events-none z-0"></div>
+        <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-gradient-to-br from-[#FF6B35]/10 to-transparent rounded-full blur-3xl opacity-30 pointer-events-none z-0"></div>
+        <div className="relative z-10 flex flex-col items-center text-center">
+          {/* Badge */}
+          <div className="mb-4 inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 shadow-sm">
+            <span className="w-2 h-2 bg-blue-500 rounded-full mr-2 animate-pulse"></span>
+            <span className="text-sm font-medium text-slate-700">Your Posts</span>
           </div>
-          <Link href="/posts/new" className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight text-slate-900 mb-3 tracking-tight" style={{fontFamily: 'Plus Jakarta Sans'}}>
+            Manage & Schedule Posts
+          </h1>
+          <p className="text-slate-700 text-lg sm:text-xl font-medium mb-2" style={{fontFamily: 'Plus Jakarta Sans'}}>
+            All your Reddit content in one place
+          </p>
+          <Link href="/posts/new" className="mt-4 px-6 py-3 text-base font-semibold text-white bg-blue-600 rounded-xl shadow-lg hover:bg-blue-700 transition-all">
             + New Post
           </Link>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-6">
         {successMessage && <div className="mb-4 p-4 text-sm text-green-800 bg-green-100 border border-green-200 rounded-lg">{successMessage}</div>}
-        
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200">
+        <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
           {/* Filter Bar */}
-          <div className="p-4 border-b border-slate-200">
+          <div className="p-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-4">
               <label htmlFor="status-filter" className="text-sm font-medium text-slate-700">Filter by status:</label>
               <select
@@ -149,8 +159,12 @@ function PostsPageContent() {
                 {statusOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
               </select>
             </div>
+            <div className="flex-1 flex justify-end">
+              <Link href="/posts/new" className="hidden sm:inline-block px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
+                + New Post
+              </Link>
+            </div>
           </div>
-          
           {/* Table */}
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-200">
@@ -188,10 +202,9 @@ function PostsPageContent() {
               </tbody>
             </table>
           </div>
-
           {/* Pagination */}
           {posts.length > 0 && (
-            <div className="p-4 border-t border-slate-200 flex justify-between items-center text-sm">
+            <div className="p-4 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center text-sm gap-2">
                 <button
                     onClick={() => setPage(p => Math.max(1, p - 1))}
                     disabled={page === 1 || loading}
