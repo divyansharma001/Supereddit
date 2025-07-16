@@ -105,24 +105,32 @@ export default function AIPage() {
   return (
     // --- Improvement: Consistent page structure with dashboard ---
     <main className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <h1 className="text-2xl font-bold text-slate-900">
-            AI Content Generator
+      {/* Header - Dashboard style */}
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 md:pt-28">
+        {/* Floating/blurred background shapes */}
+        <div className="absolute left-1/2 top-8 -translate-x-1/2 w-[340px] h-[80px] bg-gradient-to-r from-[#FF4500]/20 via-[#FF6B35]/20 to-[#FFF7F0]/0 rounded-full blur-3xl opacity-60 pointer-events-none z-0"></div>
+        <div className="absolute top-1/4 left-1/4 w-40 h-40 bg-gradient-to-br from-[#FF4500]/10 to-transparent rounded-full blur-2xl opacity-40 pointer-events-none z-0"></div>
+        <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-gradient-to-br from-[#FF6B35]/10 to-transparent rounded-full blur-3xl opacity-30 pointer-events-none z-0"></div>
+        <div className="relative z-10 flex flex-col items-center text-center">
+          {/* Badge */}
+          <div className="mb-4 inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 shadow-sm">
+            <span className="w-2 h-2 bg-purple-500 rounded-full mr-2 animate-pulse"></span>
+            <span className="text-sm font-medium text-slate-700">AI Content Generator</span>
+          </div>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight text-slate-900 mb-3 tracking-tight" style={{fontFamily: 'Plus Jakarta Sans'}}>
+            Generate Reddit Content with AI
           </h1>
-          <p className="text-slate-600 mt-1">
-            Generate high-quality Reddit post ideas and drafts in seconds.
+          <p className="text-slate-700 text-lg sm:text-xl font-medium mb-2" style={{fontFamily: 'Plus Jakarta Sans'}}>
+            Instantly create high-quality post ideas and drafts
           </p>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-          
           {/* Form Card */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">
+          <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
+            <h2 className="text-xl font-semibold text-slate-900 mb-4">
               1. Enter Your Idea
             </h2>
             <form className="space-y-4" onSubmit={handleGenerate}>
@@ -177,8 +185,8 @@ export default function AIPage() {
           </div>
 
           {/* Result Card */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">
+          <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
+            <h2 className="text-xl font-semibold text-slate-900 mb-4">
               2. Review Your Draft
             </h2>
             {generating ? (
@@ -201,26 +209,27 @@ export default function AIPage() {
                     {result.body}
                   </p>
                 </div>
-                <div className="flex flex-wrap gap-3 pt-4 border-t border-slate-200">
+                <div className="flex flex-col sm:flex-row gap-3 mt-4">
                   <button
-                    className="flex-1 min-w-[120px] bg-slate-100 text-slate-800 font-semibold rounded-lg px-4 py-2 hover:bg-slate-200 transition-colors"
                     onClick={handleCopy}
+                    className="flex-1 px-4 py-2 rounded-lg font-semibold bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-200 transition-colors"
                   >
-                    {copied ? "Copied!" : "Copy Text"}
+                    {copied ? "Copied!" : "Copy to Clipboard"}
                   </button>
                   <button
-                    className="flex-1 min-w-[120px] bg-blue-600 text-white font-semibold rounded-lg px-4 py-2 hover:bg-blue-700 transition-colors"
                     onClick={handleUseInNewPost}
+                    className="flex-1 px-4 py-2 rounded-lg font-semibold bg-blue-600 text-white hover:bg-blue-700 border border-blue-600 transition-colors"
                   >
                     Use in New Post
                   </button>
                 </div>
               </div>
             ) : (
-                <div className="flex flex-col items-center justify-center h-64 text-slate-500 bg-slate-50 rounded-lg">
-                    <span className="text-4xl mb-4">📝</span>
-                    <p className="font-semibold">Your generated content will appear here.</p>
-                </div>
+              <div className="flex flex-col items-center justify-center h-64 text-slate-400">
+                <span className="text-4xl mb-4">📝</span>
+                <p className="font-semibold">No draft generated yet.</p>
+                <p className="text-sm">Enter keywords and select a tone to get started.</p>
+              </div>
             )}
           </div>
         </div>
