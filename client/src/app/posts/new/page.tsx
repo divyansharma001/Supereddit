@@ -90,32 +90,36 @@ function NewPostPage() {
   return (
     // --- Improvement: Consistent page structure ---
     <main className="min-h-screen bg-slate-50">
-      {/* Header with Breadcrumbs */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center gap-2 text-sm">
-            <Link href="/dashboard" className="text-slate-500 hover:text-blue-600">Dashboard</Link>
-            <span className="text-slate-400">/</span>
-            <Link href="/posts" className="text-slate-500 hover:text-blue-600">Posts</Link>
-            <span className="text-slate-400">/</span>
-            <span className="font-semibold text-slate-800">Create New Post</span>
+      {/* Header - Dashboard style */}
+      <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 md:pt-28">
+        {/* Floating/blurred background shapes */}
+        <div className="absolute left-1/2 top-8 -translate-x-1/2 w-[340px] h-[80px] bg-gradient-to-r from-[#FF4500]/20 via-[#FF6B35]/20 to-[#FFF7F0]/0 rounded-full blur-3xl opacity-60 pointer-events-none z-0"></div>
+        <div className="absolute top-1/4 left-1/4 w-40 h-40 bg-gradient-to-br from-[#FF4500]/10 to-transparent rounded-full blur-2xl opacity-40 pointer-events-none z-0"></div>
+        <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-gradient-to-br from-[#FF6B35]/10 to-transparent rounded-full blur-3xl opacity-30 pointer-events-none z-0"></div>
+        <div className="relative z-10 flex flex-col items-center text-center">
+          {/* Badge */}
+          <div className="mb-4 inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 shadow-sm">
+            <span className="w-2 h-2 bg-blue-500 rounded-full mr-2 animate-pulse"></span>
+            <span className="text-sm font-medium text-slate-700">Create New Post</span>
           </div>
+          <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight text-slate-900 mb-3 tracking-tight" style={{fontFamily: 'Plus Jakarta Sans'}}>
+            Compose Your Post
+          </h1>
+          <p className="text-slate-700 text-lg sm:text-xl font-medium mb-2" style={{fontFamily: 'Plus Jakarta Sans'}}>
+            All new posts are saved as drafts. You can schedule them from your posts dashboard.
+          </p>
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-6">
         {/* Alerts for success and error messages */}
         {success && <div className="mb-4 p-4 text-sm text-green-800 bg-green-100 border border-green-200 rounded-lg">{success}</div>}
         {error && <div className="mb-4 p-4 text-sm text-red-800 bg-red-100 border border-red-200 rounded-lg">{error}</div>}
-        
         <form
           onSubmit={handleSubmit}
-          className="bg-white rounded-xl shadow-sm border border-slate-200"
+          className="bg-white rounded-2xl shadow-lg border border-slate-200"
         >
-          <div className="p-6 space-y-6">
-            <h1 className="text-xl font-semibold text-slate-900">
-              Compose Your Post
-            </h1>
+          <div className="p-8 space-y-6">
             <div>
               <label htmlFor="title" className="block text-sm font-medium text-slate-700 mb-1">
                 Title
@@ -160,20 +164,6 @@ function NewPostPage() {
                 value={form.subreddit}
                 onChange={handleChange}
                 required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="scheduledAt" className="block text-sm font-medium text-slate-700 mb-1">
-                Schedule (Optional)
-              </label>
-              <input
-                id="scheduledAt"
-                name="scheduledAt"
-                type="datetime-local"
-                className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={form.scheduledAt}
-                onChange={handleChange}
               />
             </div>
           </div>

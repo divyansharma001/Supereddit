@@ -175,7 +175,7 @@ export default function AIPage() {
                 disabled={generating}
               >
                 {generating && <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>}
-                {generating ? "Generating..." : "✨ Generate Content"}
+                {generating ? "Generating..." : "Generate Content"}
               </button>
               {error && (
                 <div className="text-red-600 text-sm text-center font-medium p-3 bg-red-50 rounded-lg border border-red-200">
