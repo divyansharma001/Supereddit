@@ -68,12 +68,15 @@ export default function KeywordsPage() {
         setLoading(true);
         setError('');
         try {
-            const [keywordsRes, mentionsRes]: [{ data: unknown }, { data: unknown }] = await Promise.all([
-                api.get('/api/keywords'),
-                api.get('/api/mentions?pageSize=20'),
+            const [keywordsRes, mentionsRes]: [
+                { data: Keyword[] },
+                { data: { mentions: Mention[] } }
+            ] = await Promise.all([
+                api.get<Keyword[]>('/api/keywords'),
+                api.get<{ mentions: Mention[] }>('/api/mentions?pageSize=20'),
             ]);
-            setKeywords(keywordsRes.data as Keyword[]);
-            setMentions(((mentionsRes.data as { mentions: Mention[] }).mentions));
+            setKeywords(keywordsRes.data);
+            setMentions(mentionsRes.data.mentions);
         } catch {
             setError('Failed to load initial data. Please refresh the page.');
         } finally {
@@ -107,8 +110,12 @@ export default function KeywordsPage() {
             const newKw = res.data as Keyword;
             setKeywords(prev => [newKw, ...prev].sort((a, b) => a.term.localeCompare(b.term)));
             setNewKeyword('');
-        } catch (err: any) {
-            setError(err.response?.data?.error || 'Failed to add keyword.');
+        } catch (err: unknown) {
+            if (err && typeof err === "object" && "response" in err && err.response && typeof err.response === "object" && "data" in err.response && err.response.data && typeof err.response.data === "object" && "error" in err.response.data) {
+                setError((err.response.data as { error?: string }).error || 'Failed to add keyword.');
+            } else {
+                setError('Failed to add keyword.');
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -120,8 +127,12 @@ export default function KeywordsPage() {
         
         try {
             await api.delete(`/api/keywords/${id}`);
-        } catch (err: any) {
-            setError(err.response?.data?.error || 'Failed to delete keyword.');
+        } catch (err: unknown) {
+            if (err && typeof err === "object" && "response" in err && err.response && typeof err.response === "object" && "data" in err.response && err.response.data && typeof err.response.data === "object" && "error" in err.response.data) {
+                setError((err.response.data as { error?: string }).error || 'Failed to delete keyword.');
+            } else {
+                setError('Failed to delete keyword.');
+            }
             setKeywords(originalKeywords); // Revert on error
         }
     };

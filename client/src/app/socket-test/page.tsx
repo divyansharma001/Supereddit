@@ -47,9 +47,9 @@ export default function SocketTestPage() {
       addLog('Socket disconnected');
     };
 
-    const handleConnectError = (error: any) => {
+    const handleConnectError = (error: unknown) => {
       setConnectionStatus('Connection Error');
-      addLog(`Connection error: ${error.message || error}`);
+      addLog(`Connection error: ${typeof error === 'object' && error && 'message' in error ? (error as { message?: string }).message : String(error)}`);
     };
 
     const handleNewMention = (mention: Mention) => {
@@ -103,8 +103,8 @@ export default function SocketTestPage() {
         const errorData = await response.json();
         addLog(`Failed to trigger test mention: ${response.status} - ${errorData.error || 'Unknown error'}`);
       }
-    } catch (error: any) {
-      addLog(`Error triggering test mention: ${error.toString()}`);
+    } catch (error: unknown) {
+      addLog(`Error triggering test mention: ${String(error)}`);
     }
   };
 

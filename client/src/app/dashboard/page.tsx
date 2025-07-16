@@ -55,7 +55,7 @@ export default function DashboardPage() {
       try {
         const [accountsRes, postsRes] = await Promise.all([
           api.get<{ accounts: RedditAccount[] }>("/api/auth/reddit/accounts"),
-          api.get<{ posts: any[] }>("/api/posts?limit=20")
+          api.get<{ posts: Post[] }>("/api/posts?limit=20")
         ]);
         setAccounts(accountsRes.data.accounts);
         const posts = postsRes.data.posts || [];
@@ -68,7 +68,10 @@ export default function DashboardPage() {
         // Recent activity: sort by created/updated date, take latest 3
         const sorted = posts
           .slice()
-          .sort((a, b) => new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime());
+          .sort((a, b) =>
+            new Date(b.updatedAt || b.createdAt || "").getTime() -
+            new Date(a.updatedAt || a.createdAt || "").getTime()
+          );
         setRecentPosts(sorted.slice(0, 3));
       } catch {
         setAccounts([]);
@@ -237,7 +240,7 @@ export default function DashboardPage() {
                         {post.status === "Posted" ? "Post published successfully" : post.status === "Scheduled" ? "Post scheduled" : post.status === "Draft" ? "Draft saved" : "Post updated"}
                       </p>
                       <p className="text-xs text-slate-600">
-                        {post.subreddit ? `r/${post.subreddit}` : ""} • {dayjs(post.updatedAt || post.createdAt).fromNow()}
+                        {post.subreddit ? `r/${post.subreddit}` : ""} • {dayjs((post.updatedAt as string) || (post.createdAt as string) || '').fromNow()}
                       </p>
                     </div>
                   </div>
