@@ -8,26 +8,30 @@
 - [Health Check](#health-check)
 - [Authentication APIs](#authentication-apis)
 - [Post Management APIs](#post-management-apis)
+- [Monitoring & Analytics APIs](#monitoring--analytics-apis)
 - [AI APIs](#ai-apis)
+- [Testing & Debugging APIs](#testing--debugging-apis)
 - [Data Models](#data-models)
 - [Testing Examples](#testing-examples)
+- [Environment Variables](#environment-variables)
+- [Notes](#notes)
 
 ## 🌐 Overview
 
-This API provides a complete backend for managing Reddit posts with AI-assisted content generation, secure token storage, and automated scheduling.
+This API provides a complete backend for managing Reddit posts with AI-assisted content generation, secure token storage, automated scheduling, and real-time keyword monitoring.
 
 **Features:**
 - User authentication with JWT
 - Multi-tenant client management
-- Reddit OAuth integration
-- AI-powered content generation
+- Reddit OAuth integration with encrypted token storage
+- AI-powered content generation (Google Gemini)
 - Automated post scheduling
-- Secure token encryption
+- Real-time Reddit keyword monitoring with WebSocket alerts
 
 ## 🔗 Base URL
 
 ```
-Development: http://localhost:3000
+Development: http://localhost:3001
 Production: https://your-domain.com
 ```
 
@@ -58,6 +62,7 @@ All endpoints return consistent error responses:
 **Common HTTP Status Codes:**
 - `200` - Success
 - `201` - Created
+- `204` - No Content
 - `400` - Bad Request
 - `401` - Unauthorized
 - `403` - Forbidden
@@ -75,7 +80,7 @@ Check if the server is running.
 
 **No authentication required**
 
-**Response:**
+**Response (200):**
 ```json
 {
   "status": "OK",
@@ -101,11 +106,6 @@ Register a new user and create a client organization.
 }
 ```
 
-**Validation:**
-- Email must be valid format
-- Password minimum 6 characters
-- Client name is required
-
 **Response (201):**
 ```json
 {
@@ -114,10 +114,6 @@ Register a new user and create a client organization.
   "userId": "user_xyz789..."
 }
 ```
-
-**Error Responses:**
-- `400` - Missing required fields
-- `409` - Email already exists
 
 ### POST `/api/auth/login`
 
@@ -145,13 +141,28 @@ Authenticate user and get JWT token.
 }
 ```
 
-**Error Responses:**
-- `400` - Missing email or password
-- `401` - Invalid credentials
+### GET `/api/auth/me`
+
+Get information for the currently authenticated user.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Response (200):**
+```json
+{
+  "user": {
+    "id": "user_xyz789...",
+    "email": "user@example.com",
+    "role": "CLIENT_USER",
+    "clientId": "cl_abc123...",
+    "clientName": "My Company"
+  }
+}
+```
 
 ### POST `/api/auth/reddit/oauth/connect`
 
-Get Reddit OAuth URL for connecting Reddit account.
+Get Reddit OAuth URL for connecting a Reddit account.
 
 **Headers:** `Authorization: Bearer <token>`
 
@@ -162,19 +173,15 @@ Get Reddit OAuth URL for connecting Reddit account.
 }
 ```
 
-**Error Responses:**
-- `401` - Unauthorized
-- `500` - Reddit OAuth not configured
-
 ### GET `/api/auth/reddit/oauth/callback`
 
-Handle Reddit OAuth callback and save tokens.
+Handle Reddit OAuth callback and save tokens. The frontend should capture the `code` and `state` from the URL after Reddit redirects, then call this backend endpoint.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Query Parameters:**
-- `code` - Authorization code from Reddit
-- `state` - State parameter for security
+- `code`: Authorization code from Reddit
+- `state`: State parameter for security
 
 **Response (200):**
 ```json
@@ -184,36 +191,46 @@ Handle Reddit OAuth callback and save tokens.
 }
 ```
 
-**Error Responses:**
-- `400` - Missing authorization code
-- `401` - Unauthorized
-- `500` - Failed to connect Reddit account
+### GET `/api/auth/reddit/accounts`
+
+List all connected Reddit accounts for the client.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Response (200):**
+```json
+{
+  "accounts": [
+    {
+      "id": "acct_abc123...",
+      "reddit_username": "my_reddit_username",
+      "token_expires_at": "2025-01-15T10:00:00.000Z",
+      "createdAt": "2024-01-15T10:00:00.000Z",
+      "updatedAt": "2024-01-15T10:00:00.000Z"
+    }
+  ]
+}
+```
 
 ---
 
 ## 📝 Post Management APIs
 
+All endpoints require authentication.
+
 ### POST `/api/posts`
 
 Create a new post.
-
-**Headers:** 
-- `Authorization: Bearer <token>`
-- `Content-Type: application/json`
 
 **Request Body:**
 ```json
 {
   "title": "My Reddit Post Title",
-  "body": "This is the content of my post. It can be multiple paragraphs long.",
+  "body": "This is the content of my post.",
   "subreddit": "programming",
-  "scheduled_at": "2024-01-15T15:00:00Z"
+  "scheduled_at": "2024-01-15T15:00:00Z" // Optional
 }
 ```
-
-**Validation:**
-- Title, body, and subreddit are required
-- scheduled_at is optional
 
 **Response (201):**
 ```json
@@ -226,8 +243,6 @@ Create a new post.
     "subreddit": "programming",
     "status": "Draft",
     "scheduled_at": "2024-01-15T15:00:00.000Z",
-    "createdAt": "2024-01-15T10:00:00.000Z",
-    "updatedAt": "2024-01-15T10:00:00.000Z",
     "author": {
       "email": "user@example.com"
     }
@@ -237,14 +252,12 @@ Create a new post.
 
 ### GET `/api/posts`
 
-Get all posts for the authenticated user's client.
-
-**Headers:** `Authorization: Bearer <token>`
+Get all posts for the client, with pagination.
 
 **Query Parameters:**
-- `page` (optional) - Page number (default: 1)
-- `limit` (optional) - Items per page (default: 10)
-- `status` (optional) - Filter by status (Draft, Scheduled, Posted, Error)
+- `page` (optional): Page number (default: 1)
+- `limit` (optional): Items per page (default: 10)
+- `status` (optional): Filter by `Draft`, `Scheduled`, `Posted`, `Error`
 
 **Response (200):**
 ```json
@@ -253,21 +266,11 @@ Get all posts for the authenticated user's client.
     {
       "id": "post_abc123...",
       "title": "My Reddit Post",
-      "body": "Post content...",
       "subreddit": "programming",
       "status": "Draft",
       "scheduled_at": null,
-      "posted_at": null,
-      "reddit_post_id": null,
-      "error_message": null,
-      "createdAt": "2024-01-15T10:00:00.000Z",
-      "updatedAt": "2024-01-15T10:00:00.000Z",
-      "author": {
-        "email": "user@example.com"
-      },
-      "redditAccount": {
-        "reddit_username": "my_reddit_username"
-      }
+      "author": { "email": "user@example.com" },
+      "redditAccount": { "reddit_username": "my_reddit_username" }
     }
   ],
   "pagination": {
@@ -279,122 +282,21 @@ Get all posts for the authenticated user's client.
 }
 ```
 
-### GET `/api/posts/:id`
+### GET `/api/posts/:id` / PUT `/api/posts/:id` / DELETE `/api/posts/:id`
 
-Get a specific post by ID.
-
-**Headers:** `Authorization: Bearer <token>`
-
-**Response (200):**
-```json
-{
-  "post": {
-    "id": "post_abc123...",
-    "title": "My Reddit Post",
-    "body": "Post content...",
-    "subreddit": "programming",
-    "status": "Draft",
-    "scheduled_at": null,
-    "posted_at": null,
-    "reddit_post_id": null,
-    "error_message": null,
-    "createdAt": "2024-01-15T10:00:00.000Z",
-    "updatedAt": "2024-01-15T10:00:00.000Z",
-    "author": {
-      "email": "user@example.com"
-    },
-    "redditAccount": {
-      "reddit_username": "my_reddit_username"
-    }
-  }
-}
-```
-
-**Error Responses:**
-- `400` - Post ID is required
-- `404` - Post not found
-
-### PUT `/api/posts/:id`
-
-Update a post.
-
-**Headers:** 
-- `Authorization: Bearer <token>`
-- `Content-Type: application/json`
-
-**Request Body:**
-```json
-{
-  "title": "Updated Title",
-  "body": "Updated content",
-  "subreddit": "technology",
-  "status": "Scheduled"
-}
-```
-
-**Validation:**
-- Cannot update posted posts
-- All fields are optional
-
-**Response (200):**
-```json
-{
-  "message": "Post updated successfully",
-  "post": {
-    "id": "post_abc123...",
-    "title": "Updated Title",
-    "body": "Updated content",
-    "subreddit": "technology",
-    "status": "Scheduled",
-    "updatedAt": "2024-01-15T11:00:00.000Z",
-    "author": {
-      "email": "user@example.com"
-    }
-  }
-}
-```
-
-**Error Responses:**
-- `400` - Post ID is required / Cannot update posted post
-- `404` - Post not found
-
-### DELETE `/api/posts/:id`
-
-Delete a post.
-
-**Headers:** `Authorization: Bearer <token>`
-
-**Response (200):**
-```json
-{
-  "message": "Post deleted successfully"
-}
-```
-
-**Error Responses:**
-- `400` - Post ID is required / Cannot delete posted post
-- `404` - Post not found
+Standard CRUD operations for a specific post. `PUT` cannot be used on a `Posted` post. `DELETE` cannot be used on a `Posted` post.
 
 ### POST `/api/posts/:id/schedule`
 
-Schedule a post for posting.
-
-**Headers:** 
-- `Authorization: Bearer <token>`
-- `Content-Type: application/json`
+Schedule a post for a specific time.
 
 **Request Body:**
 ```json
 {
   "scheduled_at": "2024-01-15T16:00:00Z",
-  "redditAccountId": "account_xyz789..."
+  "redditAccountId": "acct_xyz789..."
 }
 ```
-
-**Validation:**
-- scheduled_at is required
-- redditAccountId is optional
-- Cannot schedule posted posts
 
 **Response (200):**
 ```json
@@ -402,19 +304,85 @@ Schedule a post for posting.
   "message": "Post scheduled successfully",
   "post": {
     "id": "post_abc123...",
-    "title": "My Post",
-    "body": "Post content...",
-    "subreddit": "programming",
     "status": "Scheduled",
-    "scheduled_at": "2024-01-15T16:00:00.000Z",
-    "redditAccountId": "account_xyz789...",
-    "author": {
-      "email": "user@example.com"
-    },
-    "redditAccount": {
-      "reddit_username": "my_reddit_username"
-    }
+    "scheduled_at": "2024-01-15T16:00:00.000Z"
   }
+}
+```
+
+---
+
+## 📈 Monitoring & Analytics APIs
+
+All endpoints require authentication.
+
+### POST `/api/keywords`
+
+Create a new keyword for the client to monitor.
+
+**Request Body:**
+```json
+{ "term": "customer service" }
+```
+
+**Response (201):**
+```json
+{
+  "id": "kw_abc123...",
+  "term": "customer service",
+  "is_active": true,
+  "createdAt": "2024-01-15T10:00:00.000Z",
+  "lastScannedAt": null,
+  "clientId": "cl_abc123..."
+}
+```
+
+### GET `/api/keywords`
+
+List all keywords for the client.
+
+**Response (200):**
+```json
+[
+  {
+    "id": "kw_abc123...",
+    "term": "customer service",
+    "is_active": true
+  }
+]
+```
+
+### DELETE `/api/keywords/:id`
+
+Delete a specific keyword by its ID.
+
+**Response (204):** No content.
+
+### GET `/api/mentions`
+
+Get a paginated list of all mentions found for the client's keywords.
+
+**Query Parameters:**
+- `page` (optional): Page number (default: 1)
+- `pageSize` (optional): Items per page (default: 20)
+
+**Response (200):**
+```json
+{
+  "mentions": [
+    {
+      "id": "mention_abc123...",
+      "source_url": "https://reddit.com/...",
+      "content_snippet": "A snippet of the post or comment...",
+      "author": "reddit_user",
+      "subreddit": "programming",
+      "sentiment": "NEUTRAL",
+      "found_at": "2024-01-15T10:00:00.000Z"
+    }
+  ],
+  "total": 50,
+  "page": 1,
+  "pageSize": 20
 }
 ```
 
@@ -422,42 +390,11 @@ Schedule a post for posting.
 
 ## 🤖 AI APIs
 
-### GET `/api/ai/tones`
-
-Get available AI generation tones.
-
-**Headers:** `Authorization: Bearer <token>`
-
-**Response (200):**
-```json
-{
-  "tones": [
-    {
-      "value": "story",
-      "label": "Personal Story",
-      "description": "Share a personal anecdote or experience"
-    },
-    {
-      "value": "question",
-      "label": "Discussion Question",
-      "description": "Ask an engaging question to the community"
-    },
-    {
-      "value": "experience",
-      "label": "Experience Share",
-      "description": "Share an observation or experience for others to relate to"
-    }
-  ]
-}
-```
+All endpoints require authentication.
 
 ### POST `/api/ai/draft`
 
-Generate AI-powered post content.
-
-**Headers:** 
-- `Authorization: Bearer <token>`
-- `Content-Type: application/json`
+Generate AI-powered post content using Google Gemini.
 
 **Request Body:**
 ```json
@@ -467,63 +404,103 @@ Generate AI-powered post content.
 }
 ```
 
-**Validation:**
-- keywords and tone are required
-- tone must be: "story", "question", or "experience"
-
 **Response (200):**
 ```json
 {
   "title": "How I Learned Programming: A Beginner's Journey",
-  "body": "When I first started learning to code, I was completely overwhelmed...",
+  "body": "When I first started learning to code...",
   "keywords": "programming tips for beginners",
   "tone": "story"
 }
 ```
 
-**Error Responses:**
-- `400` - Missing keywords or tone / Invalid tone
-- `500` - Failed to generate content / OpenAI API error
+### GET `/api/ai/tones`
 
+Get available AI generation tones.
+
+**Response (200):**
+```json
+{
+  "tones": [
+    { "value": "story", "label": "Personal Story", "description": "..." },
+    { "value": "question", "label": "Discussion Question", "description": "..." },
+    { "value": "experience", "label": "Experience Share", "description": "..." }
+  ]
+}
+```
+
+---
+
+## 🧪 Testing & Debugging APIs
+
+### POST `/api/test/trigger-mention`
+
+Manually triggers a `new_mention` WebSocket event for the authenticated client. Requires at least one keyword to exist for the client.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Test mention created and emitted",
+  "mention": { /* The test mention object */ }
+}
+```
+
+### GET `/api/test/socket-status`
+
+Checks the current WebSocket connection status for the client.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Response (200):**
+```json
+{
+  "clientId": "cl_abc123...",
+  "connectedSockets": 1,
+  "totalConnections": 5,
+  "roomExists": true
+}
+```
 ---
 
 ## 📊 Data Models
 
-### Post Status Enum
+### Enums
 ```typescript
-enum PostStatus {
-  Draft = "Draft"
-  Scheduled = "Scheduled"
-  Posted = "Posted"
-  Error = "Error"
-}
+enum PostStatus { Draft, Scheduled, Posted, Error }
+enum Role { ADMIN, CLIENT_USER }
+enum Sentiment { POSITIVE, NEUTRAL, NEGATIVE, UNKNOWN }
 ```
 
-### User Role Enum
-```typescript
-enum Role {
-  ADMIN = "ADMIN"
-  CLIENT_USER = "CLIENT_USER"
-}
-```
-
-### Post Object
+### Core Objects
 ```typescript
 interface Post {
-  id: string
-  title: string
-  body: string
-  subreddit: string
-  status: PostStatus
-  scheduled_at?: Date
-  posted_at?: Date
-  reddit_post_id?: string
-  error_message?: string
-  createdAt: Date
-  updatedAt: Date
-  authorId: string
-  clientId: string
-  redditAccountId?: string
+  id: string;
+  title: string;
+  body: string;
+  subreddit: string;
+  status: PostStatus;
+  scheduled_at?: Date;
+  // ... other fields
+}
+
+interface Keyword {
+  id: string;
+  term: string;
+  is_active: boolean;
+  lastScannedAt?: Date;
+}
+
+interface Mention {
+  id: string;
+  source_url: string;
+  content_snippet: string;
+  author: string;
+  subreddit: string;
+  sentiment: Sentiment;
+  found_at: Date;
 }
 ```
 
@@ -531,11 +508,11 @@ interface Post {
 
 ## 🧪 Testing Examples
 
-### Using cURL
+Use `curl`, Postman, or any other API client.
 
 **1. Register a user:**
 ```bash
-curl -X POST http://localhost:3000/api/auth/register \
+curl -X POST http://localhost:3001/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{
     "email": "test@example.com",
@@ -544,9 +521,9 @@ curl -X POST http://localhost:3000/api/auth/register \
   }'
 ```
 
-**2. Login:**
+**2. Login and get a token:**
 ```bash
-curl -X POST http://localhost:3000/api/auth/login \
+curl -X POST http://localhost:3001/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "email": "test@example.com",
@@ -554,105 +531,48 @@ curl -X POST http://localhost:3000/api/auth/login \
   }'
 ```
 
-**3. Create a post:**
+**3. Add a keyword (using the token):**
 ```bash
-curl -X POST http://localhost:3000/api/posts \
+curl -X POST http://localhost:3001/api/keywords \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -d '{
-    "title": "My First Post",
-    "body": "This is my first Reddit post!",
-    "subreddit": "programming"
-  }'
+  -d '{"term": "new feature"}'
 ```
-
-**4. Generate AI content:**
-```bash
-curl -X POST http://localhost:3000/api/ai/draft \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -d '{
-    "keywords": "programming tips",
-    "tone": "story"
-  }'
-```
-
-### Using Postman
-
-1. **Create a new collection**
-2. **Set up environment variables:**
-   - `base_url`: `http://localhost:3000`
-   - `token`: (will be set after login)
-3. **Use `{{base_url}}` and `{{token}}` in requests**
-
-### Using JavaScript/Fetch
-
-```javascript
-// Login
-const loginResponse = await fetch('http://localhost:3000/api/auth/login', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    email: 'test@example.com',
-    password: 'password123'
-  })
-});
-
-const { token } = await loginResponse.json();
-
-// Create post
-const postResponse = await fetch('http://localhost:3000/api/posts', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`
-  },
-  body: JSON.stringify({
-    title: 'My Post',
-    body: 'Post content',
-    subreddit: 'programming'
-  })
-});
-```
-
 ---
 
 ## 🔧 Environment Variables
 
-Required environment variables for the API to function:
+Required `.env` variables for the server to function:
 
 ```bash
 # Server
-PORT=3000
+PORT=3001
 NODE_ENV=development
 FRONTEND_URL=http://localhost:5173
 
 # Database
-DATABASE_URL="postgresql://username:password@localhost:5432/database"
+DATABASE_URL="postgresql://user:pass@host:port/db?schema=public"
 
 # Security
 JWT_SECRET=your_jwt_secret_here
-ENCRYPTION_KEY=your_32_byte_encryption_key
-ENCRYPTION_IV=your_16_byte_encryption_iv
+ENCRYPTION_KEY=your_32_byte_encryption_key_hex
+ENCRYPTION_IV=your_16_byte_encryption_iv_hex
 
 # Reddit OAuth
 REDDIT_CLIENT_ID=your_reddit_client_id
 REDDIT_CLIENT_SECRET=your_reddit_client_secret
-REDDIT_REDIRECT_URI=http://localhost:3000/api/auth/reddit/oauth/callback
+REDDIT_REDIRECT_URI=http://localhost:3001/api/auth/reddit/oauth/callback
 
-# OpenAI
-OPENAI_API_KEY=your_openai_api_key
+# Google Gemini
+GEMINI_API_KEY=your_google_gemini_api_key
 ```
 
 ---
 
 ## 📝 Notes
-
-- All timestamps are in ISO 8601 format
-- IDs are CUID format for security
-- Passwords are hashed with bcryptjs
-- Reddit tokens are encrypted with AES-256-CBC
-- The scheduler runs every minute to process scheduled posts
-- Multi-tenant architecture ensures data isolation between clients 
+- All timestamps are in ISO 8601 format.
+- IDs are CUIDs for security and uniqueness.
+- Passwords are hashed with bcryptjs.
+- Reddit tokens are encrypted with AES-256-CBC.
+- A scheduler runs to process scheduled posts and monitor keywords.
+- Real-time monitoring alerts are sent via WebSockets. Clients must connect with a valid JWT. 

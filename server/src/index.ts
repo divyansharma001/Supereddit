@@ -1,19 +1,62 @@
+// server/src/index.ts
+
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { createServer } from 'http';
+import { Server as SocketIOServer } from 'socket.io';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import { prisma } from './utils/prisma';
 import { SchedulerService } from './services/scheduler.service';
+import { triggerMonitoringJob } from './services/monitoring.service'; // Import the monitoring service
 
 // Import routes
 import authRoutes from './routes/auth.routes';
 import postRoutes from './routes/post.routes';
 import aiRoutes from './routes/ai.routes';
+import testRoutes from './routes/test.routes';
+import keywordRoutes from './routes/keyword.routes';
+import mentionRoutes from './routes/mention.routes';
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const server = createServer(app);
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    credentials: true,
+  },
+});
+export { io };
+
+// Socket.io authentication middleware
+io.use(async (socket: any, next: (err?: Error) => void) => {
+  try {
+    const token = socket.handshake.auth.token;
+    if (!token) return next(new Error('Authentication error: token required'));
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) return next(new Error('JWT secret not configured'));
+    const decoded = jwt.verify(token, jwtSecret) as JwtPayload;
+    // Attach clientId to socket
+    socket.clientId = decoded.clientId;
+    socket.join(decoded.clientId);
+    next();
+  } catch (err) {
+    next(new Error('Authentication error: invalid token'));
+  }
+});
+
+io.on('connection', (socket: any) => {
+  const clientId = socket.clientId;
+  console.log(`Socket connected for clientId: ${clientId}`);
+  socket.on('disconnect', () => {
+    console.log(`Socket disconnected for clientId: ${clientId}`);
+  });
+});
+
+const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors({
@@ -36,6 +79,9 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/test', testRoutes);
+app.use('/api/keywords', keywordRoutes);
+app.use('/api/mentions', mentionRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -75,13 +121,21 @@ async function startServer() {
     await prisma.$connect();
     console.log('✅ Database connected successfully');
 
-    // Initialize scheduler
+    // Initialize scheduler for posts
     SchedulerService.initialize();
+    
+    // Start monitoring service job immediately on start in development for faster feedback
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Running initial monitoring job in development mode...');
+      // Use setImmediate to run it right after the current event loop finishes
+      setImmediate(triggerMonitoringJob);
+    }
 
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📊 Health check: http://localhost:${PORT}/health`);
       console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
+      console.log(`🔌 Socket.io running on port ${PORT}`);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);
@@ -89,4 +143,4 @@ async function startServer() {
   }
 }
 
-startServer(); 
+startServer();

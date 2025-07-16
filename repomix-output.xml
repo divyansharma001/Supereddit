@@ -76,6 +76,8 @@ client/src/app/posts/new/page.tsx
 client/src/app/posts/page.tsx
 client/src/app/reddit-connect/page.tsx
 client/src/app/register/page.tsx
+client/src/app/socket-test/page.tsx
+client/src/contexts/SocketContext.tsx
 client/src/lib/auth.tsx
 client/src/lib/axios.ts
 client/src/lib/theme.tsx
@@ -86,17 +88,24 @@ server/.env.example
 server/.gitignore
 server/API_DOCUMENTATION.md
 server/package.json
+server/PHASE2_MONITORING_PLAN.md
 server/prisma/schema.prisma
 server/README.md
 server/src/controllers/ai.controller.ts
 server/src/controllers/auth.controller.ts
+server/src/controllers/keyword.controller.ts
+server/src/controllers/mention.controller.ts
 server/src/controllers/post.controller.ts
 server/src/index.ts
 server/src/middleware/auth.middleware.ts
 server/src/routes/ai.routes.ts
 server/src/routes/auth.routes.ts
+server/src/routes/keyword.routes.ts
+server/src/routes/mention.routes.ts
 server/src/routes/post.routes.ts
+server/src/routes/test.routes.ts
 server/src/services/encryption.service.ts
+server/src/services/monitoring.service.ts
 server/src/services/scheduler.service.ts
 server/src/utils/prisma.ts
 server/tsconfig.json
@@ -104,6 +113,664 @@ server/tsconfig.json
 
 <files>
 This section contains the contents of the repository's files.
+
+<file path="client/src/app/socket-test/page.tsx">
+"use client";
+
+import React, { useEffect, useState } from 'react';
+import { useSocketContext } from '@/contexts/SocketContext';
+import { useAuth } from '@/lib/auth';
+
+interface Mention {
+  id: string;
+  source_url: string;
+  content_snippet: string;
+  author: string;
+  subreddit: string;
+  sentiment: 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE' | 'UNKNOWN';
+  found_at: string;
+  keywordId: string;
+  clientId: string;
+}
+
+export default function SocketTestPage() {
+  const { socket, lastMention } = useSocketContext();
+  const { user } = useAuth();
+  const [connectionStatus, setConnectionStatus] = useState<string>('Disconnected');
+  const [mentions, setMentions] = useState<Mention[]>([]);
+  const [logs, setLogs] = useState<string[]>([]);
+
+  const addLog = (message: string) => {
+    const timestamp = new Date().toLocaleTimeString();
+    setLogs(prev => [...prev.slice(-9), `[${timestamp}] ${message}`]);
+  };
+
+  useEffect(() => {
+    if (!socket) {
+      setConnectionStatus('No socket instance');
+      addLog('No socket instance available');
+      return;
+    }
+
+    const handleConnect = () => {
+      setConnectionStatus('Connected');
+      addLog('Socket connected successfully');
+    };
+
+    const handleDisconnect = () => {
+      setConnectionStatus('Disconnected');
+      addLog('Socket disconnected');
+    };
+
+    const handleConnectError = (error: any) => {
+      setConnectionStatus('Connection Error');
+      addLog(`Connection error: ${error.message || error}`);
+    };
+
+    const handleNewMention = (mention: Mention) => {
+      addLog(`New mention received: ${mention.content_snippet.substring(0, 50)}...`);
+      setMentions(prev => [mention, ...prev.slice(0, 9)]);
+    };
+
+    // Check initial connection status
+    if (socket.connected) {
+      setConnectionStatus('Connected');
+      addLog('Socket already connected');
+    } else {
+      setConnectionStatus('Connecting...');
+      addLog('Socket connecting...');
+    }
+
+    // Add event listeners
+    socket.on('connect', handleConnect);
+    socket.on('disconnect', handleDisconnect);
+    socket.on('connect_error', handleConnectError);
+    socket.on('new_mention', handleNewMention);
+
+    return () => {
+      socket.off('connect', handleConnect);
+      socket.off('disconnect', handleDisconnect);
+      socket.off('connect_error', handleConnectError);
+      socket.off('new_mention', handleNewMention);
+    };
+  }, [socket]);
+
+  useEffect(() => {
+    if (lastMention) {
+      addLog(`Context updated with new mention: ${lastMention.content_snippet.substring(0, 50)}...`);
+    }
+  }, [lastMention]);
+
+  const triggerTestMention = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/test/trigger-mention`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        addLog('Test mention trigger sent');
+      } else {
+        addLog(`Failed to trigger test mention: ${response.status}`);
+      }
+    } catch (error) {
+      addLog(`Error triggering test mention: ${error}`);
+    }
+  };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Socket Test</h1>
+          <p className="text-gray-600">Please log in to test socket connection</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Socket Connection Test</h1>
+        
+        {/* Connection Status */}
+        <div className="bg-white rounded-lg shadow p-6 mb-6">
+          <h2 className="text-xl font-semibold mb-4">Connection Status</h2>
+          <div className="flex items-center gap-4">
+            <div className={`w-3 h-3 rounded-full ${
+              connectionStatus === 'Connected' ? 'bg-green-500' : 
+              connectionStatus === 'Connecting...' ? 'bg-yellow-500' : 'bg-red-500'
+            }`}></div>
+            <span className="font-medium">{connectionStatus}</span>
+          </div>
+          <div className="mt-4 text-sm text-gray-600">
+            <p>User: {user.email}</p>
+            <p>Client ID: {user.clientId}</p>
+            <p>Socket Instance: {socket ? 'Available' : 'Not Available'}</p>
+          </div>
+        </div>
+
+        {/* Test Controls */}
+        <div className="bg-white rounded-lg shadow p-6 mb-6">
+          <h2 className="text-xl font-semibold mb-4">Test Controls</h2>
+          <button
+            onClick={triggerTestMention}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md font-medium"
+          >
+            Trigger Test Mention
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Connection Logs */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold mb-4">Connection Logs</h2>
+            <div className="bg-gray-100 rounded p-4 h-64 overflow-y-auto">
+              {logs.length === 0 ? (
+                <p className="text-gray-500">No logs yet...</p>
+              ) : (
+                logs.map((log, index) => (
+                  <div key={index} className="text-sm font-mono mb-1">
+                    {log}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Recent Mentions */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold mb-4">Recent Mentions</h2>
+            <div className="space-y-3 h-64 overflow-y-auto">
+              {mentions.length === 0 ? (
+                <p className="text-gray-500">No mentions received yet...</p>
+              ) : (
+                mentions.map((mention, index) => (
+                  <div key={index} className="border rounded p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        mention.sentiment === 'POSITIVE' ? 'bg-green-100 text-green-800' :
+                        mention.sentiment === 'NEGATIVE' ? 'bg-red-100 text-red-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {mention.sentiment}
+                      </span>
+                      <span className="text-sm text-gray-600">r/{mention.subreddit}</span>
+                    </div>
+                    <p className="text-sm">{mention.content_snippet}</p>
+                    <p className="text-xs text-gray-500 mt-1">by u/{mention.author}</p>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="client/src/contexts/SocketContext.tsx">
+'use client';
+
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { io, Socket } from 'socket.io-client';
+
+interface Mention {
+  id: string;
+  source_url: string;
+  content_snippet: string;
+  author: string;
+  subreddit: string;
+  sentiment: 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE' | 'UNKNOWN';
+  found_at: string;
+  keywordId: string;
+  clientId: string;
+}
+
+interface SocketContextValue {
+  socket: Socket | null;
+  lastMention: Mention | null;
+}
+
+const SocketContext = createContext<SocketContextValue>({ socket: null, lastMention: null });
+
+export const SocketProvider: React.FC<{ token?: string; children: React.ReactNode }> = ({ token, children }) => {
+  const [lastMention, setLastMention] = useState<Mention | null>(null);
+  const socketRef = useRef<Socket | null>(null);
+
+  useEffect(() => {
+    if (!token) return;
+    const socketInstance = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000', {
+      auth: { token },
+      transports: ['websocket'],
+    });
+    socketRef.current = socketInstance;
+
+    socketInstance.on('connect', () => {
+      console.log('Socket connected');
+    });
+    socketInstance.on('new_mention', (mention: Mention) => {
+      setLastMention(mention);
+    });
+    socketInstance.on('disconnect', () => {
+      console.log('Socket disconnected');
+    });
+    return () => {
+      socketInstance.disconnect();
+      socketRef.current = null;
+    };
+  }, [token]);
+
+  return (
+    <SocketContext.Provider value={{ socket: socketRef.current, lastMention }}>
+      {children}
+    </SocketContext.Provider>
+  );
+};
+
+export const useSocketContext = () => useContext(SocketContext);
+</file>
+
+<file path="server/PHASE2_MONITORING_PLAN.md">
+# Phase 2: Monitoring & Analytics Module – Project Plan
+
+## Persona
+You are a Senior Full-Stack Engineer with deep expertise in real-time data processing, external API integration, and building scalable SaaS features. You are tasked with extending an existing Reddit management application with a sophisticated monitoring and analytics module. Your code must be efficient, secure, and production-ready.
+
+## Project Goal
+Evolve the application from a simple content publisher into a proactive market intelligence platform. You will build a complete, end-to-end system that allows clients to track keywords across Reddit, receive real-time alerts for new mentions, and automatically analyze the sentiment of those conversations.
+
+---
+
+## Part A: The Backend (Node.js, Express, TypeScript, Prisma)
+
+### Step 1: Database Schema Expansion (`prisma/schema.prisma`)
+- **Define Enums:**
+  - `Sentiment` enum: POSITIVE, NEUTRAL, NEGATIVE, UNKNOWN
+- **Create Models:**
+  - **Keyword Model:**
+    - Fields: id, term, is_active, createdAt, lastScannedAt, clientId (FK), mentions (relation)
+    - Constraints: `@@unique([term, clientId])`
+  - **Mention Model:**
+    - Fields: id, source_url (unique), content_snippet (@db.Text), author, subreddit, sentiment, found_at, keywordId (FK), clientId (FK)
+    - Relations: keyword (onDelete: Cascade), client (onDelete: Cascade)
+- **After modifying, run:**
+  - `npx prisma migrate dev --name add_monitoring_engine`
+
+### Step 2: Keyword & Mention Management APIs
+- **File Locations:**
+  - `src/controllers/keyword.controller.ts`, `src/routes/keyword.routes.ts`, etc.
+- **Authentication:**
+  - All endpoints protected by `auth.middleware`.
+- **Endpoints:**
+  - `POST /api/keywords`: Create new keyword for authenticated client
+  - `GET /api/keywords`: List all keywords for client
+  - `DELETE /api/keywords/:id`: Delete keyword (ownership enforced)
+  - `GET /api/mentions`: Paginated list of mentions for client, ordered by `found_at` desc
+
+### Step 3: The Reddit Monitoring Service (`src/services/monitoring.service.ts`)
+- **Scheduler Setup:**
+  - Use `node-cron` to run every 2 minutes (`'*/2 * * * *'`)
+  - Locking mechanism to prevent overlapping runs
+- **Reddit API Authentication:**
+  - Use app-only OAuth2 (client_credentials grant)
+  - Store token and expiry
+- **Core Scanning Logic:**
+  - Fetch active keywords
+  - For each keyword:
+    - Delay between requests (e.g., 1100ms)
+    - Use `lastScannedAt` or default (24h ago)
+    - Query Reddit: `q=timestamp:${lastScannedAt}..${now} "${keyword.term}"`
+    - GET `https://oauth.reddit.com/search.json?sort=new&limit=100&q=...`
+    - For each result:
+      - Extract permalink, author, subreddit, title, selftext/body
+      - Deduplicate by permalink
+      - Sentiment analysis (map score to enum)
+      - Insert Mention in DB
+      - Emit real-time alert via socket.io to client room
+    - Update keyword's `lastScannedAt`
+
+### Step 4: WebSocket Server Integration (`src/index.ts`)
+- **Setup socket.io** and attach to HTTP server
+- **Connection Authentication:**
+  - Middleware: verify JWT in handshake
+  - On success: join room named after clientId
+
+---
+
+## Part B: The Frontend (React, TypeScript, Vite)
+
+### Step 1: Context for WebSocket Management (`src/contexts/SocketContext.tsx`)
+- Create `SocketProvider` to wrap app
+- `useEffect`:
+  - If authenticated, connect socket.io-client with JWT
+  - Listen for `new_mention` event
+  - Update context state or notify via callback
+  - Cleanup: `socket.disconnect()`
+
+### Step 2: New Pages and Routing
+- Create `MonitoringPage.tsx` (central hub)
+- Fetch initial keywords and mentions
+- Update `App.tsx` and `Navbar.tsx` for new route/link
+
+### Step 3: Build the UI Components
+- **KeywordManager.tsx:**
+  - Props: keywords, onAddKeyword, onDeleteKeyword
+  - UI: MUI TextField + Add Button, List of keywords, Delete button
+- **MentionsFeed.tsx:**
+  - Props: mentions
+  - State: updates on new mentions via SocketContext
+  - UI: MUI Card per mention
+    - MUI Chip for sentiment (color-coded)
+    - Content snippet
+    - Metadata (subreddit, author, relative time)
+    - "View on Reddit" link
+
+---
+
+By following this plan, you will create a highly valuable and technically impressive feature that functions as a cohesive, end-to-end system.
+</file>
+
+<file path="server/src/controllers/keyword.controller.ts">
+import { Request, Response } from 'express';
+import { prisma } from '../utils/prisma';
+
+// POST /api/keywords
+export const createKeyword = async (req: Request, res: Response) => {
+  try {
+    if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+    const { term } = req.body;
+    const clientId = req.user.clientId;
+    if (!term) return res.status(400).json({ error: 'Keyword term is required' });
+    const keyword = await prisma.keyword.create({
+      data: { term, clientId },
+    });
+    res.status(201).json(keyword);
+  } catch (err: any) {
+    if (err.code === 'P2002') {
+      return res.status(409).json({ error: 'Keyword already exists for this client' });
+    }
+    res.status(500).json({ error: 'Failed to create keyword' });
+    return;
+  }
+};
+
+// GET /api/keywords
+export const getKeywords = async (req: Request, res: Response) => {
+  try {
+    if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+    const clientId = req.user.clientId;
+    const keywords = await prisma.keyword.findMany({
+      where: { clientId },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json(keywords);
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch keywords' });
+    return;
+  }
+};
+
+// DELETE /api/keywords/:id
+export const deleteKeyword = async (req: Request, res: Response) => {
+  try {
+    if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+    const { id } = req.params;
+    if (!id) {
+      res.status(400).json({ error: 'Keyword id is required' });
+      return;
+    }
+    const clientId = req.user.clientId;
+    // Ensure ownership
+    const keyword = await prisma.keyword.findUnique({ where: { id } });
+    if (!keyword || keyword.clientId !== clientId) {
+      return res.status(404).json({ error: 'Keyword not found' });
+    }
+    await prisma.keyword.delete({ where: { id } });
+    res.status(204).end();
+  } catch {
+    res.status(500).json({ error: 'Failed to delete keyword' });
+    return;
+  }
+};
+</file>
+
+<file path="server/src/controllers/mention.controller.ts">
+import { Request, Response } from 'express';
+import { prisma } from '../utils/prisma';
+
+// GET /api/mentions
+export const getMentions = async (req: Request, res: Response) => {
+  try {
+    if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+    const clientId = req.user.clientId;
+    const page = parseInt(req.query.page as string) || 1;
+    const pageSize = parseInt(req.query.pageSize as string) || 20;
+    const skip = (page - 1) * pageSize;
+    const [mentions, total] = await Promise.all([
+      prisma.mention.findMany({
+        where: { clientId },
+        orderBy: { found_at: 'desc' },
+        skip,
+        take: pageSize,
+      }),
+      prisma.mention.count({ where: { clientId } }),
+    ]);
+    res.json({ mentions, total, page, pageSize });
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch mentions' });
+  }
+};
+</file>
+
+<file path="server/src/routes/keyword.routes.ts">
+import { Router } from 'express';
+import { createKeyword, getKeywords, deleteKeyword } from '../controllers/keyword.controller';
+import { authenticateToken } from '../middleware/auth.middleware';
+
+const router = Router();
+
+router.use(authenticateToken);
+
+router.post('/api/keywords', createKeyword);
+router.get('/api/keywords', getKeywords);
+router.delete('/api/keywords/:id', deleteKeyword);
+
+export default router;
+</file>
+
+<file path="server/src/routes/mention.routes.ts">
+import { Router } from 'express';
+import { getMentions } from '../controllers/mention.controller';
+import { authenticateToken } from '../middleware/auth.middleware';
+
+const router = Router();
+
+router.use(authenticateToken);
+
+router.get('/api/mentions', getMentions);
+
+export default router;
+</file>
+
+<file path="server/src/routes/test.routes.ts">
+import { Router } from 'express';
+import { authenticateToken } from '../middleware/auth.middleware';
+import { io } from '../index';
+import { prisma } from '../utils/prisma';
+
+const router = Router();
+
+// Test endpoint to trigger a socket event
+router.post('/trigger-mention', authenticateToken, async (req, res) => {
+  try {
+    const clientId = req.user?.clientId;
+    if (!clientId) {
+      return res.status(400).json({ error: 'Client ID not found' });
+    }
+
+    // Fetch a valid keyword for this client
+    const keyword = await prisma.keyword.findFirst({ where: { clientId } });
+    if (!keyword) {
+      return res.status(400).json({ error: 'No keyword found for this client. Please create a keyword first.' });
+    }
+
+    // Create a test mention in the database
+    const testMention = await prisma.mention.create({
+      data: {
+        source_url: `https://reddit.com/test/${Date.now()}`,
+        content_snippet: `Test mention created at ${new Date().toISOString()} - This is a test to verify socket connectivity is working properly.`,
+        author: 'test_user',
+        subreddit: 'test',
+        sentiment: 'NEUTRAL',
+        found_at: new Date(),
+        keywordId: keyword.id,
+        clientId: clientId,
+      },
+    });
+
+    // Emit the test mention to the client's room
+    io.to(clientId).emit('new_mention', testMention);
+    
+    console.log(`Test mention emitted to client ${clientId}:`, testMention);
+
+    return res.json({ 
+      success: true, 
+      message: 'Test mention created and emitted',
+      mention: testMention 
+    });
+  } catch (error) {
+    console.error('Error creating test mention:', error);
+    return res.status(500).json({ error: 'Failed to create test mention' });
+  }
+});
+
+// Test endpoint to check socket connection status
+router.get('/socket-status', authenticateToken, (req, res) => {
+  try {
+    const clientId = req.user?.clientId;
+    if (!clientId) {
+      return res.status(400).json({ error: 'Client ID not found' });
+    }
+
+    // Get connected sockets for this client
+    const room = io.sockets.adapter.rooms.get(clientId);
+    const connectedSockets = room ? room.size : 0;
+
+    return res.json({
+      clientId,
+      connectedSockets,
+      totalConnections: io.engine.clientsCount,
+      roomExists: !!room
+    });
+  } catch (error) {
+    console.error('Error checking socket status:', error);
+    return res.status(500).json({ error: 'Failed to check socket status' });
+  }
+});
+
+export default router;
+</file>
+
+<file path="server/src/services/monitoring.service.ts">
+import cron from 'node-cron';
+import axios from 'axios';
+import { prisma } from '../utils/prisma';
+import { subHours } from 'date-fns';
+import { io } from '../index';
+
+// TODO: Import your socket.io instance here
+// import { io } from '../path/to/socket';
+
+let isRunning = false;
+let redditToken: string | null = null;
+let redditTokenExpiry: number = 0;
+
+const getRedditToken = async () => {
+  const now = Date.now() / 1000;
+  if (redditToken && redditTokenExpiry > now + 60) return redditToken;
+  const clientId = process.env.REDDIT_CLIENT_ID;
+  const clientSecret = process.env.REDDIT_CLIENT_SECRET;
+  if (!clientId || !clientSecret) throw new Error('Reddit API credentials missing');
+  const auth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+  const resp = await axios.post(
+    'https://www.reddit.com/api/v1/access_token',
+    'grant_type=client_credentials',
+    { headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/x-www-form-urlencoded' } }
+  );
+  redditToken = resp.data.access_token;
+  redditTokenExpiry = now + resp.data.expires_in;
+  return redditToken;
+};
+
+const analyzeSentiment = (text: string): 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE' | 'UNKNOWN' => {
+  // Simple placeholder: positive if contains 'good', negative if 'bad', else neutral
+  if (/good|great|awesome|love/i.test(text)) return 'POSITIVE';
+  if (/bad|terrible|hate|awful/i.test(text)) return 'NEGATIVE';
+  if (text.trim() === '') return 'UNKNOWN';
+  return 'NEUTRAL';
+};
+
+const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+
+const runMonitoringJob = async () => {
+  if (isRunning) return;
+  isRunning = true;
+  try {
+    const token = await getRedditToken();
+    const keywords = await prisma.keyword.findMany({ where: { is_active: true }, include: { client: true } });
+    for (const keyword of keywords) {
+      await delay(1100); // Reddit rate limit
+      const since = keyword.lastScannedAt || subHours(new Date(), 24);
+      const now = new Date();
+      const q = `timestamp:${Math.floor(since.getTime()/1000)}..${Math.floor(now.getTime()/1000)} \"${keyword.term}\"`;
+      const url = `https://oauth.reddit.com/search.json?sort=new&limit=100&q=${encodeURIComponent(q)}`;
+      const resp = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
+      const results = resp.data.data.children || [];
+      for (const post of results) {
+        const data = post.data;
+        const permalink = data.permalink;
+        const source_url = `https://reddit.com${permalink}`;
+        // Deduplicate by source_url
+        const exists = await prisma.mention.findUnique({ where: { source_url } });
+        if (exists) continue;
+        const content = [data.title, data.selftext].filter(Boolean).join(' ');
+        const sentiment = analyzeSentiment(content);
+        const mention = await prisma.mention.create({
+          data: {
+            source_url,
+            content_snippet: content.slice(0, 500),
+            author: data.author,
+            subreddit: data.subreddit,
+            sentiment,
+            found_at: new Date(data.created_utc * 1000),
+            keywordId: keyword.id,
+            clientId: keyword.clientId,
+          },
+        });
+        io.to(keyword.clientId).emit('new_mention', mention);
+      }
+      // Update lastScannedAt
+      await prisma.keyword.update({ where: { id: keyword.id }, data: { lastScannedAt: now } });
+    }
+    console.log('Monitoring job completed at', new Date().toISOString());
+  } catch (err) {
+    console.error('Monitoring job error:', err);
+  } finally {
+    isRunning = false;
+  }
+};
+
+cron.schedule('*/2 * * * *', runMonitoringJob);
+export const triggerMonitoringJob = runMonitoringJob;
+</file>
 
 <file path=".cursor/rules/ai-integration.mdc">
 # AI Integration & Post Generation
@@ -938,104 +1605,6 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
   font-display: swap;
   src: url(https://fonts.gstatic.com/s/plusjakartasans/v11/LDIbaomQNQcsA88c7O9yZ4KMCoOg4IA6-91aHEjcWuA_KUnNSg.ttf) format('truetype');
 }
-</file>
-
-<file path="client/src/lib/auth.tsx">
-"use client";
-import React, { createContext, useContext, useEffect, useState } from "react";
-import api from "@/lib/axios";
-
-interface User {
-  id: string;
-  email: string;
-  role: string;
-  clientId: string;
-  clientName: string;
-}
-
-interface AuthContextType {
-  user: User | null;
-  loading: boolean;
-  login: (token: string) => Promise<void>;
-  logout: () => void;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      // Try to fetch user info
-      (api.get("/api/auth/me") as Promise<any>)
-        .then((res: any) => setUser(res.data.user))
-        .catch(() => setUser(null))
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
-  }, []);
-
-  const login = async (token: string) => {
-    localStorage.setItem("token", token);
-    setLoading(true);
-    try {
-      const res: any = await api.get("/api/auth/me");
-      setUser(res.data.user);
-    } catch {
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const logout = () => {
-    localStorage.removeItem("token");
-    setUser(null);
-  };
-
-  return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
-
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
-  return ctx;
-}
-</file>
-
-<file path="client/src/lib/axios.ts">
-// If you haven't already, run: npm install axios @types/axios
-import axios from "axios";
-// TODO: Type config parameter more strictly if axios types are available
-
-const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000",
-  withCredentials: false, // CORS, but no cookies needed for JWT
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-api.interceptors.request.use((config: any) => {
-  if (typeof window !== "undefined") {
-    const token = localStorage.getItem("token");
-    if (token) {
-      if (!config.headers) config.headers = {};
-      config.headers["Authorization"] = `Bearer ${token}`;
-    }
-  }
-  return config;
-});
-
-export default api;
 </file>
 
 <file path="client/src/lib/utils.ts">
@@ -2091,6 +2660,7 @@ OPENAI_API_KEY=your_openai_api_key
     "axios": "^1.10.0",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
+    "date-fns": "^4.1.0",
     "dotenv": "^17.2.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
@@ -2102,7 +2672,10 @@ OPENAI_API_KEY=your_openai_api_key
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   },
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "@types/socket.io": "^3.0.1"
+  }
 }
 </file>
 
@@ -2140,6 +2713,8 @@ model Client {
   users           User[]
   redditAccounts  RedditAccount[]
   posts           Post[]
+  keywords        Keyword[]
+  mentions        Mention[]
 
   @@map("clients")
 }
@@ -2200,6 +2775,44 @@ model Post {
   redditAccountId String?
 
   @@map("posts")
+}
+
+// --- Monitoring & Analytics Additions ---
+enum Sentiment {
+  POSITIVE
+  NEUTRAL
+  NEGATIVE
+  UNKNOWN
+}
+
+model Keyword {
+  id            String    @id @default(cuid())
+  term          String
+  is_active     Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  lastScannedAt DateTime?
+  client        Client    @relation(fields: [clientId], references: [id])
+  clientId      String
+  mentions      Mention[]
+
+  @@unique([term, clientId])
+  @@map("keywords")
+}
+
+model Mention {
+  id            String    @id @default(cuid())
+  source_url    String    @unique
+  content_snippet String  @db.Text
+  author        String
+  subreddit     String
+  sentiment     Sentiment @default(UNKNOWN)
+  found_at      DateTime
+  keyword       Keyword   @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+  keywordId     String
+  client        Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId      String
+
+  @@map("mentions")
 }
 </file>
 
@@ -3012,6 +3625,9 @@ export class PostController {
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { createServer } from 'http';
+import { Server as SocketIOServer } from 'socket.io';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import { prisma } from './utils/prisma';
 import { SchedulerService } from './services/scheduler.service';
 
@@ -3019,11 +3635,46 @@ import { SchedulerService } from './services/scheduler.service';
 import authRoutes from './routes/auth.routes';
 import postRoutes from './routes/post.routes';
 import aiRoutes from './routes/ai.routes';
+import testRoutes from './routes/test.routes';
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
+const server = createServer(app);
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    credentials: true,
+  },
+});
+export { io };
+
+// Socket.io authentication middleware
+io.use(async (socket: any, next: (err?: Error) => void) => {
+  try {
+    const token = socket.handshake.auth.token;
+    if (!token) return next(new Error('Authentication error: token required'));
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) return next(new Error('JWT secret not configured'));
+    const decoded = jwt.verify(token, jwtSecret) as JwtPayload;
+    // Attach clientId to socket
+    socket.clientId = decoded.clientId;
+    socket.join(decoded.clientId);
+    next();
+  } catch (err) {
+    next(new Error('Authentication error: invalid token'));
+  }
+});
+
+io.on('connection', (socket: any) => {
+  const clientId = socket.clientId;
+  console.log(`Socket connected for clientId: ${clientId}`);
+  socket.on('disconnect', () => {
+    console.log(`Socket disconnected for clientId: ${clientId}`);
+  });
+});
+
 const PORT = process.env.PORT || 3000;
 
 // Middleware
@@ -3047,6 +3698,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/test', testRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -3089,10 +3741,11 @@ async function startServer() {
     // Initialize scheduler
     SchedulerService.initialize();
 
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📊 Health check: http://localhost:${PORT}/health`);
       console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
+      console.log(`🔌 Socket.io running on port ${PORT}`);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);
@@ -3357,262 +4010,6 @@ export class EncryptionService {
 export const encryptionService = new EncryptionService();
 </file>
 
-<file path="server/src/services/scheduler.service.ts">
-import cron from 'node-cron';
-import axios from 'axios';
-import { prisma } from '../utils/prisma';
-import { encryptionService } from './encryption.service';
-
-/**
- * Service for scheduling and posting Reddit posts
- */
-export class SchedulerService {
-  private static isRunning = false;
-
-  /**
-   * Initialize the scheduler
-   */
-  static initialize(): void {
-    if (this.isRunning) {
-      console.log('Scheduler is already running');
-      return;
-    }
-
-    // Run every minute
-    cron.schedule('*/1 * * * *', async () => {
-      await this.processScheduledPosts();
-    });
-
-    this.isRunning = true;
-    console.log('Scheduler initialized - checking for scheduled posts every minute');
-  }
-
-  /**
-   * Process all scheduled posts that are due
-   */
-  private static async processScheduledPosts(): Promise<void> {
-    try {
-      const now = new Date();
-
-      // Find all scheduled posts that are due
-      const scheduledPosts = await prisma.post.findMany({
-        where: {
-          status: 'Scheduled',
-          scheduled_at: {
-            lte: now
-          }
-        },
-        include: {
-          redditAccount: true
-        }
-      });
-
-      console.log(`Found ${scheduledPosts.length} posts to process`);
-
-      for (const post of scheduledPosts) {
-        await this.processPost(post);
-      }
-    } catch (error) {
-      console.error('Error processing scheduled posts:', error);
-    }
-  }
-
-  /**
-   * Process a single scheduled post
-   */
-  private static async processPost(post: any): Promise<void> {
-    try {
-      console.log(`Processing post: ${post.id} - ${post.title}`);
-
-      // Check if post has a Reddit account
-      if (!post.redditAccount) {
-        await this.updatePostStatus(post.id, 'Error', 'No Reddit account associated with this post');
-        return;
-      }
-
-      // Decrypt access token
-      let accessToken: string;
-      try {
-        accessToken = encryptionService.decrypt(post.redditAccount.access_token);
-      } catch (error) {
-        console.error(`Failed to decrypt access token for post ${post.id}:`, error);
-        await this.updatePostStatus(post.id, 'Error', 'Failed to decrypt access token');
-        return;
-      }
-
-      // Check if token is expired and refresh if necessary
-      if (new Date() >= post.redditAccount.token_expires_at) {
-        console.log(`Token expired for post ${post.id}, refreshing...`);
-        const refreshed = await this.refreshRedditToken(post.redditAccount.id);
-        if (!refreshed) {
-          await this.updatePostStatus(post.id, 'Error', 'Failed to refresh Reddit token');
-          return;
-        }
-        // Get the refreshed token
-        const updatedAccount = await prisma.redditAccount.findUnique({
-          where: { id: post.redditAccount.id }
-        });
-        if (!updatedAccount) {
-          await this.updatePostStatus(post.id, 'Error', 'Reddit account not found after refresh');
-          return;
-        }
-        accessToken = encryptionService.decrypt(updatedAccount.access_token);
-      }
-
-      // Post to Reddit
-      const success = await this.submitToReddit(post, accessToken);
-
-      if (success) {
-        await this.updatePostStatus(post.id, 'Posted', null, new Date());
-        console.log(`Successfully posted to Reddit: ${post.id}`);
-      } else {
-        await this.updatePostStatus(post.id, 'Error', 'Failed to submit to Reddit');
-      }
-    } catch (error) {
-      console.error(`Error processing post ${post.id}:`, error);
-      await this.updatePostStatus(post.id, 'Error', error instanceof Error ? error.message : 'Unknown error');
-    }
-  }
-
-  /**
-   * Refresh Reddit access token
-   */
-  private static async refreshRedditToken(redditAccountId: string): Promise<boolean> {
-    try {
-      const account = await prisma.redditAccount.findUnique({
-        where: { id: redditAccountId }
-      });
-
-      if (!account) {
-        return false;
-      }
-
-      // Decrypt refresh token
-      const refreshToken = encryptionService.decrypt(account.refresh_token);
-
-      const clientId = process.env.REDDIT_CLIENT_ID;
-      const clientSecret = process.env.REDDIT_CLIENT_SECRET;
-
-      if (!clientId || !clientSecret) {
-        console.error('Reddit OAuth not configured');
-        return false;
-      }
-
-      // Exchange refresh token for new access token
-      const response = await axios.post('https://www.reddit.com/api/v1/access_token',
-        `grant_type=refresh_token&refresh_token=${refreshToken}`,
-        {
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`
-          }
-        }
-      );
-
-      const { access_token, refresh_token, expires_in } = response.data;
-
-      // Encrypt new tokens
-      const encryptedAccessToken = encryptionService.encrypt(access_token);
-      const encryptedRefreshToken = encryptionService.encrypt(refresh_token);
-      const tokenExpiresAt = new Date(Date.now() + expires_in * 1000);
-
-      // Update account with new tokens
-      await prisma.redditAccount.update({
-        where: { id: redditAccountId },
-        data: {
-          access_token: encryptedAccessToken,
-          refresh_token: encryptedRefreshToken,
-          token_expires_at: tokenExpiresAt,
-          updatedAt: new Date()
-        }
-      });
-
-      console.log(`Successfully refreshed token for account ${redditAccountId}`);
-      return true;
-    } catch (error) {
-      console.error('Failed to refresh Reddit token:', error);
-      return false;
-    }
-  }
-
-  /**
-   * Submit post to Reddit
-   */
-  private static async submitToReddit(post: any, accessToken: string): Promise<boolean> {
-    try {
-      const response = await axios.post('https://oauth.reddit.com/api/submit',
-        {
-          sr: post.subreddit,
-          title: post.title,
-          text: post.body,
-          kind: 'self'
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'User-Agent': 'RedditPostManager/1.0'
-          }
-        }
-      );
-
-      if (response.data && response.data.data && response.data.data.name) {
-        // Update post with Reddit post ID
-        await prisma.post.update({
-          where: { id: post.id },
-          data: {
-            reddit_post_id: response.data.data.name
-          }
-        });
-        return true;
-      }
-
-      return false;
-    } catch (error) {
-      console.error('Failed to submit to Reddit:', error);
-      return false;
-    }
-  }
-
-  /**
-   * Update post status
-   */
-  private static async updatePostStatus(
-    postId: string,
-    status: 'Posted' | 'Error',
-    errorMessage?: string | null,
-    postedAt?: Date
-  ): Promise<void> {
-    try {
-      const updateData: any = {
-        status,
-        posted_at: postedAt || null
-      };
-      
-      // Only include error_message if it's not undefined
-      if (errorMessage !== undefined) {
-        updateData.error_message = errorMessage;
-      }
-
-      await prisma.post.update({
-        where: { id: postId },
-        data: updateData
-      });
-    } catch (error) {
-      console.error(`Failed to update post status for ${postId}:`, error);
-    }
-  }
-
-  /**
-   * Stop the scheduler
-   */
-  static stop(): void {
-    this.isRunning = false;
-    console.log('Scheduler stopped');
-  }
-}
-</file>
-
 <file path="server/src/utils/prisma.ts">
 import { PrismaClient } from '@prisma/client';
 
@@ -3698,6 +4095,7 @@ if (process.env.NODE_ENV !== 'production') {
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "same-runtime": "^0.0.1",
+    "socket.io-client": "^4.8.1",
     "tailwind-merge": "^3.3.0",
     "tailwindcss-animate": "^1.0.7"
   },
@@ -3713,238 +4111,6 @@ if (process.env.NODE_ENV !== 'production') {
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3"
   }
-}
-</file>
-
-<file path="client/src/app/ai/page.tsx">
-"use client";
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth";
-import api from "@/lib/axios";
-
-// --- Improvement: Type-safe data model based on your API docs ---
-interface AITone {
-  value: string;
-  label: string;
-  description: string;
-}
-
-export default function AIPage() {
-  const { user, loading: authLoading } = useAuth();
-  const router = useRouter();
-
-  const [keywords, setKeywords] = useState("");
-  const [tone, setTone] = useState("");
-  const [tones, setTones] = useState<AITone[]>([]);
-  const [generating, setGenerating] = useState(false);
-  const [result, setResult] = useState<{ title: string; body: string } | null>(
-    null
-  );
-  const [error, setError] = useState("");
-  const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.replace("/login");
-    }
-  }, [user, authLoading, router]);
-
-  useEffect(() => {
-    if (!user) return;
-    const fetchTones = async () => {
-      try {
-        const res = await api.get<{ tones: AITone[] }>("/api/ai/tones");
-        setTones(res.data.tones);
-        // Set a default tone if available
-        if (res.data.tones.length > 0) {
-          setTone(res.data.tones[0].value);
-        }
-      } catch {
-        setError("Could not load AI tones. Please try again later.");
-        setTones([]);
-      }
-    };
-    fetchTones();
-  }, [user]);
-
-  const handleGenerate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!keywords || !tone) {
-      setError("Please enter keywords and select a tone.");
-      return;
-    }
-    setError("");
-    setResult(null);
-    setGenerating(true);
-    try {
-      const res = await api.post<{ title: string; body: string }>("/api/ai/draft", { keywords, tone });
-      setResult({ title: res.data.title, body: res.data.body });
-    } catch (err: unknown) {
-      setError(
-        (err as any)?.response?.data?.error ||
-          (err instanceof Error ? err.message : "An unknown error occurred") ||
-          "An unknown error occurred."
-      );
-    } finally {
-      setGenerating(false);
-    }
-  };
-
-  const handleCopy = () => {
-    if (!result) return;
-    navigator.clipboard.writeText(`${result.title}\n\n${result.body}`);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleUseInNewPost = () => {
-    if (!result) return;
-    // Use query params to pre-fill the new post form
-    router.push(
-      `/posts/new?title=${encodeURIComponent(
-        result.title
-      )}&body=${encodeURIComponent(result.body)}`
-    );
-  };
-
-  // --- Improvement: Consistent loading state with the dashboard ---
-  if (authLoading || !user) {
-    return (
-      <main className="flex items-center justify-center min-h-screen bg-slate-50">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <div className="text-lg text-slate-600 font-medium">Loading AI Generator...</div>
-        </div>
-      </main>
-    );
-  }
-
-  return (
-    // --- Improvement: Consistent page structure with dashboard ---
-    <main className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <h1 className="text-2xl font-bold text-slate-900">
-            AI Content Generator
-          </h1>
-          <p className="text-slate-600 mt-1">
-            Generate high-quality Reddit post ideas and drafts in seconds.
-          </p>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-          
-          {/* Form Card */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">
-              1. Enter Your Idea
-            </h2>
-            <form className="space-y-4" onSubmit={handleGenerate}>
-              <div>
-                <label htmlFor="keywords" className="block text-sm font-medium text-slate-700 mb-1">
-                  Keywords
-                </label>
-                <input
-                  id="keywords"
-                  type="text"
-                  placeholder="e.g., productivity hacks for developers"
-                  className="w-full px-4 py-2 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  value={keywords}
-                  onChange={(e) => setKeywords(e.target.value)}
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="tone" className="block text-sm font-medium text-slate-700 mb-1">
-                  Tone of Voice
-                </label>
-                <select
-                  id="tone"
-                  className="w-full px-4 py-2 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  value={tone}
-                  onChange={(e) => setTone(e.target.value)}
-                  required
-                >
-                  <option value="" disabled>Select a tone</option>
-                  {tones.map((t) => (
-                    <option key={t.value} value={t.value}>
-                      {t.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full bg-blue-600 text-white font-semibold rounded-lg px-4 py-2.5 hover:bg-blue-700 transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed flex items-center justify-center"
-                disabled={generating}
-              >
-                {generating && <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>}
-                {generating ? "Generating..." : "✨ Generate Content"}
-              </button>
-              {error && (
-                <div className="text-red-600 text-sm text-center font-medium p-3 bg-red-50 rounded-lg border border-red-200">
-                  {error}
-                </div>
-              )}
-            </form>
-          </div>
-
-          {/* Result Card */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">
-              2. Review Your Draft
-            </h2>
-            {generating ? (
-                <div className="flex flex-col items-center justify-center h-64 text-slate-500">
-                    <span className="text-4xl mb-4">🤖</span>
-                    <p className="font-semibold">Our AI is writing...</p>
-                    <p className="text-sm">This may take a few moments.</p>
-                </div>
-            ) : result ? (
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-sm font-medium text-slate-600">TITLE</h3>
-                  <p className="text-lg font-semibold text-slate-900 mt-1">
-                    {result.title}
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-slate-600">BODY</h3>
-                  <p className="text-slate-800 mt-1 whitespace-pre-line prose prose-slate max-w-none">
-                    {result.body}
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-3 pt-4 border-t border-slate-200">
-                  <button
-                    className="flex-1 min-w-[120px] bg-slate-100 text-slate-800 font-semibold rounded-lg px-4 py-2 hover:bg-slate-200 transition-colors"
-                    onClick={handleCopy}
-                  >
-                    {copied ? "Copied!" : "Copy Text"}
-                  </button>
-                  <button
-                    className="flex-1 min-w-[120px] bg-blue-600 text-white font-semibold rounded-lg px-4 py-2 hover:bg-blue-700 transition-colors"
-                    onClick={handleUseInNewPost}
-                  >
-                    Use in New Post
-                  </button>
-                </div>
-              </div>
-            ) : (
-                <div className="flex flex-col items-center justify-center h-64 text-slate-500 bg-slate-50 rounded-lg">
-                    <span className="text-4xl mb-4">📝</span>
-                    <p className="font-semibold">Your generated content will appear here.</p>
-                </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </main>
-  );
 }
 </file>
 
@@ -3975,661 +4141,102 @@ export default function ClientBody({
 }
 </file>
 
-<file path="client/src/app/posts/[id]/page.tsx">
+<file path="client/src/lib/auth.tsx">
 "use client";
-import React, { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { useAuth } from "@/lib/auth";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import api from "@/lib/axios";
-import Link from "next/link";
 
-// --- Improvement: Type-safe data model based on your API docs ---
-type PostStatus = "Draft" | "Scheduled" | "Posted" | "Error";
-
-interface Post {
+interface User {
   id: string;
-  title: string;
-  body: string;
-  subreddit: string;
-  status: PostStatus;
-  scheduled_at?: string;
-  posted_at?: string;
-  createdAt: string;
-  updatedAt: string;
-  author: {
-    email: string;
-  };
-  redditAccount?: {
-    reddit_username: string;
-  };
+  email: string;
+  role: string;
+  clientId: string;
+  clientName: string;
 }
 
-// --- Improvement: Reusable Status Badge Component ---
-const StatusBadge = ({ status }: { status: PostStatus }) => {
-  const statusStyles: Record<PostStatus, string> = {
-    Draft: "bg-slate-100 text-slate-800",
-    Scheduled: "bg-yellow-100 text-yellow-800",
-    Posted: "bg-green-100 text-green-800",
-    Error: "bg-red-100 text-red-800",
+interface AuthContextType {
+  user: User | null;
+  loading: boolean;
+  login: (token: string) => Promise<void>;
+  logout: () => void;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      // Try to fetch user info
+      Promise.resolve(api.get<{ user: User }>("/api/auth/me"))
+        .then((res) => setUser(res.data.user))
+        .catch(() => setUser(null))
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
+  }, []);
+
+  const login = async (token: string) => {
+    localStorage.setItem("token", token);
+    setLoading(true);
+    try {
+      const res = await api.get<{ user: User }>("/api/auth/me");
+      setUser(res.data.user);
+    } catch {
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    setUser(null);
+  };
+
   return (
-    <span
-      className={`px-2.5 py-0.5 text-xs font-semibold rounded-full ${statusStyles[status]}`}
-    >
-      {status}
-    </span>
+    <AuthContext.Provider value={{ user, loading, login, logout }}>
+      {children}
+    </AuthContext.Provider>
   );
 };
 
-// --- Main Page Component ---
-export default function PostDetailPage() {
-  const { user, loading: authLoading } = useAuth();
-  const router = useRouter();
-  const params = useParams();
-  const postId = params?.id as string;
-
-  const [post, setPost] = useState<Post | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [form, setForm] = useState({ title: "", body: "", subreddit: "" });
-
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [loading, setLoading] = useState(true);
-  
-  const [isSaving, setIsSaving] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isScheduling, setIsScheduling] = useState(false);
-
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.replace("/login");
-    }
-  }, [user, authLoading, router]);
-
-  useEffect(() => {
-    if (!user || !postId) return;
-
-    const fetchPost = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const res = await api.get<{ post: Post }>(`/api/posts/${postId}`);
-        setPost(res.data.post);
-        setForm({
-          title: res.data.post.title,
-          body: res.data.post.body,
-          subreddit: res.data.post.subreddit,
-        });
-      } catch (err: any) {
-        setError(err.response?.data?.error || "Failed to load the post.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPost();
-  }, [user, postId]);
-
-  const handleSaveChanges = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSaving(true);
-    setError("");
-    setSuccess("");
-    try {
-      const res = await api.put<{ post: Post }>(`/api/posts/${postId}`, form);
-      setPost(res.data.post);
-      setSuccess("Post updated successfully!");
-      setIsEditing(false);
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to update the post.");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-  
-  const handleDelete = async () => {
-    if (!window.confirm("Are you sure you want to permanently delete this post?")) return;
-    setIsDeleting(true);
-    setError("");
-    try {
-      await api.delete(`/api/posts/${postId}`);
-      router.push("/posts?deleted=true");
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to delete the post.");
-      setIsDeleting(false);
-    }
-  };
-
-  const handleSchedule = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const scheduledAt = (e.currentTarget.elements.namedItem("scheduleAt") as HTMLInputElement).value;
-    if (!scheduledAt) {
-        setError("Please select a date and time to schedule the post.");
-        return;
-    }
-
-    setIsScheduling(true);
-    setError("");
-    setSuccess("");
-    try {
-      const res = await api.post<{ post: Post }>(`/api/posts/${postId}/schedule`, {
-        scheduled_at: new Date(scheduledAt).toISOString(),
-      });
-      setPost(res.data.post);
-      setSuccess("Post scheduled successfully!");
-    } catch (err: any)      {
-      setError(err.response?.data?.error || "Failed to schedule the post.");
-    } finally {
-      setIsScheduling(false);
-    }
-  };
-
-  if (authLoading || loading) {
-    return (
-      <main className="flex items-center justify-center min-h-screen bg-slate-50">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <div className="text-lg text-slate-600 font-medium">Loading Post...</div>
-        </div>
-      </main>
-    );
-  }
-
-  if (!post) {
-    return (
-        <main className="flex items-center justify-center min-h-screen bg-slate-50">
-            <div className="text-center p-8 bg-white rounded-lg shadow-md border border-red-200">
-                <h2 className="text-xl font-bold text-red-600">Error</h2>
-                <p className="text-slate-700 mt-2">{error || "Post not found."}</p>
-                <Link href="/posts" className="mt-4 inline-block bg-blue-600 text-white font-semibold rounded-lg px-4 py-2 hover:bg-blue-700 transition-colors">
-                    Back to Posts
-                </Link>
-            </div>
-        </main>
-    );
-  }
-
-  const canEdit = post.status !== "Posted";
-
-  return (
-    <main className="min-h-screen bg-slate-50">
-      {/* Header with Breadcrumbs */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center gap-2 text-sm">
-             <Link href="/dashboard" className="text-slate-500 hover:text-blue-600">Dashboard</Link>
-             <span className="text-slate-400">/</span>
-             <Link href="/posts" className="text-slate-500 hover:text-blue-600">Posts</Link>
-             <span className="text-slate-400">/</span>
-             <span className="font-semibold text-slate-800 truncate">{post.title}</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Alerts for success and error messages */}
-        {success && <div className="mb-4 p-4 text-sm text-green-800 bg-green-100 border border-green-200 rounded-lg">{success}</div>}
-        {error && <div className="mb-4 p-4 text-sm text-red-800 bg-red-100 border border-red-200 rounded-lg">{error}</div>}
-      
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content (Left Column) */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200">
-                {isEditing && canEdit ? (
-                    <form onSubmit={handleSaveChanges}>
-                        <div className="p-6 space-y-4">
-                            <div>
-                                <label htmlFor="title" className="block text-sm font-medium text-slate-700 mb-1">Title</label>
-                                <input id="title" type="text" value={form.title} onChange={e => setForm(f => ({...f, title: e.target.value}))} className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
-                            </div>
-                            <div>
-                                <label htmlFor="subreddit" className="block text-sm font-medium text-slate-700 mb-1">Subreddit (r/)</label>
-                                <input id="subreddit" type="text" value={form.subreddit} onChange={e => setForm(f => ({...f, subreddit: e.target.value}))} className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
-                            </div>
-                             <div>
-                                <label htmlFor="body" className="block text-sm font-medium text-slate-700 mb-1">Body</label>
-                                <textarea id="body" value={form.body} onChange={e => setForm(f => ({...f, body: e.target.value}))} className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[250px]" required />
-                            </div>
-                        </div>
-                        <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-3">
-                            <button type="button" onClick={() => setIsEditing(false)} className="px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50">Cancel</button>
-                            <button type="submit" disabled={isSaving} className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-slate-400 flex items-center">
-                                {isSaving && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>}
-                                {isSaving ? 'Saving...' : 'Save Changes'}
-                            </button>
-                        </div>
-                    </form>
-                ) : (
-                    <div className="p-6">
-                        <h1 className="text-2xl font-bold text-slate-900">{post.title}</h1>
-                        <p className="text-sm text-slate-500 mt-1">in <span className="font-semibold">r/{post.subreddit}</span></p>
-                        <div className="mt-6 prose prose-slate max-w-none whitespace-pre-line">
-                            {post.body}
-                        </div>
-                    </div>
-                )}
-            </div>
-          </div>
-          
-          {/* Sidebar (Right Column) */}
-          <div className="space-y-6">
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-              <h3 className="text-lg font-semibold text-slate-900 mb-4">Post Status</h3>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-slate-600">Status</span>
-                <StatusBadge status={post.status} />
-              </div>
-              <ul className="mt-4 space-y-2 text-sm text-slate-600 border-t border-slate-200 pt-4">
-                 <li><strong>Created:</strong> {new Date(post.createdAt).toLocaleString()}</li>
-                 <li><strong>Last Updated:</strong> {new Date(post.updatedAt).toLocaleString()}</li>
-                 <li><strong>Scheduled for:</strong> {post.scheduled_at ? new Date(post.scheduled_at).toLocaleString() : 'N/A'}</li>
-                 <li><strong>Posted at:</strong> {post.posted_at ? new Date(post.posted_at).toLocaleString() : 'N/A'}</li>
-              </ul>
-            </div>
-            {canEdit && (
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                    <h3 className="text-lg font-semibold text-slate-900 mb-4">Actions</h3>
-                    <div className="space-y-3">
-                        {!isEditing && <button onClick={() => setIsEditing(true)} className="w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">Edit Post</button>}
-                        <form onSubmit={handleSchedule} className="space-y-2">
-                             <input name="scheduleAt" type="datetime-local" className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                             <button type="submit" disabled={isScheduling} className="w-full px-4 py-2 font-semibold text-white bg-purple-600 rounded-lg hover:bg-purple-700 disabled:bg-slate-400 flex items-center justify-center">
-                                {isScheduling && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>}
-                                {isScheduling ? 'Scheduling...' : 'Schedule'}
-                             </button>
-                        </form>
-                        <button onClick={handleDelete} disabled={isDeleting} className="w-full px-4 py-2 font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:bg-slate-400 flex items-center justify-center">
-                            {isDeleting && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>}
-                            {isDeleting ? 'Deleting...' : 'Delete Post'}
-                        </button>
-                    </div>
-                </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </main>
-  );
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
 }
 </file>
 
-<file path="client/src/app/posts/new/page.tsx">
-"use client";
-import React, { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useAuth } from "@/lib/auth";
-import api from "@/lib/axios";
-import Link from "next/link";
+<file path="client/src/lib/axios.ts">
+// If you haven't already, run: npm install axios @types/axios
+import axios from "axios";
+// TODO: Type config parameter more strictly if axios types are available
 
-export default function NewPostPage() {
-  const { user, loading: authLoading } = useAuth();
-  const router = useRouter();
-  const searchParams = useSearchParams(); // Hook to read URL query params
+const api = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000",
+  withCredentials: false, // CORS, but no cookies needed for JWT
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
 
-  const [form, setForm] = useState({
-    title: "",
-    body: "",
-    subreddit: "",
-    scheduledAt: "",
-  });
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.replace("/login");
+api.interceptors.request.use((config) => {
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("token");
+    if (token) {
+      if (!config.headers) config.headers = {};
+      config.headers["Authorization"] = `Bearer ${token}`;
     }
-  }, [user, authLoading, router]);
-
-  // --- Improvement: Pre-fill form from URL query params (from AI page) ---
-  useEffect(() => {
-    const titleFromQuery = searchParams.get("title");
-    const bodyFromQuery = searchParams.get("body");
-    if (titleFromQuery || bodyFromQuery) {
-      setForm((f) => ({
-        ...f,
-        title: decodeURIComponent(titleFromQuery || ""),
-        body: decodeURIComponent(bodyFromQuery || ""),
-      }));
-    }
-  }, [searchParams]);
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
-    setIsSubmitting(true);
-    try {
-      const payload = {
-        title: form.title,
-        body: form.body,
-        subreddit: form.subreddit,
-        // Conditionally add scheduled_at if it exists
-        ...(form.scheduledAt
-          ? { scheduled_at: new Date(form.scheduledAt).toISOString() }
-          : {}),
-      };
-      await api.post("/api/posts", payload);
-      setSuccess("Post created successfully! Redirecting...");
-      setTimeout(() => router.push("/posts"), 1500);
-    } catch (err: any) {
-      setError(
-        err.response?.data?.error || err.message || "Failed to create post"
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-  
-  // --- Improvement: Consistent loading state ---
-  if (authLoading || !user) {
-    return (
-      <main className="flex items-center justify-center min-h-screen bg-slate-50">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <div className="text-lg text-slate-600 font-medium">Loading...</div>
-        </div>
-      </main>
-    );
   }
+  return config;
+});
 
-  return (
-    // --- Improvement: Consistent page structure ---
-    <main className="min-h-screen bg-slate-50">
-      {/* Header with Breadcrumbs */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center gap-2 text-sm">
-            <Link href="/dashboard" className="text-slate-500 hover:text-blue-600">Dashboard</Link>
-            <span className="text-slate-400">/</span>
-            <Link href="/posts" className="text-slate-500 hover:text-blue-600">Posts</Link>
-            <span className="text-slate-400">/</span>
-            <span className="font-semibold text-slate-800">Create New Post</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Alerts for success and error messages */}
-        {success && <div className="mb-4 p-4 text-sm text-green-800 bg-green-100 border border-green-200 rounded-lg">{success}</div>}
-        {error && <div className="mb-4 p-4 text-sm text-red-800 bg-red-100 border border-red-200 rounded-lg">{error}</div>}
-        
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white rounded-xl shadow-sm border border-slate-200"
-        >
-          <div className="p-6 space-y-6">
-            <h1 className="text-xl font-semibold text-slate-900">
-              Compose Your Post
-            </h1>
-            <div>
-              <label htmlFor="title" className="block text-sm font-medium text-slate-700 mb-1">
-                Title
-              </label>
-              <input
-                id="title"
-                name="title"
-                type="text"
-                placeholder="An interesting title for your post"
-                className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={form.title}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="body" className="block text-sm font-medium text-slate-700 mb-1">
-                Body
-              </label>
-              <textarea
-                id="body"
-                name="body"
-                placeholder="Write your post content here. Markdown is supported."
-                className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[250px]"
-                value={form.body}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="subreddit" className="block text-sm font-medium text-slate-700 mb-1">
-                Subreddit
-              </label>
-              <input
-                id="subreddit"
-                name="subreddit"
-                type="text"
-                placeholder="e.g., programming"
-                className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={form.subreddit}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="scheduledAt" className="block text-sm font-medium text-slate-700 mb-1">
-                Schedule (Optional)
-              </label>
-              <input
-                id="scheduledAt"
-                name="scheduledAt"
-                type="datetime-local"
-                className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={form.scheduledAt}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-          <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-3">
-            <Link href="/posts" className="px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50">
-                Cancel
-            </Link>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-slate-400 flex items-center"
-            >
-              {isSubmitting && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>}
-              {isSubmitting ? "Creating..." : "Create Post"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </main>
-  );
-}
-</file>
-
-<file path="client/src/app/reddit-connect/page.tsx">
-"use client";
-import React, { useState, useEffect, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import api from "@/lib/axios";
-import { useAuth } from "@/lib/auth";
-import Link from "next/link";
-
-// --- Improvement: Type-safe data model ---
-interface RedditAccount {
-  id: string;
-  reddit_username: string;
-}
-
-// The main component logic
-function RedditConnectContent() {
-  const { user, loading: authLoading } = useAuth();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
-  const [accounts, setAccounts] = useState<RedditAccount[]>([]);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [success, setSuccess] = useState("");
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [callbackHandled, setCallbackHandled] = useState(false);
-
-  // --- Effect 1: Handle User Authentication Guard ---
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.replace("/login");
-    }
-  }, [user, authLoading, router]);
-
-  // --- Effect 2: Fetch initial account status ---
-  useEffect(() => {
-    if (!user) return;
-    setIsLoading(true);
-    const fetchAccounts = async () => {
-      try {
-        const res = await api.get<{ accounts: RedditAccount[] }>("/api/auth/reddit/accounts");
-        setAccounts(res.data.accounts);
-      } catch (err) {
-        setError("Failed to fetch connection status. Please refresh.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchAccounts();
-  }, [user, callbackHandled]); // Rerun when callback is handled to get new status
-
-  // --- Effect 3: Handle the OAuth callback from Reddit ---
-  useEffect(() => {
-    if (!user || callbackHandled) return;
-    const code = searchParams.get("code");
-    const state = searchParams.get("state");
-
-    if (code) {
-      setCallbackHandled(true); // Prevent this from running multiple times
-      setIsConnecting(true); // Show a "finalizing" state
-      setError("");
-      setSuccess("");
-
-      const handleCallback = async () => {
-        try {
-          const res = await api.get<{ redditUsername: string }>(`/api/auth/reddit/oauth/callback?code=${code}&state=${state || ""}`);
-          setSuccess(`Success! Connected as ${res.data.redditUsername}. Redirecting...`);
-          // --- Improvement: Redirect to dashboard after success ---
-          setTimeout(() => router.push("/dashboard"), 2000);
-        } catch (err: any) {
-          setError(err.response?.data?.error || "Failed to connect Reddit account.");
-        } finally {
-          setIsConnecting(false);
-        }
-      };
-      handleCallback();
-    }
-  }, [user, searchParams, callbackHandled, router]);
-
-
-  const handleInitiateConnect = async () => {
-    setIsConnecting(true);
-    setError("");
-    setSuccess("");
-    try {
-      const res = await api.post<{ authUrl: string }>("/api/auth/reddit/oauth/connect");
-      window.location.href = res.data.authUrl; // Redirect user to Reddit
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Could not initiate connection. Please try again.");
-      setIsConnecting(false);
-    }
-  };
-
-  if (authLoading || isLoading) {
-    return (
-      <main className="flex items-center justify-center min-h-screen bg-slate-50">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <div className="text-lg text-slate-600 font-medium">Loading Connection Status...</div>
-        </div>
-      </main>
-    );
-  }
-
-  const isConnected = accounts.length > 0;
-  const username = isConnected ? accounts[0].reddit_username : null;
-
-  return (
-    <main className="min-h-screen bg-slate-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-right">
-             <Link href="/dashboard" className="text-sm font-semibold text-blue-600 hover:text-blue-700">
-                Go to Dashboard →
-            </Link>
-        </div>
-        <div className="flex items-center justify-center pt-16">
-            <div className="w-full max-w-lg">
-                <div className="text-center">
-                    <h1 className="text-3xl font-bold text-slate-900">Reddit Account Connection</h1>
-                    <p className="text-slate-600 mt-2">
-                        To schedule and publish posts, you need to grant access to your Reddit account.
-                    </p>
-                </div>
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 mt-8">
-                    {success && <div className="mb-4 p-3 text-sm text-green-800 bg-green-100 border border-green-200 rounded-lg">{success}</div>}
-                    {error && <div className="mb-4 p-3 text-sm text-red-800 bg-red-100 border border-red-200 rounded-lg">{error}</div>}
-
-                    {/* --- Improvement: Visual Status Box --- */}
-                    <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 flex items-center gap-4">
-                        {isConnecting ? (
-                            <>
-                                <div className="w-5 h-5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"></div>
-                                <div className="flex-1">
-                                    <p className="font-semibold text-slate-800">Finalizing Connection</p>
-                                    <p className="text-sm text-slate-600">Please wait a moment...</p>
-                                </div>
-                            </>
-                        ) : isConnected ? (
-                            <>
-                                <div className="w-10 h-10 flex items-center justify-center bg-green-100 rounded-full">
-                                    <span className="text-xl text-green-600">✓</span>
-                                </div>
-                                <div className="flex-1">
-                                    <p className="font-semibold text-slate-800">Connected</p>
-                                    <p className="text-sm text-slate-600">Authenticated as <strong>{username}</strong></p>
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                <div className="w-10 h-10 flex items-center justify-center bg-slate-100 rounded-full">
-                                    <span className="text-xl text-slate-500">!</span>
-                                </div>
-                                <div className="flex-1">
-                                    <p className="font-semibold text-slate-800">Not Connected</p>
-                                    <p className="text-sm text-slate-600">Please connect your account to proceed.</p>
-                                </div>
-                            </>
-                        )}
-                    </div>
-                    <button
-                        onClick={handleInitiateConnect}
-                        disabled={isConnecting}
-                        className="w-full flex justify-center items-center mt-6 px-4 py-2.5 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-slate-400 transition-colors"
-                    >
-                        {isConnecting ? "Please wait..." : isConnected ? "Reconnect Account" : "Connect with Reddit"}
-                    </button>
-                </div>
-            </div>
-        </div>
-    </main>
-  );
-}
-
-// Using Suspense for client components that use searchParams
-export default function RedditConnectPage() {
-    return (
-        <Suspense>
-            <RedditConnectContent />
-        </Suspense>
-    );
-}
+export default api;
 </file>
 
 <file path="client/src/lib/theme.tsx">
@@ -5072,6 +4679,1150 @@ router.get('/reddit/accounts', authenticateToken, AuthController.getRedditAccoun
 export default router;
 </file>
 
+<file path="server/src/services/scheduler.service.ts">
+import cron from 'node-cron';
+import axios from 'axios';
+import { prisma } from '../utils/prisma';
+import { encryptionService } from './encryption.service';
+
+/**
+ * Service for scheduling and posting Reddit posts
+ */
+export class SchedulerService {
+  private static isRunning = false;
+
+  /**
+   * Initialize the scheduler
+   */
+  static initialize(): void {
+    if (this.isRunning) {
+      console.log('Scheduler is already running');
+      return;
+    }
+
+    // Run every minute
+    cron.schedule('*/1 * * * *', async () => {
+      await this.processScheduledPosts();
+    });
+
+    this.isRunning = true;
+    console.log('Scheduler initialized - checking for scheduled posts every minute');
+  }
+
+  /**
+   * Process all scheduled posts that are due
+   */
+  private static async processScheduledPosts(): Promise<void> {
+    try {
+      const now = new Date();
+
+      // Find all scheduled posts that are due
+      const scheduledPosts = await prisma.post.findMany({
+        where: {
+          status: 'Scheduled',
+          scheduled_at: {
+            lte: now
+          }
+        },
+        include: {
+          redditAccount: true
+        }
+      });
+
+      console.log(`Found ${scheduledPosts.length} posts to process`);
+
+      for (const post of scheduledPosts) {
+        await this.processPost(post);
+      }
+    } catch (error) {
+      console.error('Error processing scheduled posts:', error);
+    }
+  }
+
+  /**
+   * Process a single scheduled post
+   */
+  private static async processPost(post: any): Promise<void> {
+    try {
+      console.log(`Processing post: ${post.id} - ${post.title}`);
+
+      // Check if post has a Reddit account
+      if (!post.redditAccount) {
+        await this.updatePostStatus(post.id, 'Error', 'No Reddit account associated with this post');
+        return;
+      }
+
+      // Decrypt access token
+      let accessToken: string;
+      try {
+        accessToken = encryptionService.decrypt(post.redditAccount.access_token);
+      } catch (error) {
+        console.error(`Failed to decrypt access token for post ${post.id}:`, error);
+        await this.updatePostStatus(post.id, 'Error', 'Failed to decrypt access token');
+        return;
+      }
+
+      // Check if token is expired and refresh if necessary
+      if (new Date() >= post.redditAccount.token_expires_at) {
+        console.log(`Token expired for post ${post.id}, refreshing...`);
+        const refreshed = await this.refreshRedditToken(post.redditAccount.id);
+        if (!refreshed) {
+          await this.updatePostStatus(post.id, 'Error', 'Failed to refresh Reddit token');
+          return;
+        }
+        // Get the refreshed token
+        const updatedAccount = await prisma.redditAccount.findUnique({
+          where: { id: post.redditAccount.id }
+        });
+        if (!updatedAccount) {
+          await this.updatePostStatus(post.id, 'Error', 'Reddit account not found after refresh');
+          return;
+        }
+        accessToken = encryptionService.decrypt(updatedAccount.access_token);
+      }
+
+      // Post to Reddit
+      const submissionResult = await this.submitToReddit(post, accessToken);
+
+      if (submissionResult.success) {
+        await this.updatePostStatus(post.id, 'Posted', null, new Date());
+        console.log(`Successfully posted to Reddit: ${post.id}`);
+      } else {
+        const errorMessage = submissionResult.error || 'Failed to submit to Reddit';
+        await this.updatePostStatus(post.id, 'Error', errorMessage);
+      }
+    } catch (error) {
+      console.error(`Error processing post ${post.id}:`, error);
+      await this.updatePostStatus(post.id, 'Error', error instanceof Error ? error.message : 'Unknown error');
+    }
+  }
+
+  /**
+   * Refresh Reddit access token
+   */
+  private static async refreshRedditToken(redditAccountId: string): Promise<boolean> {
+    try {
+      const account = await prisma.redditAccount.findUnique({
+        where: { id: redditAccountId }
+      });
+
+      if (!account) {
+        return false;
+      }
+
+      // Decrypt refresh token
+      const refreshToken = encryptionService.decrypt(account.refresh_token);
+
+      const clientId = process.env.REDDIT_CLIENT_ID;
+      const clientSecret = process.env.REDDIT_CLIENT_SECRET;
+
+      if (!clientId || !clientSecret) {
+        console.error('Reddit OAuth not configured');
+        return false;
+      }
+
+      // Exchange refresh token for new access token
+      const response = await axios.post('https://www.reddit.com/api/v1/access_token',
+        `grant_type=refresh_token&refresh_token=${refreshToken}`,
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`
+          }
+        }
+      );
+
+      const { access_token, refresh_token, expires_in } = response.data;
+
+      // Encrypt new tokens
+      const encryptedAccessToken = encryptionService.encrypt(access_token);
+      const encryptedRefreshToken = encryptionService.encrypt(refresh_token);
+      const tokenExpiresAt = new Date(Date.now() + expires_in * 1000);
+
+      // Update account with new tokens
+      await prisma.redditAccount.update({
+        where: { id: redditAccountId },
+        data: {
+          access_token: encryptedAccessToken,
+          refresh_token: encryptedRefreshToken,
+          token_expires_at: tokenExpiresAt,
+          updatedAt: new Date()
+        }
+      });
+
+      console.log(`Successfully refreshed token for account ${redditAccountId}`);
+      return true;
+    } catch (error) {
+      console.error('Failed to refresh Reddit token:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Submit post to Reddit
+   */
+  private static async submitToReddit(post: any, accessToken: string): Promise<{ success: boolean; error?: string }> {
+    try {
+        const response = await axios.post('https://oauth.reddit.com/api/submit',
+            new URLSearchParams({
+                sr: post.subreddit,
+                title: post.title,
+                text: post.body,
+                kind: 'self',
+                api_type: 'json' // Request a JSON response to be safe
+            }), // No .toString() needed, Axios handles this
+            {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'User-Agent': 'RedditPostManager/1.0'
+                }
+            }
+        );
+
+        // --- IMPROVED, SAFER LOGIC ---
+        // Safely check the response structure.
+        const redditResponse = response.data;
+
+        if (redditResponse && redditResponse.json && redditResponse.json.errors && redditResponse.json.errors.length === 0) {
+            // Success! Update post with the Reddit ID
+            await prisma.post.update({
+                where: { id: post.id },
+                data: {
+                    reddit_post_id: redditResponse.json.data.name
+                }
+            });
+            return { success: true };
+        } else if (redditResponse && redditResponse.json && redditResponse.json.errors) {
+            // There are errors in the successful response.
+            const errorMessage = redditResponse.json.errors.map((e: any) => `[${e[0]}] ${e[1]}`).join(', ');
+            console.error(`Reddit API reported an error for post ${post.id}:`, errorMessage);
+            return { success: false, error: errorMessage };
+        } else {
+            // The response was successful (2xx) but not in the expected format.
+            console.error(`Unexpected response structure from Reddit for post ${post.id}:`, redditResponse);
+            return { success: false, error: 'Received an unexpected response structure from Reddit.' };
+        }
+
+    } catch (error) {
+        // --- IMPROVED LOGGING ---
+        console.error(`!!! An exception occurred in submitToReddit for post ${post.id} !!!`);
+        // Log the full error object to see its type and stack trace
+        console.error(error); 
+        
+        if (axios.isAxiosError(error)) {
+            const errorMessage = `Reddit API request failed: ${error.response?.status} - ${JSON.stringify(error.response?.data)}`;
+            return { success: false, error: errorMessage };
+        }
+        
+        // This will now capture the TypeError and give a more useful message
+        const errorMessage = error instanceof Error ? error.message : 'An unknown internal error occurred.';
+        return { success: false, error: `Internal Server Error: ${errorMessage}` };
+    }
+  }
+
+  /**
+   * Update post status
+   */
+  private static async updatePostStatus(
+    postId: string,
+    status: 'Posted' | 'Error',
+    errorMessage?: string | null,
+    postedAt?: Date
+  ): Promise<void> {
+    try {
+      const updateData: any = {
+        status,
+        posted_at: postedAt || null
+      };
+      
+      // Only include error_message if it's not undefined
+      if (errorMessage !== undefined) {
+        updateData.error_message = errorMessage;
+      }
+
+      await prisma.post.update({
+        where: { id: postId },
+        data: updateData
+      });
+    } catch (error) {
+      console.error(`Failed to update post status for ${postId}:`, error);
+    }
+  }
+
+  /**
+   * Stop the scheduler
+   */
+  static stop(): void {
+    this.isRunning = false;
+    console.log('Scheduler stopped');
+  }
+}
+</file>
+
+<file path="client/src/app/ai/page.tsx">
+"use client";
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth";
+import api from "@/lib/axios";
+
+// --- Improvement: Type-safe data model based on your API docs ---
+interface AITone {
+  value: string;
+  label: string;
+  description: string;
+}
+
+export default function AIPage() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+
+  const [keywords, setKeywords] = useState("");
+  const [tone, setTone] = useState("");
+  const [tones, setTones] = useState<AITone[]>([]);
+  const [generating, setGenerating] = useState(false);
+  const [result, setResult] = useState<{ title: string; body: string } | null>(
+    null
+  );
+  const [error, setError] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace("/login");
+    }
+  }, [user, authLoading, router]);
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchTones = async () => {
+      try {
+        const res = await api.get<{ tones: AITone[] }>("/api/ai/tones");
+        setTones(res.data.tones);
+        // Set a default tone if available
+        if (res.data.tones.length > 0) {
+          setTone(res.data.tones[0].value);
+        }
+      } catch {
+        setError("Could not load AI tones. Please try again later.");
+        setTones([]);
+      }
+    };
+    fetchTones();
+  }, [user]);
+
+  const handleGenerate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!keywords || !tone) {
+      setError("Please enter keywords and select a tone.");
+      return;
+    }
+    setError("");
+    setResult(null);
+    setGenerating(true);
+    try {
+      const res = await api.post<{ title: string; body: string }>("/api/ai/draft", { keywords, tone });
+      setResult({ title: res.data.title, body: res.data.body });
+    } catch (err: unknown) {
+      setError(
+        (err && typeof err === "object" && "response" in err && err.response && typeof err.response === "object" && "data" in err.response && err.response.data && typeof err.response.data === "object" && "error" in err.response.data)
+          ? (err.response.data.error as string)
+          : (err instanceof Error ? err.message : "An unknown error occurred") ||
+            "An unknown error occurred."
+      );
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const handleCopy = () => {
+    if (!result) return;
+    navigator.clipboard.writeText(`${result.title}\n\n${result.body}`);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleUseInNewPost = () => {
+    if (!result) return;
+    // Use query params to pre-fill the new post form
+    router.push(
+      `/posts/new?title=${encodeURIComponent(
+        result.title
+      )}&body=${encodeURIComponent(result.body)}`
+    );
+  };
+
+  // --- Improvement: Consistent loading state with the dashboard ---
+  if (authLoading || !user) {
+    return (
+      <main className="flex items-center justify-center min-h-screen bg-slate-50">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <div className="text-lg text-slate-600 font-medium">Loading AI Generator...</div>
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    // --- Improvement: Consistent page structure with dashboard ---
+    <main className="min-h-screen bg-slate-50">
+      {/* Header */}
+      <div className="bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <h1 className="text-2xl font-bold text-slate-900">
+            AI Content Generator
+          </h1>
+          <p className="text-slate-600 mt-1">
+            Generate high-quality Reddit post ideas and drafts in seconds.
+          </p>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+          
+          {/* Form Card */}
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <h2 className="text-lg font-semibold text-slate-900 mb-4">
+              1. Enter Your Idea
+            </h2>
+            <form className="space-y-4" onSubmit={handleGenerate}>
+              <div>
+                <label htmlFor="keywords" className="block text-sm font-medium text-slate-700 mb-1">
+                  Keywords
+                </label>
+                <input
+                  id="keywords"
+                  type="text"
+                  placeholder="e.g., productivity hacks for developers"
+                  className="w-full px-4 py-2 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={keywords}
+                  onChange={(e) => setKeywords(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="tone" className="block text-sm font-medium text-slate-700 mb-1">
+                  Tone of Voice
+                </label>
+                <select
+                  id="tone"
+                  className="w-full px-4 py-2 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={tone}
+                  onChange={(e) => setTone(e.target.value)}
+                  required
+                >
+                  <option value="" disabled>Select a tone</option>
+                  {tones.map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-blue-600 text-white font-semibold rounded-lg px-4 py-2.5 hover:bg-blue-700 transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed flex items-center justify-center"
+                disabled={generating}
+              >
+                {generating && <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>}
+                {generating ? "Generating..." : "✨ Generate Content"}
+              </button>
+              {error && (
+                <div className="text-red-600 text-sm text-center font-medium p-3 bg-red-50 rounded-lg border border-red-200">
+                  {error}
+                </div>
+              )}
+            </form>
+          </div>
+
+          {/* Result Card */}
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <h2 className="text-lg font-semibold text-slate-900 mb-4">
+              2. Review Your Draft
+            </h2>
+            {generating ? (
+                <div className="flex flex-col items-center justify-center h-64 text-slate-500">
+                    <span className="text-4xl mb-4">🤖</span>
+                    <p className="font-semibold">Our AI is writing...</p>
+                    <p className="text-sm">This may take a few moments.</p>
+                </div>
+            ) : result ? (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-sm font-medium text-slate-600">TITLE</h3>
+                  <p className="text-lg font-semibold text-slate-900 mt-1">
+                    {result.title}
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-slate-600">BODY</h3>
+                  <p className="text-slate-800 mt-1 whitespace-pre-line prose prose-slate max-w-none">
+                    {result.body}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-3 pt-4 border-t border-slate-200">
+                  <button
+                    className="flex-1 min-w-[120px] bg-slate-100 text-slate-800 font-semibold rounded-lg px-4 py-2 hover:bg-slate-200 transition-colors"
+                    onClick={handleCopy}
+                  >
+                    {copied ? "Copied!" : "Copy Text"}
+                  </button>
+                  <button
+                    className="flex-1 min-w-[120px] bg-blue-600 text-white font-semibold rounded-lg px-4 py-2 hover:bg-blue-700 transition-colors"
+                    onClick={handleUseInNewPost}
+                  >
+                    Use in New Post
+                  </button>
+                </div>
+              </div>
+            ) : (
+                <div className="flex flex-col items-center justify-center h-64 text-slate-500 bg-slate-50 rounded-lg">
+                    <span className="text-4xl mb-4">📝</span>
+                    <p className="font-semibold">Your generated content will appear here.</p>
+                </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
+</file>
+
+<file path="client/src/app/posts/new/page.tsx">
+"use client";
+import React, { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/lib/auth";
+import api from "@/lib/axios";
+import Link from "next/link";
+
+function NewPostPage() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams(); // Hook to read URL query params
+
+  const [form, setForm] = useState({
+    title: "",
+    body: "",
+    subreddit: "",
+    scheduledAt: "",
+  });
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace("/login");
+    }
+  }, [user, authLoading, router]);
+
+  // --- Improvement: Pre-fill form from URL query params (from AI page) ---
+  useEffect(() => {
+    const titleFromQuery = searchParams.get("title");
+    const bodyFromQuery = searchParams.get("body");
+    if (titleFromQuery || bodyFromQuery) {
+      setForm((f) => ({
+        ...f,
+        title: decodeURIComponent(titleFromQuery || ""),
+        body: decodeURIComponent(bodyFromQuery || ""),
+      }));
+    }
+  }, [searchParams]);
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        title: form.title,
+        body: form.body,
+        subreddit: form.subreddit,
+        // Conditionally add scheduled_at if it exists
+        ...(form.scheduledAt
+          ? { scheduled_at: new Date(form.scheduledAt).toISOString() }
+          : {}),
+      };
+      await api.post("/api/posts", payload);
+      setSuccess("Post created successfully! Redirecting...");
+      setTimeout(() => router.push("/posts"), 1500);
+    } catch (err: unknown) {
+      setError(
+        (err && typeof err === "object" && "response" in err && err.response && typeof err.response === "object" && "data" in err.response && err.response.data && typeof err.response.data === "object" && "error" in err.response.data)
+          ? (err.response.data.error as string)
+          : (err instanceof Error ? err.message : "Failed to create post")
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  // --- Improvement: Consistent loading state ---
+  if (authLoading || !user) {
+    return (
+      <main className="flex items-center justify-center min-h-screen bg-slate-50">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <div className="text-lg text-slate-600 font-medium">Loading...</div>
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    // --- Improvement: Consistent page structure ---
+    <main className="min-h-screen bg-slate-50">
+      {/* Header with Breadcrumbs */}
+      <div className="bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center gap-2 text-sm">
+            <Link href="/dashboard" className="text-slate-500 hover:text-blue-600">Dashboard</Link>
+            <span className="text-slate-400">/</span>
+            <Link href="/posts" className="text-slate-500 hover:text-blue-600">Posts</Link>
+            <span className="text-slate-400">/</span>
+            <span className="font-semibold text-slate-800">Create New Post</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Alerts for success and error messages */}
+        {success && <div className="mb-4 p-4 text-sm text-green-800 bg-green-100 border border-green-200 rounded-lg">{success}</div>}
+        {error && <div className="mb-4 p-4 text-sm text-red-800 bg-red-100 border border-red-200 rounded-lg">{error}</div>}
+        
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white rounded-xl shadow-sm border border-slate-200"
+        >
+          <div className="p-6 space-y-6">
+            <h1 className="text-xl font-semibold text-slate-900">
+              Compose Your Post
+            </h1>
+            <div>
+              <label htmlFor="title" className="block text-sm font-medium text-slate-700 mb-1">
+                Title
+              </label>
+              <input
+                id="title"
+                name="title"
+                type="text"
+                placeholder="An interesting title for your post"
+                className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={form.title}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="body" className="block text-sm font-medium text-slate-700 mb-1">
+                Body
+              </label>
+              <textarea
+                id="body"
+                name="body"
+                placeholder="Write your post content here. Markdown is supported."
+                className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[250px]"
+                value={form.body}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="subreddit" className="block text-sm font-medium text-slate-700 mb-1">
+                Subreddit
+              </label>
+              <input
+                id="subreddit"
+                name="subreddit"
+                type="text"
+                placeholder="e.g., programming"
+                className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={form.subreddit}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="scheduledAt" className="block text-sm font-medium text-slate-700 mb-1">
+                Schedule (Optional)
+              </label>
+              <input
+                id="scheduledAt"
+                name="scheduledAt"
+                type="datetime-local"
+                className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={form.scheduledAt}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+          <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-3">
+            <Link href="/posts" className="px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50">
+                Cancel
+            </Link>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-slate-400 flex items-center"
+            >
+              {isSubmitting && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>}
+              {isSubmitting ? "Creating..." : "Create Post"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </main>
+  );
+}
+
+export default function NewPostPageWithSuspense() {
+  return (
+    <Suspense>
+      <NewPostPage />
+    </Suspense>
+  );
+}
+</file>
+
+<file path="client/src/app/posts/page.tsx">
+"use client";
+import React, { useEffect, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/lib/auth";
+import api from "@/lib/axios";
+import Link from "next/link";
+
+// --- Improvement: Type-safe data models ---
+type PostStatus = "Draft" | "Scheduled" | "Posted" | "Error";
+
+interface Post {
+  id: string;
+  title: string;
+  subreddit: string;
+  status: PostStatus;
+  scheduled_at?: string;
+}
+
+interface RedditAccount {
+  id: string;
+  reddit_username: string;
+}
+
+// --- Improvement: Reusable Status Badge Component ---
+const StatusBadge = ({ status }: { status: PostStatus }) => {
+  const statusStyles: Record<PostStatus, string> = {
+    Draft: "bg-slate-100 text-slate-800",
+    Scheduled: "bg-yellow-100 text-yellow-800",
+    Posted: "bg-green-100 text-green-800",
+    Error: "bg-red-100 text-red-800",
+  };
+  return (
+    <span
+      className={`px-2.5 py-0.5 text-xs font-semibold rounded-full ${statusStyles[status]}`}
+    >
+      {status}
+    </span>
+  );
+};
+
+// --- Main Page Component ---
+function PostsPageContent() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const [accounts, setAccounts] = useState<RedditAccount[] | null>(null);
+  const [posts, setPosts] = useState<Post[]>([]);
+  
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [status, setStatus] = useState("All");
+
+  const [loading, setLoading] = useState(true);
+  const [successMessage, setSuccessMessage] = useState("");
+
+  const statusOptions = ["All", "Draft", "Scheduled", "Posted", "Error"];
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace("/login");
+    }
+  }, [user, authLoading, router]);
+
+  // Check for success message from query params
+  useEffect(() => {
+    if (searchParams.get("deleted") === "true") {
+      setSuccessMessage("Post deleted successfully.");
+      // Clean up URL
+      router.replace("/posts", { scroll: false });
+    }
+  }, [searchParams, router]);
+
+  // This effect now combines account fetching and the initial post fetch.
+  useEffect(() => {
+    if (!user) return;
+    
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        // First, check for connected Reddit accounts
+        const accountsRes = await api.get<{ accounts: RedditAccount[] }>("/api/auth/reddit/accounts");
+        if (accountsRes.data.accounts.length === 0) {
+          router.replace("/reddit-connect");
+          return;
+        }
+        setAccounts(accountsRes.data.accounts);
+
+        // Then, fetch posts
+        const postsRes = await api.get("/api/posts", {
+          params: { page, limit: 10, ...(status !== "All" && { status }) },
+        });
+        const responseData = postsRes.data as { posts: Post[]; pagination: { pages: number } };
+        setPosts(responseData.posts);
+        setTotalPages(responseData.pagination.pages);
+
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+        setPosts([]); // Clear posts on error
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [user, page, status, router]);
+
+
+  if (authLoading || accounts === null) {
+    return (
+      <main className="flex items-center justify-center min-h-screen bg-slate-50">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <div className="text-lg text-slate-600 font-medium">Loading...</div>
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className="min-h-screen bg-slate-50">
+      {/* Header */}
+      <div className="bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Your Posts</h1>
+            <p className="text-slate-600 mt-1">Manage, edit, and schedule all your content.</p>
+          </div>
+          <Link href="/posts/new" className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
+            + New Post
+          </Link>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {successMessage && <div className="mb-4 p-4 text-sm text-green-800 bg-green-100 border border-green-200 rounded-lg">{successMessage}</div>}
+        
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200">
+          {/* Filter Bar */}
+          <div className="p-4 border-b border-slate-200">
+            <div className="flex items-center gap-4">
+              <label htmlFor="status-filter" className="text-sm font-medium text-slate-700">Filter by status:</label>
+              <select
+                id="status-filter"
+                className="px-3 py-1.5 text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={status}
+                onChange={e => { setStatus(e.target.value); setPage(1); }}
+              >
+                {statusOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+              </select>
+            </div>
+          </div>
+          
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-slate-200">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Title</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Subreddit</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Scheduled</th>
+                  <th className="px-6 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-slate-200">
+                {loading ? (
+                  <tr><td colSpan={5} className="text-center py-12 text-slate-500">Loading posts...</td></tr>
+                ) : posts.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="text-center py-12">
+                      <h3 className="text-lg font-semibold text-slate-800">No Posts Found</h3>
+                      <p className="text-slate-500 mt-1">Try a different filter or create a new post.</p>
+                      <Link href="/posts/new" className="mt-4 inline-block px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">Create your first post</Link>
+                    </td>
+                  </tr>
+                ) : posts.map(post => (
+                  <tr key={post.id}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 max-w-xs truncate">{post.title}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">r/{post.subreddit}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm"><StatusBadge status={post.status} /></td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{post.scheduled_at ? new Date(post.scheduled_at).toLocaleString() : '—'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
+                      <Link href={`/posts/${post.id}`} className="px-3 py-1.5 text-sm font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">View</Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          {posts.length > 0 && (
+            <div className="p-4 border-t border-slate-200 flex justify-between items-center text-sm">
+                <button
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1 || loading}
+                    className="px-3 py-1.5 font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50"
+                >
+                    Previous
+                </button>
+                <span className="text-slate-700 font-medium">Page {page} of {totalPages}</span>
+                <button
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages || loading}
+                    className="px-3 py-1.5 font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50"
+                >
+                    Next
+                </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </main>
+  );
+}
+
+// Using Suspense for client components that use searchParams
+export default function PostsPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <PostsPageContent />
+        </Suspense>
+    );
+}
+</file>
+
+<file path="client/src/app/reddit-connect/page.tsx">
+"use client";
+import React, { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import api from "@/lib/axios";
+import { useAuth } from "@/lib/auth";
+import Link from "next/link";
+
+// --- Improvement: Type-safe data model ---
+interface RedditAccount {
+  id: string;
+  reddit_username: string;
+}
+
+// The main component logic
+function RedditConnectContent() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const [accounts, setAccounts] = useState<RedditAccount[]>([]);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [success, setSuccess] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [callbackHandled, setCallbackHandled] = useState(false);
+
+  // --- Effect 1: Handle User Authentication Guard ---
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace("/login");
+    }
+  }, [user, authLoading, router]);
+
+  // --- Effect 2: Fetch initial account status ---
+  useEffect(() => {
+    if (!user) return;
+    setIsLoading(true);
+    const fetchAccounts = async () => {
+      try {
+        const res = await api.get<{ accounts: RedditAccount[] }>("/api/auth/reddit/accounts");
+        setAccounts(res.data.accounts);
+      } catch (err: unknown) {
+        setError(
+          (err && typeof err === "object" && "response" in err && err.response && typeof err.response === "object" && "data" in err.response && err.response.data && typeof err.response.data === "object" && "error" in err.response.data)
+            ? (err.response.data.error as string)
+            : (err instanceof Error ? err.message : "Failed to fetch connection status. Please refresh.")
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchAccounts();
+  }, [user, callbackHandled]); // Rerun when callback is handled to get new status
+
+  // --- Effect 3: Handle the OAuth callback from Reddit ---
+  useEffect(() => {
+    if (!user || callbackHandled) return;
+    const code = searchParams.get("code");
+    const state = searchParams.get("state");
+
+    if (code) {
+      setCallbackHandled(true); // Prevent this from running multiple times
+      setIsConnecting(true); // Show a "finalizing" state
+      setError("");
+      setSuccess("");
+
+      const handleCallback = async () => {
+        try {
+          const res = await api.get<{ redditUsername: string }>(`/api/auth/reddit/oauth/callback?code=${code}&state=${state || ""}`);
+          setSuccess(`Success! Connected as ${res.data.redditUsername}. Redirecting...`);
+          // --- Improvement: Redirect to dashboard after success ---
+          setTimeout(() => router.push("/dashboard"), 2000);
+        } catch (err: unknown) {
+          setError(
+            (err && typeof err === "object" && "response" in err && err.response && typeof err.response === "object" && "data" in err.response && err.response.data && typeof err.response.data === "object" && "error" in err.response.data)
+              ? (err.response.data.error as string)
+              : (err instanceof Error ? err.message : "Failed to connect Reddit account.")
+          );
+        } finally {
+          setIsConnecting(false);
+        }
+      };
+      handleCallback();
+    }
+  }, [user, searchParams, callbackHandled, router]);
+
+
+  const handleInitiateConnect = async () => {
+    setIsConnecting(true);
+    setError("");
+    setSuccess("");
+    try {
+      const res = await api.post<{ authUrl: string }>("/api/auth/reddit/oauth/connect");
+      window.location.href = res.data.authUrl; // Redirect user to Reddit
+    } catch (err: unknown) {
+      setError(
+        (err && typeof err === "object" && "response" in err && err.response && typeof err.response === "object" && "data" in err.response && err.response.data && typeof err.response.data === "object" && "error" in err.response.data)
+          ? (err.response.data.error as string)
+          : (err instanceof Error ? err.message : "Could not initiate connection. Please try again.")
+      );
+      setIsConnecting(false);
+    }
+  };
+
+  if (authLoading || isLoading) {
+    return (
+      <main className="flex items-center justify-center min-h-screen bg-slate-50">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <div className="text-lg text-slate-600 font-medium">Loading Connection Status...</div>
+        </div>
+      </main>
+    );
+  }
+
+  const isConnected = accounts.length > 0;
+  const username = isConnected ? accounts[0].reddit_username : null;
+
+  return (
+    <main className="min-h-screen bg-slate-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-right">
+             <Link href="/dashboard" className="text-sm font-semibold text-blue-600 hover:text-blue-700">
+                Go to Dashboard →
+            </Link>
+        </div>
+        <div className="flex items-center justify-center pt-16">
+            <div className="w-full max-w-lg">
+                <div className="text-center">
+                    <h1 className="text-3xl font-bold text-slate-900">Reddit Account Connection</h1>
+                    <p className="text-slate-600 mt-2">
+                        To schedule and publish posts, you need to grant access to your Reddit account.
+                    </p>
+                </div>
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 mt-8">
+                    {success && <div className="mb-4 p-3 text-sm text-green-800 bg-green-100 border border-green-200 rounded-lg">{success}</div>}
+                    {error && <div className="mb-4 p-3 text-sm text-red-800 bg-red-100 border border-red-200 rounded-lg">{error}</div>}
+
+                    {/* --- Improvement: Visual Status Box --- */}
+                    <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 flex items-center gap-4">
+                        {isConnecting ? (
+                            <>
+                                <div className="w-5 h-5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"></div>
+                                <div className="flex-1">
+                                    <p className="font-semibold text-slate-800">Finalizing Connection</p>
+                                    <p className="text-sm text-slate-600">Please wait a moment...</p>
+                                </div>
+                            </>
+                        ) : isConnected ? (
+                            <>
+                                <div className="w-10 h-10 flex items-center justify-center bg-green-100 rounded-full">
+                                    <span className="text-xl text-green-600">✓</span>
+                                </div>
+                                <div className="flex-1">
+                                    <p className="font-semibold text-slate-800">Connected</p>
+                                    <p className="text-sm text-slate-600">Authenticated as <strong>{username}</strong></p>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <div className="w-10 h-10 flex items-center justify-center bg-slate-100 rounded-full">
+                                    <span className="text-xl text-slate-500">!</span>
+                                </div>
+                                <div className="flex-1">
+                                    <p className="font-semibold text-slate-800">Not Connected</p>
+                                    <p className="text-sm text-slate-600">Please connect your account to proceed.</p>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                    <button
+                        onClick={handleInitiateConnect}
+                        disabled={isConnecting}
+                        className="w-full flex justify-center items-center mt-6 px-4 py-2.5 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-slate-400 transition-colors"
+                    >
+                        {isConnecting ? "Please wait..." : isConnected ? "Reconnect Account" : "Connect with Reddit"}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+  );
+}
+
+// Using Suspense for client components that use searchParams
+export default function RedditConnectPage() {
+    return (
+        <Suspense>
+            <RedditConnectContent />
+        </Suspense>
+    );
+}
+</file>
+
 <file path="client/src/app/dashboard/page.tsx">
 "use client";
 import React, { useEffect, useState } from "react";
@@ -5080,10 +5831,16 @@ import { useAuth } from "@/lib/auth";
 import api from "@/lib/axios";
 import Link from "next/link";
 
+// --- Add RedditAccount interface ---
+interface RedditAccount {
+  id: string;
+  reddit_username: string;
+}
+
 export default function DashboardPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const [accounts, setAccounts] = useState<any[] | null>(null);
+  const [accounts, setAccounts] = useState<RedditAccount[] | null>(null);
   const [fetchingAccounts, setFetchingAccounts] = useState(true);
   const [stats, setStats] = useState({
     totalPosts: 0,
@@ -5103,7 +5860,7 @@ export default function DashboardPage() {
     setFetchingAccounts(true);
     const fetchAccounts = async () => {
       try {
-        const res: any = await api.get("/api/auth/reddit/accounts");
+        const res = await api.get<{ accounts: RedditAccount[] }>("/api/auth/reddit/accounts");
         setAccounts(res.data.accounts);
         // Mock stats - replace with actual API calls
         setStats({
@@ -5336,7 +6093,11 @@ function LoginContent() {
       await authLogin(data.token);
       router.push("/dashboard");
     } catch (err: unknown) {
-      setError((err as any)?.response?.data?.error || "Invalid email or password.");
+      setError(
+        (err && typeof err === "object" && "response" in err && err.response && typeof err.response === "object" && "data" in err.response && err.response.data && typeof err.response.data === "object" && "error" in err.response.data)
+          ? (err.response.data.error as string)
+          : (err instanceof Error ? err.message : "Invalid email or password.")
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -5440,28 +6201,118 @@ export default function LoginPage() {
 }
 </file>
 
-<file path="client/src/app/posts/page.tsx">
+<file path="client/src/app/Navbar.tsx">
 "use client";
-import React, { useEffect, useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import React from "react";
+import Link from "next/link";
+import { useAuth } from "@/lib/auth";
+import { usePathname } from "next/navigation";
+
+function UserMenu() {
+  const { user, logout } = useAuth();
+  const [open, setOpen] = React.useState(false);
+  if (!user) return null;
+  return (
+    <div className="relative">
+      <button
+        className="flex items-center gap-2 px-4 py-1.5 bg-slate-50 rounded-md font-medium text-slate-700 hover:bg-slate-100 transition-colors"
+        onClick={() => setOpen((o) => !o)}
+      >
+        <span className="truncate max-w-[120px]">{user.clientName || user.email}</span>
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+      </button>
+      {open && (
+        <div className="absolute right-0 mt-1 w-40 bg-white border border-slate-200 rounded-md shadow-lg z-50">
+          <button
+            className="w-full text-left px-4 py-2 text-slate-700 hover:bg-slate-50 transition-colors"
+            onClick={() => { logout(); window.location.href = "/login"; }}
+          >
+            Logout
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function Navbar() {
+  const { user } = useAuth();
+  const pathname = usePathname();
+  return (
+    <nav className="w-full flex items-center justify-between py-3 px-4 sm:px-6 lg:px-8 bg-white shadow-sm fixed top-0 left-0 z-30 border-b border-slate-100">
+      <div className="flex items-center">
+        <Link href="/" className="flex items-center mr-8" title="Home">
+          <span className="font-bold text-lg tracking-tight text-slate-900">RedditMVP</span>
+        </Link>
+        <div className="hidden md:flex items-center space-x-6">
+          <Link href="/" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname === '/' ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
+            Home
+          </Link>
+          <Link href="/posts" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/posts') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
+            Posts
+          </Link>
+          <Link href="/ai" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/ai') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
+            AI
+          </Link>
+          <Link href="/reddit-connect" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/reddit-connect') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
+            Reddit Connect
+          </Link>
+          {user && (
+            <Link href="/dashboard" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/dashboard') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
+              Dashboard
+            </Link>
+          )}
+        </div>
+      </div>
+      <div className="flex items-center space-x-4">
+        {user ? (
+          <UserMenu />
+        ) : (
+          <>
+            <Link href="/login" className="py-1.5 px-3 font-medium text-sm text-slate-600 hover:text-[#FF4500] transition-colors">
+              Login
+            </Link>
+            <Link href="/register" className="py-1.5 px-4 rounded-md font-medium text-sm bg-[#FF4500] hover:bg-[#FF4500]/90 text-white transition-colors">
+              Sign Up
+            </Link>
+          </>
+        )}
+        <Link href="/posts/new" className="hidden md:block py-1.5 px-4 rounded-md font-medium text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors">
+          New Post
+        </Link>
+      </div>
+    </nav>
+  );
+}
+</file>
+
+<file path="client/src/app/posts/[id]/page.tsx">
+"use client";
+import React, { useEffect, useState } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import api from "@/lib/axios";
 import Link from "next/link";
 
-// --- Improvement: Type-safe data models ---
+// --- Improvement: Type-safe data model based on your API docs ---
 type PostStatus = "Draft" | "Scheduled" | "Posted" | "Error";
 
 interface Post {
   id: string;
   title: string;
+  body: string;
   subreddit: string;
   status: PostStatus;
   scheduled_at?: string;
-}
-
-interface RedditAccount {
-  id: string;
-  reddit_username: string;
+  posted_at?: string;
+  createdAt: string;
+  updatedAt: string;
+  author: {
+    email: string;
+  };
+  redditAccount?: {
+    reddit_username: string;
+  };
 }
 
 // --- Improvement: Reusable Status Badge Component ---
@@ -5482,22 +6333,27 @@ const StatusBadge = ({ status }: { status: PostStatus }) => {
 };
 
 // --- Main Page Component ---
-function PostsPageContent() {
+export default function PostDetailPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const params = useParams();
+  const postId = params?.id as string;
 
-  const [accounts, setAccounts] = useState<RedditAccount[] | null>(null);
-  const [posts, setPosts] = useState<Post[]>([]);
-  
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [status, setStatus] = useState("All");
+  const [post, setPost] = useState<Post | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [form, setForm] = useState({ title: "", body: "", subreddit: "" });
 
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(true);
-  const [successMessage, setSuccessMessage] = useState("");
+  
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isScheduling, setIsScheduling] = useState(false);
 
-  const statusOptions = ["All", "Draft", "Scheduled", "Posted", "Error"];
+  // Add state for accounts and selected account
+  const [accounts, setAccounts] = useState<{ id: string; reddit_username: string }[]>([]);
+  const [selectedAccountId, setSelectedAccountId] = useState("");
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -5505,166 +6361,253 @@ function PostsPageContent() {
     }
   }, [user, authLoading, router]);
 
-  // Check for success message from query params
   useEffect(() => {
-    if (searchParams.get("deleted") === "true") {
-      setSuccessMessage("Post deleted successfully.");
-      // Clean up URL
-      router.replace("/posts", { scroll: false });
-    }
-  }, [searchParams, router]);
+    if (!user || !postId) return;
 
-  // This effect now combines account fetching and the initial post fetch.
-  useEffect(() => {
-    if (!user) return;
-    
     const fetchData = async () => {
       setLoading(true);
+      setError("");
       try {
-        // First, check for connected Reddit accounts
-        const accountsRes = await api.get<{ accounts: RedditAccount[] }>("/api/auth/reddit/accounts");
-        if (accountsRes.data.accounts.length === 0) {
-          router.replace("/reddit-connect");
-          return;
-        }
-        setAccounts(accountsRes.data.accounts);
-
-        // Then, fetch posts
-        const postsRes = await api.get("/api/posts", {
-          params: { page, limit: 10, ...(status !== "All" && { status }) },
+        const [postRes, accountsRes] = await Promise.all([
+          api.get<{ post: Post }>(`/api/posts/${postId}`),
+          api.get<{ accounts: { id: string; reddit_username: string }[] }>("/api/auth/reddit/accounts"),
+        ]);
+        setPost(postRes.data.post);
+        setForm({
+          title: postRes.data.post.title,
+          body: postRes.data.post.body,
+          subreddit: postRes.data.post.subreddit,
         });
-        const responseData = postsRes.data as { posts: Post[]; pagination: { pages: number } };
-        setPosts(responseData.posts);
-        setTotalPages(responseData.pagination.pages);
-
-      } catch (error) {
-        console.error("Failed to fetch data:", error);
-        setPosts([]); // Clear posts on error
+        setAccounts(accountsRes.data.accounts);
+        if (accountsRes.data.accounts.length > 0) {
+          setSelectedAccountId(accountsRes.data.accounts[0].id);
+        }
+      } catch (err: unknown) {
+        setError(
+          (err && typeof err === "object" && "response" in err && err.response && typeof err.response === "object" && "data" in err.response && err.response.data && typeof err.response.data === "object" && "error" in err.response.data)
+            ? (err.response.data.error as string)
+            : (err instanceof Error ? err.message : "Failed to load data.")
+        );
       } finally {
         setLoading(false);
       }
     };
-
     fetchData();
-  }, [user, page, status, router]);
+  }, [user, postId]);
 
+  const handleSaveChanges = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+    setError("");
+    setSuccess("");
+    try {
+      const res = await api.put<{ post: Post }>(`/api/posts/${postId}`, form);
+      setPost(res.data.post);
+      setSuccess("Post updated successfully!");
+      setIsEditing(false);
+    } catch (err: unknown) {
+      setError(
+        (err && typeof err === "object" && "response" in err && err.response && typeof err.response === "object" && "data" in err.response && err.response.data && typeof err.response.data === "object" && "error" in err.response.data)
+          ? (err.response.data.error as string)
+          : (err instanceof Error ? err.message : "Failed to update the post.")
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+  
+  const handleDelete = async () => {
+    if (!window.confirm("Are you sure you want to permanently delete this post?")) return;
+    setIsDeleting(true);
+    setError("");
+    try {
+      await api.delete(`/api/posts/${postId}`);
+      router.push("/posts?deleted=true");
+    } catch (err: unknown) {
+      setError(
+        (err && typeof err === "object" && "response" in err && err.response && typeof err.response === "object" && "data" in err.response && err.response.data && typeof err.response.data === "object" && "error" in err.response.data)
+          ? (err.response.data.error as string)
+          : (err instanceof Error ? err.message : "Failed to delete the post.")
+      );
+      setIsDeleting(false);
+    }
+  };
 
-  if (authLoading || accounts === null) {
+  const handleSchedule = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const scheduledAt = (e.currentTarget.elements.namedItem("scheduleAt") as HTMLInputElement).value;
+    if (!scheduledAt) {
+      setError("Please select a date and time to schedule the post.");
+      return;
+    }
+    if (!selectedAccountId) {
+      setError("Please select a Reddit account to post with.");
+      return;
+    }
+    setIsScheduling(true);
+    setError("");
+    setSuccess("");
+    try {
+      const res = await api.post<{ post: Post }>(`/api/posts/${postId}/schedule`, {
+        scheduled_at: new Date(scheduledAt).toISOString(),
+        redditAccountId: selectedAccountId,
+      });
+      setPost(res.data.post);
+      setSuccess("Post scheduled successfully!");
+    } catch (err: unknown) {
+      setError(
+        (err && typeof err === "object" && "response" in err && err.response && typeof err.response === "object" && "data" in err.response && err.response.data && typeof err.response.data === "object" && "error" in err.response.data)
+          ? (err.response.data.error as string)
+          : (err instanceof Error ? err.message : "Failed to schedule the post.")
+      );
+    } finally {
+      setIsScheduling(false);
+    }
+  };
+
+  if (authLoading || loading) {
     return (
       <main className="flex items-center justify-center min-h-screen bg-slate-50">
         <div className="flex flex-col items-center gap-4">
           <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <div className="text-lg text-slate-600 font-medium">Loading...</div>
+          <div className="text-lg text-slate-600 font-medium">Loading Post...</div>
         </div>
       </main>
     );
   }
 
+  if (!post) {
+    return (
+        <main className="flex items-center justify-center min-h-screen bg-slate-50">
+            <div className="text-center p-8 bg-white rounded-lg shadow-md border border-red-200">
+                <h2 className="text-xl font-bold text-red-600">Error</h2>
+                <p className="text-slate-700 mt-2">{error || "Post not found."}</p>
+                <Link href="/posts" className="mt-4 inline-block bg-blue-600 text-white font-semibold rounded-lg px-4 py-2 hover:bg-blue-700 transition-colors">
+                    Back to Posts
+                </Link>
+            </div>
+        </main>
+    );
+  }
+
+  const canEdit = post.status !== "Posted";
+
   return (
     <main className="min-h-screen bg-slate-50">
-      {/* Header */}
+      {/* Header with Breadcrumbs */}
       <div className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Your Posts</h1>
-            <p className="text-slate-600 mt-1">Manage, edit, and schedule all your content.</p>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center gap-2 text-sm">
+             <Link href="/dashboard" className="text-slate-500 hover:text-blue-600">Dashboard</Link>
+             <span className="text-slate-400">/</span>
+             <Link href="/posts" className="text-slate-500 hover:text-blue-600">Posts</Link>
+             <span className="text-slate-400">/</span>
+             <span className="font-semibold text-slate-800 truncate">{post.title}</span>
           </div>
-          <Link href="/posts/new" className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
-            + New Post
-          </Link>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {successMessage && <div className="mb-4 p-4 text-sm text-green-800 bg-green-100 border border-green-200 rounded-lg">{successMessage}</div>}
-        
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200">
-          {/* Filter Bar */}
-          <div className="p-4 border-b border-slate-200">
-            <div className="flex items-center gap-4">
-              <label htmlFor="status-filter" className="text-sm font-medium text-slate-700">Filter by status:</label>
-              <select
-                id="status-filter"
-                className="px-3 py-1.5 text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={status}
-                onChange={e => { setStatus(e.target.value); setPage(1); }}
-              >
-                {statusOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-              </select>
+        {/* Alerts for success and error messages */}
+        {success && <div className="mb-4 p-4 text-sm text-green-800 bg-green-100 border border-green-200 rounded-lg">{success}</div>}
+        {error && <div className="mb-4 p-4 text-sm text-red-800 bg-red-100 border border-red-200 rounded-lg">{error}</div>}
+      
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content (Left Column) */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200">
+                {isEditing && canEdit ? (
+                    <form onSubmit={handleSaveChanges}>
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <label htmlFor="title" className="block text-sm font-medium text-slate-700 mb-1">Title</label>
+                                <input id="title" type="text" value={form.title} onChange={e => setForm(f => ({...f, title: e.target.value}))} className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                            </div>
+                            <div>
+                                <label htmlFor="subreddit" className="block text-sm font-medium text-slate-700 mb-1">Subreddit (r/)</label>
+                                <input id="subreddit" type="text" value={form.subreddit} onChange={e => setForm(f => ({...f, subreddit: e.target.value}))} className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                            </div>
+                             <div>
+                                <label htmlFor="body" className="block text-sm font-medium text-slate-700 mb-1">Body</label>
+                                <textarea id="body" value={form.body} onChange={e => setForm(f => ({...f, body: e.target.value}))} className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[250px]" required />
+                            </div>
+                        </div>
+                        <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-3">
+                            <button type="button" onClick={() => setIsEditing(false)} className="px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50">Cancel</button>
+                            <button type="submit" disabled={isSaving} className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-slate-400 flex items-center">
+                                {isSaving && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>}
+                                {isSaving ? 'Saving...' : 'Save Changes'}
+                            </button>
+                        </div>
+                    </form>
+                ) : (
+                    <div className="p-6">
+                        <h1 className="text-2xl font-bold text-slate-900">{post.title}</h1>
+                        <p className="text-sm text-slate-500 mt-1">in <span className="font-semibold">r/{post.subreddit}</span></p>
+                        <div className="mt-6 prose prose-slate max-w-none whitespace-pre-line">
+                            {post.body}
+                        </div>
+                    </div>
+                )}
             </div>
           </div>
           
-          {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Title</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Subreddit</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Scheduled</th>
-                  <th className="px-6 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-slate-200">
-                {loading ? (
-                  <tr><td colSpan={5} className="text-center py-12 text-slate-500">Loading posts...</td></tr>
-                ) : posts.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="text-center py-12">
-                      <h3 className="text-lg font-semibold text-slate-800">No Posts Found</h3>
-                      <p className="text-slate-500 mt-1">Try a different filter or create a new post.</p>
-                      <Link href="/posts/new" className="mt-4 inline-block px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">Create your first post</Link>
-                    </td>
-                  </tr>
-                ) : posts.map(post => (
-                  <tr key={post.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 max-w-xs truncate">{post.title}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">r/{post.subreddit}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm"><StatusBadge status={post.status} /></td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{post.scheduled_at ? new Date(post.scheduled_at).toLocaleString() : '—'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
-                      <Link href={`/posts/${post.id}`} className="px-3 py-1.5 text-sm font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">View</Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          {posts.length > 0 && (
-            <div className="p-4 border-t border-slate-200 flex justify-between items-center text-sm">
-                <button
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                    disabled={page === 1 || loading}
-                    className="px-3 py-1.5 font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50"
-                >
-                    Previous
-                </button>
-                <span className="text-slate-700 font-medium">Page {page} of {totalPages}</span>
-                <button
-                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                    disabled={page === totalPages || loading}
-                    className="px-3 py-1.5 font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50"
-                >
-                    Next
-                </button>
+          {/* Sidebar (Right Column) */}
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+              <h3 className="text-lg font-semibold text-slate-900 mb-4">Post Status</h3>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-slate-600">Status</span>
+                <StatusBadge status={post.status} />
+              </div>
+              <ul className="mt-4 space-y-2 text-sm text-slate-600 border-t border-slate-200 pt-4">
+                 <li><strong>Created:</strong> {new Date(post.createdAt).toLocaleString()}</li>
+                 <li><strong>Last Updated:</strong> {new Date(post.updatedAt).toLocaleString()}</li>
+                 <li><strong>Scheduled for:</strong> {post.scheduled_at ? new Date(post.scheduled_at).toLocaleString() : 'N/A'}</li>
+                 <li><strong>Posted at:</strong> {post.posted_at ? new Date(post.posted_at).toLocaleString() : 'N/A'}</li>
+              </ul>
             </div>
-          )}
+            {canEdit && (
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <h3 className="text-lg font-semibold text-slate-900 mb-4">Actions</h3>
+                    <div className="space-y-3">
+                        {!isEditing && <button onClick={() => setIsEditing(true)} className="w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">Edit Post</button>}
+                        <form onSubmit={handleSchedule} className="space-y-2">
+                          <div>
+                            <label htmlFor="redditAccount" className="block text-sm font-medium text-slate-700 mb-1">Post with Account</label>
+                            <select
+                              id="redditAccount"
+                              value={selectedAccountId}
+                              onChange={e => setSelectedAccountId(e.target.value)}
+                              className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              required
+                            >
+                              <option value="" disabled>Select an account</option>
+                              {accounts.map(acc => (
+                                <option key={acc.id} value={acc.id}>
+                                  {acc.reddit_username}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <input name="scheduleAt" type="datetime-local" className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                          <button type="submit" disabled={isScheduling || !selectedAccountId} className="w-full px-4 py-2 font-semibold text-white bg-purple-600 rounded-lg hover:bg-purple-700 disabled:bg-slate-400 flex items-center justify-center">
+                            {isScheduling && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>}
+                            {isScheduling ? 'Scheduling...' : 'Schedule'}
+                          </button>
+                        </form>
+                        <button onClick={handleDelete} disabled={isDeleting} className="w-full px-4 py-2 font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:bg-slate-400 flex items-center justify-center">
+                            {isDeleting && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>}
+                            {isDeleting ? 'Deleting...' : 'Delete Post'}
+                        </button>
+                    </div>
+                </div>
+            )}
+          </div>
         </div>
       </div>
     </main>
   );
-}
-
-// Using Suspense for client components that use searchParams
-export default function PostsPage() {
-    return (
-        <Suspense fallback={<div>Loading...</div>}>
-            <PostsPageContent />
-        </Suspense>
-    );
 }
 </file>
 
@@ -5708,8 +6651,12 @@ export default function RegisterPage() {
       await api.post("/api/auth/register", form);
       // --- Improvement: Redirect with a query param for a better user experience on the login page ---
       router.push("/login?registered=true");
-    } catch (err: any) {
-      setError(err.response?.data?.error || "An unknown error occurred during registration.");
+    } catch (err: unknown) {
+      setError(
+        (err && typeof err === "object" && "response" in err && err.response && typeof err.response === "object" && "data" in err.response && err.response.data && typeof err.response.data === "object" && "error" in err.response.data)
+          ? (err.response.data.error as string)
+          : (err instanceof Error ? err.message : "An unknown error occurred during registration.")
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -5813,91 +6760,6 @@ export default function RegisterPage() {
         </div>
       </div>
     </main>
-  );
-}
-</file>
-
-<file path="client/src/app/Navbar.tsx">
-"use client";
-import React from "react";
-import Link from "next/link";
-import { useAuth } from "@/lib/auth";
-import { usePathname } from "next/navigation";
-
-function UserMenu() {
-  const { user, logout } = useAuth();
-  const [open, setOpen] = React.useState(false);
-  if (!user) return null;
-  return (
-    <div className="relative">
-      <button
-        className="flex items-center gap-2 px-4 py-1.5 bg-slate-50 rounded-md font-medium text-slate-700 hover:bg-slate-100 transition-colors"
-        onClick={() => setOpen((o) => !o)}
-      >
-        <span className="truncate max-w-[120px]">{user.clientName || user.email}</span>
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-      </button>
-      {open && (
-        <div className="absolute right-0 mt-1 w-40 bg-white border border-slate-200 rounded-md shadow-lg z-50">
-          <button
-            className="w-full text-left px-4 py-2 text-slate-700 hover:bg-slate-50 transition-colors"
-            onClick={() => { logout(); window.location.href = "/login"; }}
-          >
-            Logout
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-export default function Navbar() {
-  const { user } = useAuth();
-  const pathname = usePathname();
-  return (
-    <nav className="w-full flex items-center justify-between py-3 px-4 sm:px-6 lg:px-8 bg-white shadow-sm fixed top-0 left-0 z-30 border-b border-slate-100">
-      <div className="flex items-center">
-        <Link href="/" className="flex items-center mr-8" title="Home">
-          <span className="font-bold text-lg tracking-tight text-slate-900">RedditMVP</span>
-        </Link>
-        <div className="hidden md:flex items-center space-x-6">
-          <Link href="/" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname === '/' ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
-            Home
-          </Link>
-          <Link href="/posts" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/posts') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
-            Posts
-          </Link>
-          <Link href="/ai" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/ai') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
-            AI
-          </Link>
-          <Link href="/reddit-connect" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/reddit-connect') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
-            Reddit Connect
-          </Link>
-          {user && (
-            <Link href="/dashboard" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/dashboard') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
-              Dashboard
-            </Link>
-          )}
-        </div>
-      </div>
-      <div className="flex items-center space-x-4">
-        {user ? (
-          <UserMenu />
-        ) : (
-          <>
-            <Link href="/login" className="py-1.5 px-3 font-medium text-sm text-slate-600 hover:text-[#FF4500] transition-colors">
-              Login
-            </Link>
-            <Link href="/register" className="py-1.5 px-4 rounded-md font-medium text-sm bg-[#FF4500] hover:bg-[#FF4500]/90 text-white transition-colors">
-              Sign Up
-            </Link>
-          </>
-        )}
-        <Link href="/posts/new" className="hidden md:block py-1.5 px-4 rounded-md font-medium text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors">
-          New Post
-        </Link>
-      </div>
-    </nav>
   );
 }
 </file>
@@ -6097,6 +6959,7 @@ import Link from "next/link";
 import React from "react";
 import Navbar from "./Navbar";
 import { ThemeProvider } from "@/lib/theme";
+import { SocketProvider } from '@/contexts/SocketContext';
 
 
 const geistSans = Geist({
@@ -6162,6 +7025,12 @@ export default function RootLayout({
     '/settings',
   ].some((route) => pathname.startsWith(route));
 
+  // Get token from localStorage (client-side only)
+  let token: string | undefined = undefined;
+  if (typeof window !== 'undefined') {
+    token = localStorage.getItem('token') || undefined;
+  }
+
   return (
     <html lang="en" className={`light ${geistSans.variable} ${geistMono.variable}`}>
       <head>
@@ -6173,8 +7042,10 @@ export default function RootLayout({
       <body suppressHydrationWarning className="antialiased">
         <ThemeProvider>
           <AuthProvider>
-            {!hideNavbar && <Navbar />}
-            <ClientBody>{children}</ClientBody>
+            <SocketProvider token={token}>
+              {!hideNavbar && <Navbar />}
+              <ClientBody>{children}</ClientBody>
+            </SocketProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>
@@ -6670,7 +7541,7 @@ export default function Home() {
               <div className="flex flex-col items-center md:items-start gap-3">
                 <h3 className="font-bold text-slate-800 text-sm">Quick Links</h3>
                 <nav className="flex flex-wrap md:flex-col items-center md:items-start justify-center gap-3 text-sm font-medium text-slate-600">
-                  <a href="/" className="hover:text-[#FF4500] transition-colors">Home</a>
+                  <Link href="/" className="hover:text-[#FF4500] transition-colors">Home</Link>
                   <a href="#how-it-works" className="hover:text-[#FF4500] transition-colors">How It Works</a>
                   <a href="#faq" className="hover:text-[#FF4500] transition-colors">FAQ</a>
                 </nav>

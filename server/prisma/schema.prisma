@@ -31,6 +31,8 @@ model Client {
   users           User[]
   redditAccounts  RedditAccount[]
   posts           Post[]
+  keywords        Keyword[]
+  mentions        Mention[]
 
   @@map("clients")
 }
@@ -91,4 +93,42 @@ model Post {
   redditAccountId String?
 
   @@map("posts")
+}
+
+// --- Monitoring & Analytics Additions ---
+enum Sentiment {
+  POSITIVE
+  NEUTRAL
+  NEGATIVE
+  UNKNOWN
+}
+
+model Keyword {
+  id            String    @id @default(cuid())
+  term          String
+  is_active     Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  lastScannedAt DateTime?
+  client        Client    @relation(fields: [clientId], references: [id])
+  clientId      String
+  mentions      Mention[]
+
+  @@unique([term, clientId])
+  @@map("keywords")
+}
+
+model Mention {
+  id            String    @id @default(cuid())
+  source_url    String    @unique
+  content_snippet String  @db.Text
+  author        String
+  subreddit     String
+  sentiment     Sentiment @default(UNKNOWN)
+  found_at      DateTime
+  keyword       Keyword   @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+  keywordId     String
+  client        Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId      String
+
+  @@map("mentions")
 } 

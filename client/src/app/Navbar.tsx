@@ -1,3 +1,5 @@
+// client/src/app/Navbar.tsx
+
 "use client";
 import React from "react";
 import Link from "next/link";
@@ -34,30 +36,33 @@ function UserMenu() {
 export default function Navbar() {
   const { user } = useAuth();
   const pathname = usePathname();
+
+  // Hide the navbar on the homepage
+  if (pathname === '/') {
+    return null;
+  }
+
   return (
     <nav className="w-full flex items-center justify-between py-3 px-4 sm:px-6 lg:px-8 bg-white shadow-sm fixed top-0 left-0 z-30 border-b border-slate-100">
       <div className="flex items-center">
-        <Link href="/" className="flex items-center mr-8" title="Home">
+        <Link href="/dashboard" className="flex items-center mr-8" title="Dashboard">
           <span className="font-bold text-lg tracking-tight text-slate-900">RedditMVP</span>
         </Link>
         <div className="hidden md:flex items-center space-x-6">
-          <Link href="/" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname === '/' ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
-            Home
-          </Link>
-          <Link href="/posts" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/posts') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
-            Posts
-          </Link>
-          <Link href="/ai" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/ai') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
-            AI
-          </Link>
-          <Link href="/reddit-connect" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/reddit-connect') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
-            Reddit Connect
-          </Link>
           {user && (
             <Link href="/dashboard" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/dashboard') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
               Dashboard
             </Link>
           )}
+           <Link href="/posts" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/posts') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
+            Posts
+          </Link>
+          <Link href="/ai" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/ai') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
+            AI
+          </Link>
+          <Link href="/keywords" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/keywords') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
+            Monitoring
+          </Link>
         </div>
       </div>
       <div className="flex items-center space-x-4">
@@ -73,10 +78,7 @@ export default function Navbar() {
             </Link>
           </>
         )}
-        <Link href="/posts/new" className="hidden md:block py-1.5 px-4 rounded-md font-medium text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors">
-          New Post
-        </Link>
       </div>
     </nav>
   );
-} 
+}
