@@ -62,16 +62,20 @@ const runMonitoringJob = async () => {
       await delay(1200); // Respect Reddit rate limits
       
       const q = `"${keyword.term}"`;
-      // --- MODIFICATION: Added t=week to limit search to the past week ---
-      const url = `https://oauth.reddit.com/search.json?sort=new&limit=100&q=${encodeURIComponent(q)}&t=week`;
+
+      // --- DYNAMIC TIME WINDOW LOGIC ---
+      // If the keyword has never been scanned, do a broad search (last month).
+      // If it has been scanned, do a narrow search for recent mentions (last day).
+      const timeWindow = keyword.lastScannedAt ? 'day' : 'month';
+      const url = `https://oauth.reddit.com/search.json?sort=new&limit=100&q=${encodeURIComponent(q)}&t=${timeWindow}`;
       
-      console.log(`[${keyword.term}] Searching URL: ${url}`);
+      console.log(`[${keyword.term}] Searching URL (window: ${timeWindow}): ${url}`);
       
       const resp = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
       const results = resp.data?.data?.children || [];
       
       if (results.length > 0) {
-        console.log(`[${keyword.term}] Found ${results.length} results from the past week. Checking for new mentions...`);
+        console.log(`[${keyword.term}] Found ${results.length} results. Checking for new mentions...`);
       }
 
       let newMentionsFound = 0;
@@ -107,6 +111,7 @@ const runMonitoringJob = async () => {
         console.log(`[${keyword.term}] Finished processing. ${newMentionsFound} new mentions were saved.`);
       }
       
+      // We always update lastScannedAt so the next run uses the narrow 'day' window.
       await prisma.keyword.update({ where: { id: keyword.id }, data: { lastScannedAt: new Date() } });
     }
   } catch (err: any) {
@@ -127,7 +132,6 @@ const runMonitoringJob = async () => {
     console.error('-----------------------------');
   } finally {
     isRunning = false;
-    // Note: Corrected a typo in the log message from the previous version
     console.log(`[${new Date().toISOString()}] Monitoring job finished.`);
   }
 };
