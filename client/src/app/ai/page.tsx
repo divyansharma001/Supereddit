@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import api from "@/lib/axios";
+import ReactMarkdown from "react-markdown";
 
 // --- Improvement: Type-safe data model based on your API docs ---
 interface AITone {
@@ -205,9 +206,9 @@ export default function AIPage() {
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-slate-600">BODY</h3>
-                  <p className="text-slate-800 mt-1 whitespace-pre-line prose prose-slate max-w-none">
-                    {result.body}
-                  </p>
+                  <div className="text-slate-800 mt-1 prose prose-slate max-w-none">
+                    <ReactMarkdown>{result.body}</ReactMarkdown>
+                  </div>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 mt-4">
                   <button
