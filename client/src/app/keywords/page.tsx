@@ -8,6 +8,7 @@ import api from '@/lib/axios';
 import { useRouter } from 'next/navigation';
 import { useSocketContext } from '@/contexts/SocketContext';
 import Link from 'next/link';
+import ReactMarkdown from "react-markdown";
 
 // --- Type Definitions (from Prisma Schema) ---
 interface Keyword {
@@ -131,28 +132,33 @@ export default function KeywordsPage() {
 
     return (
         <main className="min-h-screen bg-slate-50">
-            {/* Header */}
-            <div className="bg-white border-b border-slate-200">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-2xl font-bold text-slate-900">Keyword Monitoring</h1>
-                            <p className="text-slate-600 mt-1">Track brand mentions, competitors, and topics across Reddit.</p>
-                        </div>
-                        <Link href="/dashboard" className="text-sm font-semibold text-blue-600 hover:text-blue-700">
-                            ← Back to Dashboard
-                        </Link>
+            {/* Header - Dashboard style */}
+            <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 md:pt-28">
+                {/* Floating/blurred background shapes */}
+                <div className="absolute left-1/2 top-8 -translate-x-1/2 w-[340px] h-[80px] bg-gradient-to-r from-[#FF4500]/20 via-[#FF6B35]/20 to-[#FFF7F0]/0 rounded-full blur-3xl opacity-60 pointer-events-none z-0"></div>
+                <div className="absolute top-1/4 left-1/4 w-40 h-40 bg-gradient-to-br from-[#FF4500]/10 to-transparent rounded-full blur-2xl opacity-40 pointer-events-none z-0"></div>
+                <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-gradient-to-br from-[#FF6B35]/10 to-transparent rounded-full blur-3xl opacity-30 pointer-events-none z-0"></div>
+                <div className="relative z-10 flex flex-col items-center text-center">
+                    {/* Badge */}
+                    <div className="mb-4 inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 shadow-sm">
+                        <span className="w-2 h-2 bg-yellow-500 rounded-full mr-2 animate-pulse"></span>
+                        <span className="text-sm font-medium text-slate-700">Keyword Monitoring</span>
                     </div>
+                    <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight text-slate-900 mb-3 tracking-tight" style={{fontFamily: 'Plus Jakarta Sans'}}>
+                        Real-time Reddit Monitoring
+                    </h1>
+                    <p className="text-slate-700 text-lg sm:text-xl font-medium mb-2" style={{fontFamily: 'Plus Jakarta Sans'}}>
+                        Track brand mentions, competitors, and topics across Reddit in real time.
+                    </p>
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-6">
                 {error && <div className="mb-4 p-4 text-sm text-red-800 bg-red-100 border border-red-200 rounded-lg">{error}</div>}
-                
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                     {/* Left Column: Keyword Management */}
                     <div className="lg:col-span-1 space-y-6">
-                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                        <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
                             <h2 className="text-lg font-semibold text-slate-900 mb-4">Add Keyword</h2>
                             <form onSubmit={handleAddKeyword} className="space-y-3">
                                 <input
@@ -171,8 +177,7 @@ export default function KeywordsPage() {
                                 </button>
                             </form>
                         </div>
-
-                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                        <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
                             <h2 className="text-lg font-semibold text-slate-900 mb-4">Tracked Keywords</h2>
                             {loading ? (
                                 <p className="text-slate-500">Loading keywords...</p>
@@ -196,11 +201,10 @@ export default function KeywordsPage() {
                             )}
                         </div>
                     </div>
-
                     {/* Right Column: Mentions Feed */}
-                    <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200">
-                        <h2 className="text-lg font-semibold text-slate-900 p-6 border-b border-slate-200">Real-time Mentions</h2>
-                        <div className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+                    <div className="lg:col-span-2 bg-white rounded-2xl shadow-lg border border-slate-200">
+                        <h2 className="text-lg font-semibold text-slate-900 p-8 border-b border-slate-200">Real-time Mentions</h2>
+                        <div className="p-8 space-y-4 max-h-[80vh] overflow-y-auto">
                             {loading ? (
                                 <p className="text-slate-500 text-center py-8">Loading mentions feed...</p>
                             ) : mentions.length === 0 ? (
@@ -220,7 +224,13 @@ export default function KeywordsPage() {
                                                 View on Reddit ↗
                                             </a>
                                         </div>
-                                        <p className="text-slate-800 my-2">{mention.content_snippet}</p>
+                                        <div className="prose prose-slate my-2">
+                                            <ReactMarkdown>{
+                                                mention.content_snippet.length > 400
+                                                    ? mention.content_snippet.slice(0, 400) + '...'
+                                                    : mention.content_snippet
+                                            }</ReactMarkdown>
+                                        </div>
                                         <div className="text-xs text-slate-500 flex justify-between">
                                             <span>by u/{mention.author}</span>
                                             <span>{new Date(mention.found_at).toLocaleString()}</span>

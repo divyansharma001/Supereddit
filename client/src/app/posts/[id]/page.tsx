@@ -166,6 +166,7 @@ export default function PostDetailPage() {
       });
       setPost(res.data.post);
       setSuccess("Post scheduled successfully!");
+      setTimeout(() => router.push("/posts"), 1200);
     } catch (err: unknown) {
       setError(
         (err && typeof err === "object" && "response" in err && err.response && typeof err.response === "object" && "data" in err.response && err.response.data && typeof err.response.data === "object" && "error" in err.response.data)
