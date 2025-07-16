@@ -37,11 +37,6 @@ export default function Navbar() {
   const { user } = useAuth();
   const pathname = usePathname();
 
-  // Hide the navbar on the homepage
-  if (pathname === '/') {
-    return null;
-  }
-
   return (
     <nav className="w-full flex items-center justify-between py-3 px-4 sm:px-6 lg:px-8 bg-white shadow-sm fixed top-0 left-0 z-30 border-b border-slate-100">
       <div className="flex items-center">
