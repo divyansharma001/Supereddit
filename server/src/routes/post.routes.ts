@@ -22,6 +22,13 @@ router.post('/', PostController.createPost);
 router.get('/', PostController.getPosts);
 
 /**
+ * @route GET /api/posts/:id/vote-history
+ * @desc Get vote order history for a post
+ * @access Private
+ */
+router.get('/:id/vote-history', require('../controllers/vote.controller').VoteController.getVoteHistory);
+
+/**
  * @route GET /api/posts/:id
  * @desc Get a specific post by ID
  * @access Private

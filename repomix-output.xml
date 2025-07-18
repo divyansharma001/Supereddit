@@ -15,7 +15,7 @@ The content is organized as follows:
 2. Repository information
 3. Directory structure
 4. Repository files (if enabled)
-4. Repository files, each consisting of:
+5. Multiple file entries, each consisting of:
   - File path as an attribute
   - Full contents of the file
 </file_format>
@@ -36,10 +36,6 @@ The content is organized as follows:
 - Files matching default ignore patterns are excluded
 - Files are sorted by Git change count (files with more changes are at the bottom)
 </notes>
-
-<additional_info>
-
-</additional_info>
 
 </file_summary>
 
@@ -78,6 +74,7 @@ client/src/app/posts/page.tsx
 client/src/app/reddit-connect/page.tsx
 client/src/app/register/page.tsx
 client/src/app/socket-test/page.tsx
+client/src/components/CoordinationPanel.tsx
 client/src/contexts/SocketContext.tsx
 client/src/lib/auth.tsx
 client/src/lib/axios.ts
@@ -97,6 +94,7 @@ server/src/controllers/auth.controller.ts
 server/src/controllers/keyword.controller.ts
 server/src/controllers/mention.controller.ts
 server/src/controllers/post.controller.ts
+server/src/controllers/vote.controller.ts
 server/src/index.ts
 server/src/middleware/auth.middleware.ts
 server/src/routes/ai.routes.ts
@@ -105,6 +103,8 @@ server/src/routes/keyword.routes.ts
 server/src/routes/mention.routes.ts
 server/src/routes/post.routes.ts
 server/src/routes/test.routes.ts
+server/src/routes/vote.routes.ts
+server/src/services/analytics.service.ts
 server/src/services/encryption.service.ts
 server/src/services/monitoring.service.ts
 server/src/services/scheduler.service.ts
@@ -114,6 +114,210 @@ server/tsconfig.json
 
 <files>
 This section contains the contents of the repository's files.
+
+<file path="client/src/components/CoordinationPanel.tsx">
+// client/src/components/CoordinationPanel.tsx
+
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+
+// A simple Alert component
+const Alert = ({ children }: { children: React.ReactNode }) => (
+    <div className="p-3 mb-4 text-sm text-yellow-800 bg-yellow-100 border border-yellow-200 rounded-lg">
+        <strong>Warning:</strong> {children}
+    </div>
+);
+
+export function CoordinationPanel({ postId }: { postId: string }) {
+    const [amount, setAmount] = useState<number>(10);
+    const [history, setHistory] = useState<{created_at: string, amount: number, service: string}[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
+
+    useEffect(() => {
+        // Fetch vote history when component mounts
+        const fetchHistory = async () => {
+            const res = await axios.get(`/api/posts/${postId}/vote-history`);
+            setHistory(res.data as { created_at: string; amount: number; service: string }[]);
+        };
+        fetchHistory();
+    }, [postId, isLoading]); // Refetch after a purchase attempt
+
+    const handlePurchase = async () => {
+        setIsLoading(true);
+        setError('');
+        setSuccess('');
+        try {
+            const res = await axios.post('/api/votes/purchase', { postId, amount });
+            setSuccess(`Order placed successfully for ${amount} upvotes! Order ID: ${(res.data as { orderId: string }).orderId}`);
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'Failed to place order.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <h3 className="text-lg font-semibold text-slate-900 mb-4">Engagement Coordination</h3>
+            <Alert>
+                Purchasing votes violates Reddit ToS and may lead to account suspension. Use for sandboxed testing only.
+            </Alert>
+            <div className="space-y-3 mt-4">
+                <div>
+                    <label htmlFor="amount" className="block text-sm font-medium text-slate-700 mb-1">
+                        Upvote Amount
+                    </label>
+                    <input
+                        type="number"
+                        id="amount"
+                        value={amount}
+                        onChange={(e) => setAmount(Number(e.target.value))}
+                        className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        min="1"
+                    />
+                </div>
+                <button
+                    onClick={handlePurchase}
+                    disabled={isLoading || amount <= 0}
+                    className="w-full px-4 py-2 font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:bg-slate-400 flex items-center justify-center"
+                >
+                    {isLoading ? 'Processing...' : 'Purchase Upvotes'}
+                </button>
+                {success && <div className="text-sm text-green-600">{success}</div>}
+                {error && <div className="text-sm text-red-600">{error}</div>}
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-slate-200">
+                <h4 className="text-md font-semibold text-slate-800 mb-2">Order History</h4>
+                {history.length > 0 ? (
+                    <ul className="space-y-2 text-sm">
+                        {history.map((item, index) => (
+                            <li key={index} className="flex justify-between p-2 bg-slate-50 rounded-md">
+                                <span>{item.amount} votes via {item.service}</span>
+                                <span className="text-slate-500">{new Date(item.created_at).toLocaleString()}</span>
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    <p className="text-sm text-slate-500">No orders placed for this post yet.</p>
+                )}
+            </div>
+        </div>
+    );
+}
+</file>
+
+<file path="server/src/controllers/vote.controller.ts">
+import { Request, Response } from 'express';
+import { prisma } from '../utils/prisma';
+import axios from 'axios';
+
+export class VoteController {
+  // POST /api/votes/purchase
+  static async purchaseVotes(req: Request, res: Response) {
+    // WARNING: This action violates Reddit ToS and will likely result in account bans.
+    // For sandboxed testing purposes only.
+    const { postId, amount } = req.body;
+    const { userId, clientId } = req.user!;
+
+    if (!postId || !amount || typeof amount !== 'number' || amount <= 0) {
+      return res.status(400).json({ message: 'A valid postId and a positive amount are required.' });
+    }
+
+    const post = await prisma.post.findFirst({
+      where: { id: postId, clientId }, // Ensure user owns the post
+    });
+
+    if (!post || !post.source_url) {
+      return res.status(404).json({ message: 'Post not found or has not been published yet.' });
+    }
+
+    const apiKey = process.env.UPVOTESHOP_API_KEY;
+    if (!apiKey) {
+      console.error("UPVOTESHOP_API_KEY is not set in .env");
+      return res.status(500).json({ message: 'Vote service is not configured.' });
+    }
+
+    const UPVOTE_SHOP_API_URL = 'https://upvote.shop/api/v2'; // Their actual API URL
+
+    try {
+      const response = await axios.post(UPVOTE_SHOP_API_URL, {
+        key: apiKey,
+        action: 'add',
+        service: 1, // Service ID for Reddit Upvotes (confirm from their docs)
+        link: post.source_url,
+        quantity: amount,
+      });
+
+      if (!response.data || response.data.error) {
+        throw new Error(response.data.error || 'Unknown error from upvote service');
+      }
+
+      // Log the successful order.
+      await prisma.voteOrderLog.create({
+        data: {
+          service: 'upvote.shop',
+          amount,
+          external_ref: String(response.data.order),
+          postId: post.id,
+          userId: userId,
+          clientId: clientId,
+        },
+      });
+
+      return res.status(200).json({ message: 'Order placed successfully.', orderId: response.data.order });
+
+    } catch (error: any) {
+      console.error("Upvote.shop API error:", error.message);
+      return res.status(500).json({ message: 'Failed to place order with upvote service.' });
+    }
+  }
+
+  // GET /api/posts/:id/vote-history
+  static async getVoteHistory(req: Request, res: Response) {
+    const { id } = req.params;
+    const { clientId } = req.user!;
+
+    if (!id) {
+      return res.status(400).json({ message: 'Post ID is required.' });
+    }
+
+    const history = await prisma.voteOrderLog.findMany({
+        where: {
+            postId: id,
+            clientId,
+        },
+        orderBy: {
+            created_at: 'desc',
+        },
+        select: {
+            created_at: true,
+            amount: true,
+            service: true,
+        },
+    });
+
+    return res.status(200).json(history);
+  }
+}
+</file>
+
+<file path="server/src/routes/vote.routes.ts">
+import { Router } from 'express';
+import { authenticateToken } from '../middleware/auth.middleware';
+import { VoteController } from '../controllers/vote.controller';
+
+const router = Router();
+
+// All routes here are protected
+router.use(authenticateToken);
+
+router.post('/purchase', VoteController.purchaseVotes);
+
+export default router;
+</file>
 
 <file path=".cursor/rules/ai-integration.mdc">
 # AI Integration & Post Generation
@@ -2627,6 +2831,13 @@ router.delete('/:id', PostController.deletePost);
  */
 router.post('/:id/schedule', PostController.schedulePost);
 
+/**
+ * @route GET /api/posts/:id/vote-history
+ * @desc Get vote order history for a post
+ * @access Private
+ */
+router.get('/:id/vote-history', require('../controllers/vote.controller').VoteController.getVoteHistory);
+
 export default router;
 </file>
 
@@ -2707,6 +2918,72 @@ router.get('/socket-status', authenticateToken, (req, res) => {
 });
 
 export default router;
+</file>
+
+<file path="server/src/services/analytics.service.ts">
+import cron, { ScheduledTask } from 'node-cron';
+import axios from 'axios';
+import { prisma } from '../utils/prisma';
+
+// This service will fetch up-to-date analytics for posted content.
+export class AnalyticsService {
+  private static task: ScheduledTask;
+
+  static initialize() {
+    // Run the job every hour.
+    this.task = cron.schedule('0 * * * *', this.fetchAnalytics, {
+      timezone: "UTC"
+    });
+    console.log('📈 Analytics service initialized. Will run hourly.');
+  }
+
+  static stop() {
+    if (this.task) this.task.stop();
+    console.log('📈 Analytics service stopped.');
+  }
+
+  static async fetchAnalytics() {
+    console.log('Fetching post analytics...');
+    const postsToUpdate = await prisma.post.findMany({
+      where: {
+        status: 'Posted',
+        reddit_post_id: { not: null },
+      },
+      select: { id: true, reddit_post_id: true }
+    });
+
+    if (postsToUpdate.length === 0) {
+        console.log('No posts to update analytics for.');
+        return;
+    }
+    
+    // Reddit's info endpoint can take a comma-separated list of fullnames (e.g., t3_xyz)
+    const postIds = postsToUpdate.map(p => p.reddit_post_id).join(',');
+
+    try {
+      // Using the public .json endpoint doesn't require auth for basic info.
+      const response = await axios.get(`https://www.reddit.com/api/info.json?id=${postIds}`);
+      const postsData = response.data.data.children;
+
+      for (const postData of postsData) {
+        const { name, score, num_comments } = postData.data;
+        const postToUpdate = postsToUpdate.find(p => p.reddit_post_id === name);
+        if (!postToUpdate?.id) continue; // skip if id is undefined
+        await prisma.post.update({
+          where: { id: postToUpdate.id },
+          data: {
+            current_upvotes: score,
+            current_comments: num_comments,
+            analytics_last_updated: new Date(),
+          },
+        });
+      }
+      console.log(`Successfully updated analytics for ${postsData.length} posts.`);
+    } catch (error) {
+      console.error('Failed to fetch analytics from Reddit:', error);
+    }
+  }
+}
 </file>
 
 <file path="server/src/services/encryption.service.ts">
@@ -3826,143 +4103,6 @@ GEMINI_API_KEY=your_google_gemini_api_key
 - Real-time monitoring alerts are sent via WebSockets. Clients must connect with a valid JWT.
 </file>
 
-<file path="server/prisma/schema.prisma">
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-generator client {
-  provider = "prisma-client-js"
-}
-
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
-enum Role {
-  ADMIN
-  CLIENT_USER
-}
-
-enum PostStatus {
-  Draft
-  Scheduled
-  Posted
-  Error
-}
-
-model Client {
-  id        String   @id @default(cuid())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  users           User[]
-  redditAccounts  RedditAccount[]
-  posts           Post[]
-  keywords        Keyword[]
-  mentions        Mention[]
-
-  @@map("clients")
-}
-
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  role      Role     @default(CLIENT_USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  client   Client @relation(fields: [clientId], references: [id])
-  clientId String
-
-  posts Post[]
-
-  @@map("users")
-}
-
-model RedditAccount {
-  id                String    @id @default(cuid())
-  reddit_username   String
-  access_token      String    // Encrypted
-  refresh_token     String    // Encrypted
-  token_expires_at  DateTime
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-
-  client   Client @relation(fields: [clientId], references: [id])
-  clientId String
-
-  posts Post[]
-
-  @@map("reddit_accounts")
-}
-
-model Post {
-  id              String     @id @default(cuid())
-  title           String
-  body            String
-  subreddit       String
-  status          PostStatus @default(Draft)
-  scheduled_at    DateTime?
-  posted_at       DateTime?
-  reddit_post_id  String?
-  error_message   String?
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-
-  author   User @relation(fields: [authorId], references: [id])
-  authorId String
-
-  client   Client @relation(fields: [clientId], references: [id])
-  clientId String
-
-  redditAccount   RedditAccount? @relation(fields: [redditAccountId], references: [id])
-  redditAccountId String?
-
-  @@map("posts")
-}
-
-// --- Monitoring & Analytics Additions ---
-enum Sentiment {
-  POSITIVE
-  NEUTRAL
-  NEGATIVE
-  UNKNOWN
-}
-
-model Keyword {
-  id            String    @id @default(cuid())
-  term          String
-  is_active     Boolean   @default(true)
-  createdAt     DateTime  @default(now())
-  lastScannedAt DateTime?
-  client        Client    @relation(fields: [clientId], references: [id])
-  clientId      String
-  mentions      Mention[]
-
-  @@unique([term, clientId])
-  @@map("keywords")
-}
-
-model Mention {
-  id            String    @id @default(cuid())
-  source_url    String    @unique
-  content_snippet String  @db.Text
-  author        String
-  subreddit     String
-  sentiment     Sentiment @default(UNKNOWN)
-  found_at      DateTime
-  keyword       Keyword   @relation(fields: [keywordId], references: [id], onDelete: Cascade)
-  keywordId     String
-  client        Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  clientId      String
-
-  @@map("mentions")
-}
-</file>
-
 <file path="server/src/controllers/auth.controller.ts">
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
@@ -4298,6 +4438,7 @@ import aiRoutes from './routes/ai.routes';
 import testRoutes from './routes/test.routes';
 import keywordRoutes from './routes/keyword.routes';
 import mentionRoutes from './routes/mention.routes';
+import voteRoutes from './routes/vote.routes'; // <-- Added
 
 // Load environment variables
 dotenv.config();
@@ -4358,7 +4499,8 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api/auth', authRoutes);
-app.use('/api/posts', postRoutes);
+app.use('/api/posts', postRoutes); // Ensure post routes can handle the new history route
+app.use('/api/votes', voteRoutes); // Add this line
 app.use('/api/ai', aiRoutes);
 app.use('/api/test', testRoutes);
 app.use('/api/keywords', keywordRoutes);
@@ -4621,287 +4763,6 @@ const runMonitoringJob = async () => {
 cron.schedule('*/1 * * * *', runMonitoringJob);
 
 export const triggerMonitoringJob = runMonitoringJob;
-</file>
-
-<file path="server/src/services/scheduler.service.ts">
-import cron from 'node-cron';
-import axios from 'axios';
-import { prisma } from '../utils/prisma';
-import { encryptionService } from './encryption.service';
-
-/**
- * Service for scheduling and posting Reddit posts
- */
-export class SchedulerService {
-  private static isRunning = false;
-
-  /**
-   * Initialize the scheduler
-   */
-  static initialize(): void {
-    if (this.isRunning) {
-      console.log('Scheduler is already running');
-      return;
-    }
-
-    // Run every minute
-    cron.schedule('*/1 * * * *', async () => {
-      await this.processScheduledPosts();
-    });
-
-    this.isRunning = true;
-    console.log('Scheduler initialized - checking for scheduled posts every minute');
-  }
-
-  /**
-   * Process all scheduled posts that are due
-   */
-  private static async processScheduledPosts(): Promise<void> {
-    try {
-      const now = new Date();
-
-      // Find all scheduled posts that are due
-      const scheduledPosts = await prisma.post.findMany({
-        where: {
-          status: 'Scheduled',
-          scheduled_at: {
-            lte: now
-          }
-        },
-        include: {
-          redditAccount: true
-        }
-      });
-
-      console.log(`Found ${scheduledPosts.length} posts to process`);
-
-      for (const post of scheduledPosts) {
-        await this.processPost(post);
-      }
-    } catch (error) {
-      console.error('Error processing scheduled posts:', error);
-    }
-  }
-
-  /**
-   * Process a single scheduled post
-   */
-  private static async processPost(post: any): Promise<void> {
-    try {
-      console.log(`Processing post: ${post.id} - ${post.title}`);
-
-      // Check if post has a Reddit account
-      if (!post.redditAccount) {
-        await this.updatePostStatus(post.id, 'Error', 'No Reddit account associated with this post');
-        return;
-      }
-
-      // Decrypt access token
-      let accessToken: string;
-      try {
-        accessToken = encryptionService.decrypt(post.redditAccount.access_token);
-      } catch (error) {
-        console.error(`Failed to decrypt access token for post ${post.id}:`, error);
-        await this.updatePostStatus(post.id, 'Error', 'Failed to decrypt access token');
-        return;
-      }
-
-      // Check if token is expired and refresh if necessary
-      if (new Date() >= post.redditAccount.token_expires_at) {
-        console.log(`Token expired for post ${post.id}, refreshing...`);
-        const refreshed = await this.refreshRedditToken(post.redditAccount.id);
-        if (!refreshed) {
-          await this.updatePostStatus(post.id, 'Error', 'Failed to refresh Reddit token');
-          return;
-        }
-        // Get the refreshed token
-        const updatedAccount = await prisma.redditAccount.findUnique({
-          where: { id: post.redditAccount.id }
-        });
-        if (!updatedAccount) {
-          await this.updatePostStatus(post.id, 'Error', 'Reddit account not found after refresh');
-          return;
-        }
-        accessToken = encryptionService.decrypt(updatedAccount.access_token);
-      }
-
-      // Post to Reddit
-      const submissionResult = await this.submitToReddit(post, accessToken);
-
-      if (submissionResult.success) {
-        await this.updatePostStatus(post.id, 'Posted', null, new Date());
-        console.log(`Successfully posted to Reddit: ${post.id}`);
-      } else {
-        const errorMessage = submissionResult.error || 'Failed to submit to Reddit';
-        await this.updatePostStatus(post.id, 'Error', errorMessage);
-      }
-    } catch (error) {
-      console.error(`Error processing post ${post.id}:`, error);
-      await this.updatePostStatus(post.id, 'Error', error instanceof Error ? error.message : 'Unknown error');
-    }
-  }
-
-  /**
-   * Refresh Reddit access token
-   */
-  private static async refreshRedditToken(redditAccountId: string): Promise<boolean> {
-    try {
-      const account = await prisma.redditAccount.findUnique({
-        where: { id: redditAccountId }
-      });
-
-      if (!account) {
-        return false;
-      }
-
-      // Decrypt refresh token
-      const refreshToken = encryptionService.decrypt(account.refresh_token);
-
-      const clientId = process.env.REDDIT_CLIENT_ID;
-      const clientSecret = process.env.REDDIT_CLIENT_SECRET;
-
-      if (!clientId || !clientSecret) {
-        console.error('Reddit OAuth not configured');
-        return false;
-      }
-
-      // Exchange refresh token for new access token
-      const response = await axios.post('https://www.reddit.com/api/v1/access_token',
-        `grant_type=refresh_token&refresh_token=${refreshToken}`,
-        {
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`
-          }
-        }
-      );
-
-      const { access_token, refresh_token, expires_in } = response.data;
-
-      // Encrypt new tokens
-      const encryptedAccessToken = encryptionService.encrypt(access_token);
-      const encryptedRefreshToken = encryptionService.encrypt(refresh_token);
-      const tokenExpiresAt = new Date(Date.now() + expires_in * 1000);
-
-      // Update account with new tokens
-      await prisma.redditAccount.update({
-        where: { id: redditAccountId },
-        data: {
-          access_token: encryptedAccessToken,
-          refresh_token: encryptedRefreshToken,
-          token_expires_at: tokenExpiresAt,
-          updatedAt: new Date()
-        }
-      });
-
-      console.log(`Successfully refreshed token for account ${redditAccountId}`);
-      return true;
-    } catch (error) {
-      console.error('Failed to refresh Reddit token:', error);
-      return false;
-    }
-  }
-
-  /**
-   * Submit post to Reddit
-   */
-  private static async submitToReddit(post: any, accessToken: string): Promise<{ success: boolean; error?: string }> {
-    try {
-        const response = await axios.post('https://oauth.reddit.com/api/submit',
-            new URLSearchParams({
-                sr: post.subreddit,
-                title: post.title,
-                text: post.body,
-                kind: 'self',
-                api_type: 'json' // Request a JSON response to be safe
-            }), // No .toString() needed, Axios handles this
-            {
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'User-Agent': 'RedditPostManager/1.0'
-                }
-            }
-        );
-
-        // --- IMPROVED, SAFER LOGIC ---
-        // Safely check the response structure.
-        const redditResponse = response.data;
-
-        if (redditResponse && redditResponse.json && redditResponse.json.errors && redditResponse.json.errors.length === 0) {
-            // Success! Update post with the Reddit ID
-            await prisma.post.update({
-                where: { id: post.id },
-                data: {
-                    reddit_post_id: redditResponse.json.data.name
-                }
-            });
-            return { success: true };
-        } else if (redditResponse && redditResponse.json && redditResponse.json.errors) {
-            // There are errors in the successful response.
-            const errorMessage = redditResponse.json.errors.map((e: any) => `[${e[0]}] ${e[1]}`).join(', ');
-            console.error(`Reddit API reported an error for post ${post.id}:`, errorMessage);
-            return { success: false, error: errorMessage };
-        } else {
-            // The response was successful (2xx) but not in the expected format.
-            console.error(`Unexpected response structure from Reddit for post ${post.id}:`, redditResponse);
-            return { success: false, error: 'Received an unexpected response structure from Reddit.' };
-        }
-
-    } catch (error) {
-        // --- IMPROVED LOGGING ---
-        console.error(`!!! An exception occurred in submitToReddit for post ${post.id} !!!`);
-        // Log the full error object to see its type and stack trace
-        console.error(error); 
-        
-        if (axios.isAxiosError(error)) {
-            const errorMessage = `Reddit API request failed: ${error.response?.status} - ${JSON.stringify(error.response?.data)}`;
-            return { success: false, error: errorMessage };
-        }
-        
-        // This will now capture the TypeError and give a more useful message
-        const errorMessage = error instanceof Error ? error.message : 'An unknown internal error occurred.';
-        return { success: false, error: `Internal Server Error: ${errorMessage}` };
-    }
-  }
-
-  /**
-   * Update post status
-   */
-  private static async updatePostStatus(
-    postId: string,
-    status: 'Posted' | 'Error',
-    errorMessage?: string | null,
-    postedAt?: Date
-  ): Promise<void> {
-    try {
-      const updateData: any = {
-        status,
-        posted_at: postedAt || null
-      };
-      
-      // Only include error_message if it's not undefined
-      if (errorMessage !== undefined) {
-        updateData.error_message = errorMessage;
-      }
-
-      await prisma.post.update({
-        where: { id: postId },
-        data: updateData
-      });
-    } catch (error) {
-      console.error(`Failed to update post status for ${postId}:`, error);
-    }
-  }
-
-  /**
-   * Stop the scheduler
-   */
-  static stop(): void {
-    this.isRunning = false;
-    console.log('Scheduler stopped');
-  }
-}
 </file>
 
 <file path="client/src/app/keywords/page.tsx">
@@ -5405,6 +5266,458 @@ export default function RedditConnectPage() {
   "description": "",
   "devDependencies": {
     "@types/socket.io": "^3.0.1"
+  }
+}
+</file>
+
+<file path="server/prisma/schema.prisma">
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  CLIENT_USER
+}
+
+enum PostStatus {
+  Draft
+  Scheduled
+  Posted
+  Error
+}
+
+model Client {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users           User[]
+  redditAccounts  RedditAccount[]
+  posts           Post[]
+  keywords        Keyword[]
+  mentions        Mention[]
+  voteOrderLogs   VoteOrderLog[] // Add this relation
+
+  @@map("clients")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  role      Role     @default(CLIENT_USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  client   Client @relation(fields: [clientId], references: [id])
+  clientId String
+
+  posts         Post[]
+  voteOrderLogs VoteOrderLog[] // Add this relation
+
+  @@map("users")
+}
+
+model RedditAccount {
+  id                String    @id @default(cuid())
+  reddit_username   String
+  access_token      String    // Encrypted
+  refresh_token     String    // Encrypted
+  token_expires_at  DateTime
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  client   Client @relation(fields: [clientId], references: [id])
+  clientId String
+
+  posts Post[]
+
+  @@map("reddit_accounts")
+}
+
+model Post {
+  id              String     @id @default(cuid())
+  title           String
+  body            String
+  subreddit       String
+  status          PostStatus @default(Draft)
+  scheduled_at    DateTime?
+  posted_at       DateTime?
+  reddit_post_id  String?
+  error_message   String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  // --- PHASE 3 ADDITIONS ---
+  source_url            String?    // Full URL to the Reddit post
+  current_upvotes       Int?       // Cached upvote count
+  current_comments      Int?       // Cached comment count
+  analytics_last_updated DateTime? // Timestamp of the last analytics update
+  // --- END PHASE 3 ADDITIONS ---
+  
+  author   User @relation(fields: [authorId], references: [id])
+  authorId String
+
+  client   Client @relation(fields: [clientId], references: [id])
+  clientId String
+
+  redditAccount   RedditAccount? @relation(fields: [redditAccountId], references: [id])
+  redditAccountId String?
+
+  voteOrderLogs   VoteOrderLog[] // Add this relation
+
+  @@map("posts")
+}
+
+// --- Monitoring & Analytics Additions ---
+enum Sentiment {
+  POSITIVE
+  NEUTRAL
+  NEGATIVE
+  UNKNOWN
+}
+
+model Keyword {
+  id            String    @id @default(cuid())
+  term          String
+  is_active     Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  lastScannedAt DateTime?
+  client        Client    @relation(fields: [clientId], references: [id])
+  clientId      String
+  mentions      Mention[]
+
+  @@unique([term, clientId])
+  @@map("keywords")
+}
+
+model Mention {
+  id            String    @id @default(cuid())
+  source_url    String    @unique
+  content_snippet String  @db.Text
+  author        String
+  subreddit     String
+  sentiment     Sentiment @default(UNKNOWN)
+  found_at      DateTime
+  keyword       Keyword   @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+  keywordId     String
+  client        Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId      String
+
+  @@map("mentions")
+}
+
+// --- PHASE 3: NEW MODEL ---
+model VoteOrderLog {
+  id           String   @id @default(cuid())
+  service      String   // e.g., "upvote.shop"
+  amount       Int      // Number of upvotes ordered
+  external_ref String?  // Optional: Order ID from the external service
+  created_at   DateTime @default(now())
+
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId String
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId String
+
+  @@map("vote_order_logs")
+}
+</file>
+
+<file path="server/src/services/scheduler.service.ts">
+import cron from 'node-cron';
+import axios from 'axios';
+import { prisma } from '../utils/prisma';
+import { encryptionService } from './encryption.service';
+
+/**
+ * Service for scheduling and posting Reddit posts
+ */
+export class SchedulerService {
+  private static isRunning = false;
+
+  /**
+   * Initialize the scheduler
+   */
+  static initialize(): void {
+    if (this.isRunning) {
+      console.log('Scheduler is already running');
+      return;
+    }
+
+    // Run every minute
+    cron.schedule('*/1 * * * *', async () => {
+      await this.processScheduledPosts();
+    });
+
+    this.isRunning = true;
+    console.log('Scheduler initialized - checking for scheduled posts every minute');
+  }
+
+  /**
+   * Process all scheduled posts that are due
+   */
+  private static async processScheduledPosts(): Promise<void> {
+    try {
+      const now = new Date();
+
+      // Find all scheduled posts that are due
+      const scheduledPosts = await prisma.post.findMany({
+        where: {
+          status: 'Scheduled',
+          scheduled_at: {
+            lte: now
+          }
+        },
+        include: {
+          redditAccount: true
+        }
+      });
+
+      console.log(`Found ${scheduledPosts.length} posts to process`);
+
+      for (const post of scheduledPosts) {
+        await this.processPost(post);
+      }
+    } catch (error) {
+      console.error('Error processing scheduled posts:', error);
+    }
+  }
+
+  /**
+   * Process a single scheduled post
+   */
+  private static async processPost(post: any): Promise<void> {
+    try {
+      console.log(`Processing post: ${post.id} - ${post.title}`);
+
+      // Check if post has a Reddit account
+      if (!post.redditAccount) {
+        await this.updatePostStatus(post.id, 'Error', 'No Reddit account associated with this post');
+        return;
+      }
+
+      // Decrypt access token
+      let accessToken: string;
+      try {
+        accessToken = encryptionService.decrypt(post.redditAccount.access_token);
+      } catch (error) {
+        console.error(`Failed to decrypt access token for post ${post.id}:`, error);
+        await this.updatePostStatus(post.id, 'Error', 'Failed to decrypt access token');
+        return;
+      }
+
+      // Check if token is expired and refresh if necessary
+      if (new Date() >= post.redditAccount.token_expires_at) {
+        console.log(`Token expired for post ${post.id}, refreshing...`);
+        const refreshed = await this.refreshRedditToken(post.redditAccount.id);
+        if (!refreshed) {
+          await this.updatePostStatus(post.id, 'Error', 'Failed to refresh Reddit token');
+          return;
+        }
+        // Get the refreshed token
+        const updatedAccount = await prisma.redditAccount.findUnique({
+          where: { id: post.redditAccount.id }
+        });
+        if (!updatedAccount) {
+          await this.updatePostStatus(post.id, 'Error', 'Reddit account not found after refresh');
+          return;
+        }
+        accessToken = encryptionService.decrypt(updatedAccount.access_token);
+      }
+
+      // Post to Reddit
+      const submissionResult = await this.submitToReddit(post, accessToken);
+
+      if (submissionResult.success) {
+        await this.updatePostStatus(post.id, 'Posted', null, new Date());
+        console.log(`Successfully posted to Reddit: ${post.id}`);
+      } else {
+        const errorMessage = submissionResult.error || 'Failed to submit to Reddit';
+        await this.updatePostStatus(post.id, 'Error', errorMessage);
+      }
+    } catch (error) {
+      console.error(`Error processing post ${post.id}:`, error);
+      await this.updatePostStatus(post.id, 'Error', error instanceof Error ? error.message : 'Unknown error');
+    }
+  }
+
+  /**
+   * Refresh Reddit access token
+   */
+  private static async refreshRedditToken(redditAccountId: string): Promise<boolean> {
+    try {
+      const account = await prisma.redditAccount.findUnique({
+        where: { id: redditAccountId }
+      });
+
+      if (!account) {
+        return false;
+      }
+
+      // Decrypt refresh token
+      const refreshToken = encryptionService.decrypt(account.refresh_token);
+
+      const clientId = process.env.REDDIT_CLIENT_ID;
+      const clientSecret = process.env.REDDIT_CLIENT_SECRET;
+
+      if (!clientId || !clientSecret) {
+        console.error('Reddit OAuth not configured');
+        return false;
+      }
+
+      // Exchange refresh token for new access token
+      const response = await axios.post('https://www.reddit.com/api/v1/access_token',
+        `grant_type=refresh_token&refresh_token=${refreshToken}`,
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`
+          }
+        }
+      );
+
+      const { access_token, refresh_token, expires_in } = response.data;
+
+      // Encrypt new tokens
+      const encryptedAccessToken = encryptionService.encrypt(access_token);
+      const encryptedRefreshToken = encryptionService.encrypt(refresh_token);
+      const tokenExpiresAt = new Date(Date.now() + expires_in * 1000);
+
+      // Update account with new tokens
+      await prisma.redditAccount.update({
+        where: { id: redditAccountId },
+        data: {
+          access_token: encryptedAccessToken,
+          refresh_token: encryptedRefreshToken,
+          token_expires_at: tokenExpiresAt,
+          updatedAt: new Date()
+        }
+      });
+
+      console.log(`Successfully refreshed token for account ${redditAccountId}`);
+      return true;
+    } catch (error) {
+      console.error('Failed to refresh Reddit token:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Submit post to Reddit
+   */
+  private static async submitToReddit(post: any, accessToken: string): Promise<{ success: boolean; error?: string }> {
+    try {
+        const response = await axios.post('https://oauth.reddit.com/api/submit',
+            new URLSearchParams({
+                sr: post.subreddit,
+                title: post.title,
+                text: post.body,
+                kind: 'self',
+                api_type: 'json' // Request a JSON response to be safe
+            }), // No .toString() needed, Axios handles this
+            {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'User-Agent': 'RedditPostManager/1.0'
+                }
+            }
+        );
+
+        // --- IMPROVED, SAFER LOGIC ---
+        // Safely check the response structure.
+        const redditResponse = response.data;
+
+        if (redditResponse && redditResponse.json && redditResponse.json.errors && redditResponse.json.errors.length === 0) {
+            // Success! Update post with the Reddit ID and the full URL.
+            const postName = redditResponse.json.data.name;
+            const postUrl = `https://reddit.com${redditResponse.json.data.permalink}`;
+            await prisma.post.update({
+                where: { id: post.id },
+                data: {
+                    reddit_post_id: postName,
+                    source_url: postUrl // Save the full URL here
+                }
+            });
+            return { success: true };
+        } else if (redditResponse && redditResponse.json && redditResponse.json.errors) {
+            // There are errors in the successful response.
+            const errorMessage = redditResponse.json.errors.map((e: any) => `[${e[0]}] ${e[1]}`).join(', ');
+            console.error(`Reddit API reported an error for post ${post.id}:`, errorMessage);
+            return { success: false, error: errorMessage };
+        } else {
+            // The response was successful (2xx) but not in the expected format.
+            console.error(`Unexpected response structure from Reddit for post ${post.id}:`, redditResponse);
+            return { success: false, error: 'Received an unexpected response structure from Reddit.' };
+        }
+
+    } catch (error) {
+        // --- IMPROVED LOGGING ---
+        console.error(`!!! An exception occurred in submitToReddit for post ${post.id} !!!`);
+        // Log the full error object to see its type and stack trace
+        console.error(error); 
+        
+        if (axios.isAxiosError(error)) {
+            const errorMessage = `Reddit API request failed: ${error.response?.status} - ${JSON.stringify(error.response?.data)}`;
+            return { success: false, error: errorMessage };
+        }
+        
+        // This will now capture the TypeError and give a more useful message
+        const errorMessage = error instanceof Error ? error.message : 'An unknown internal error occurred.';
+        return { success: false, error: `Internal Server Error: ${errorMessage}` };
+    }
+  }
+
+  /**
+   * Update post status
+   */
+  private static async updatePostStatus(
+    postId: string,
+    status: 'Posted' | 'Error',
+    errorMessage?: string | null,
+    postedAt?: Date
+  ): Promise<void> {
+    try {
+      const updateData: any = {
+        status,
+        posted_at: postedAt || null
+      };
+      
+      // Only include error_message if it's not undefined
+      if (errorMessage !== undefined) {
+        updateData.error_message = errorMessage;
+      }
+
+      await prisma.post.update({
+        where: { id: postId },
+        data: updateData
+      });
+    } catch (error) {
+      console.error(`Failed to update post status for ${postId}:`, error);
+    }
+  }
+
+  /**
+   * Stop the scheduler
+   */
+  static stop(): void {
+    this.isRunning = false;
+    console.log('Scheduler stopped');
   }
 }
 </file>
@@ -6173,11 +6486,13 @@ export default function RegisterPage() {
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dayjs": "^1.11.13",
+    "jspdf": "^3.0.1",
     "lucide-react": "^0.475.0",
     "next": "^15.3.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-markdown": "^10.1.0",
+    "recharts": "^3.1.0",
     "same-runtime": "^0.0.1",
     "socket.io-client": "^4.8.1",
     "tailwind-merge": "^3.3.0",
@@ -6715,6 +7030,7 @@ import { useAuth } from "@/lib/auth";
 import api from "@/lib/axios";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
+import { CoordinationPanel } from "@/components/CoordinationPanel";
 
 // --- Improvement: Type-safe data model based on your API docs ---
 type PostStatus = "Draft" | "Scheduled" | "Posted" | "Error";
@@ -7025,6 +7341,10 @@ export default function PostDetailPage() {
                         </button>
                     </div>
                 </div>
+            )}
+            {/* CoordinationPanel: Upvote purchase & history */}
+            {canEdit && (
+              <CoordinationPanel postId={post.id} />
             )}
           </div>
         </div>

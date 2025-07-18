@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth";
 import api from "@/lib/axios";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
+import { CoordinationPanel } from "@/components/CoordinationPanel";
 
 // --- Improvement: Type-safe data model based on your API docs ---
 type PostStatus = "Draft" | "Scheduled" | "Posted" | "Error";
@@ -25,6 +26,7 @@ interface Post {
   redditAccount?: {
     reddit_username: string;
   };
+  source_url?: string; // Added source_url to the interface
 }
 
 // --- Improvement: Reusable Status Badge Component ---
@@ -315,6 +317,10 @@ export default function PostDetailPage() {
                         </button>
                     </div>
                 </div>
+            )}
+            {/* CoordinationPanel: Upvote purchase & history */}
+            {post.status === "Posted" && post.source_url && (
+              <CoordinationPanel postId={post.id} />
             )}
           </div>
         </div>

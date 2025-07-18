@@ -47,15 +47,12 @@ export default function Home() {
             <span className="text-sm font-medium text-slate-700">Trusted by 10,000+ communities</span>
           </div>
           
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] text-slate-900 mb-6 tracking-tight" style={{fontFamily: 'Plus Jakarta Sans'}}>
-            Build thriving Reddit communities with{' '}
-            <span className="bg-gradient-to-r from-[#FF4500] via-[#FF6B35] to-[#FF4500] bg-clip-text text-transparent font-bold">
-              AI-powered tools
-            </span>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] text-slate-900 mb-6 tracking-tight text-center" style={{fontFamily: 'Plus Jakarta Sans'}}>
+            Your <span style={{ color: '#FF4500', fontWeight: 'bold',  }}>Unfair</span> Advantage on <span style={{ color: '#FF4500', fontWeight: 'bold', textDecoration: 'underline' }}>Reddit</span>.
           </h1>
           
           <p className="mt-4 text-slate-600 text-lg sm:text-xl font-normal max-w-2xl mx-auto leading-relaxed" style={{fontFamily: 'Plus Jakarta Sans'}}>
-            Effortlessly <span className="italic decoration-[#FF4500] decoration-2 underline-offset-4 font-semibold">grow</span> and engage your Reddit community with smart content, automated moderation, and actionable analytics—all in one place.
+            Scale your presence with <span className="font-bold">AI post generation</span>, <span className="font-bold ">automated scheduling</span>, and a <span className="font-bold">powerful client analytics dashboard</span>.
           </p>
           
           {/* Social proof */}

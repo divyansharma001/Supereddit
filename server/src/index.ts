@@ -17,6 +17,7 @@ import aiRoutes from './routes/ai.routes';
 import testRoutes from './routes/test.routes';
 import keywordRoutes from './routes/keyword.routes';
 import mentionRoutes from './routes/mention.routes';
+import voteRoutes from './routes/vote.routes'; // <-- Added
 
 // Load environment variables
 dotenv.config();
@@ -77,7 +78,8 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api/auth', authRoutes);
-app.use('/api/posts', postRoutes);
+app.use('/api/posts', postRoutes); // Ensure post routes can handle the new history route
+app.use('/api/votes', voteRoutes); // Add this line
 app.use('/api/ai', aiRoutes);
 app.use('/api/test', testRoutes);
 app.use('/api/keywords', keywordRoutes);

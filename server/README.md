@@ -1,15 +1,16 @@
-# Reddit Post Management SaaS - Backend
+# Supereddit - Backend
 
-A robust, scalable backend for managing Reddit posts with AI-assisted content generation, secure token storage, and automated scheduling.
+A robust, scalable backend for Supereddit: AI Reddit Post Writing, Smart Scheduler, Keyword Tracking, Upvote Coordination, Analytics, and more for agencies & brands.
 
 ## 🚀 Features
 
-- **User Authentication**: JWT-based authentication with bcrypt password hashing
-- **Client Management**: Multi-tenant architecture with client isolation
-- **Reddit OAuth Integration**: Secure connection to Reddit accounts with encrypted token storage
-- **AI-Powered Content Generation**: OpenAI integration for creating engaging Reddit posts
-- **Post Scheduling**: Automated posting with token refresh and error handling
-- **RESTful API**: Clean, well-documented endpoints with proper error handling
+- **AI Reddit Post Writing**: AI-generated post drafts based on user prompt or keywords; customize tone (story, question, experience); pre-fill titles and body for approval/edit
+- **Smart Post Scheduler**: Schedule posts to specific subreddits; calendar interface; label posts by status: Draft, Scheduled, Posted
+- **Keyword Tracking**: Monitor Reddit for keyword mentions (brand, competitors, trends); push real-time alerts to user dashboard; tag mentions by sentiment (positive/neutral/negative)
+- **Upvote & Comment Coordination**: Let users trigger comment or upvote boosts; server tracks all command activity; built-in tracking dashboard for action logs
+- **Client Dashboard**: Each client gets secure access; visual calendar to see upcoming/past posts; read-only analytics (views, engagement, keyword mentions); optional comment visibility
+- **Reporting & Analytics**: Post performance (views, upvotes, CTR); comments per post + engagement graph; keyword trigger logs; exportable PDF reports for client review
+- **Reddit API Integration**: OAuth-based access for scheduling & post tracking; API for upvotes automation
 
 ## 🛠 Tech Stack
 
