@@ -203,11 +203,14 @@ export class SchedulerService {
         const redditResponse = response.data;
 
         if (redditResponse && redditResponse.json && redditResponse.json.errors && redditResponse.json.errors.length === 0) {
-            // Success! Update post with the Reddit ID
+            // Success! Update post with the Reddit ID and the full URL.
+            const postName = redditResponse.json.data.name;
+            const postUrl = `https://reddit.com${redditResponse.json.data.permalink}`;
             await prisma.post.update({
                 where: { id: post.id },
                 data: {
-                    reddit_post_id: redditResponse.json.data.name
+                    reddit_post_id: postName,
+                    source_url: postUrl // Save the full URL here
                 }
             });
             return { success: true };
