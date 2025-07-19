@@ -338,7 +338,7 @@ export default function PostDetailPage() {
             )}
 
             {/* Coordination Panel */}
-            {isPosted && <CoordinationPanel postId={post.id} />}
+            {isPosted && <CoordinationPanel />}
 
             {/* Schedule Form (only for Draft, not editing) */}
             {post.status === "Draft" && !isEditing && (

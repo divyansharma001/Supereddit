@@ -179,3 +179,32 @@
     transform: rotate(30deg) translate(5%, 5%);
   }
 }
+
+/* Custom styles for react-calendar to match dashboard theme and fix issues */
+.react-calendar__month-view__weekdays__weekday abbr {
+  text-decoration: none !important;
+  border-bottom: none !important;
+}
+
+.react-calendar__tile--active,
+.react-calendar__tile--active:enabled:focus,
+.react-calendar__tile--active:enabled:hover {
+  background: #ffe9b3 !important; /* soft yellow highlight */
+  color: #1e293b !important; /* slate-900 for text */
+  border-radius: 0.75rem !important;
+  font-weight: 600;
+}
+
+.react-calendar__tile--now {
+  background: #fef3c7 !important; /* subtle highlight for today */
+  color: #1e293b !important;
+  border-radius: 0.75rem !important;
+}
+
+.react-calendar__month-view__days__day {
+  color: #1e293b !important;
+}
+
+.react-calendar__tile:disabled {
+  color: #cbd5e1 !important;
+}

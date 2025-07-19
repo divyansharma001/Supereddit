@@ -8,6 +8,8 @@ import api from "@/lib/axios";
 import Link from "next/link";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import Calendar from 'react-calendar';
+import 'react-calendar/dist/Calendar.css';
 dayjs.extend(relativeTime);
 
 // --- API types ---
@@ -41,6 +43,14 @@ export default function DashboardPage() {
     aiGeneratedContent: 0
   });
   const [recentPosts, setRecentPosts] = useState<Post[]>([]);
+  const [calendarValue, setCalendarValue] = useState<Date>(new Date());
+  // Map of date string (YYYY-MM-DD) to array of posts
+  const postsByDate = recentPosts.reduce((acc, post) => {
+    const date = dayjs(post.scheduled_at || post.createdAt || post.updatedAt).format('YYYY-MM-DD');
+    if (!acc[date]) acc[date] = [];
+    acc[date].push(post);
+    return acc;
+  }, {} as Record<string, Post[]>);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -125,6 +135,57 @@ export default function DashboardPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-6">
+        {/* Calendar View - moved to top and beautified */}
+        <div className="relative bg-gradient-to-r from-[#FF4500]/20 via-[#FF6B35]/20 to-[#FFF7F0]/0 rounded-3xl shadow-lg border border-slate-200 p-4 sm:p-6 md:p-8 mb-12 flex flex-col items-center animate-fade-in">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-4 text-center" style={{fontFamily: 'Plus Jakarta Sans'}}>Your Activity Calendar</h2>
+          <Calendar
+            onChange={(value) => {
+              if (value instanceof Date) setCalendarValue(value);
+              else if (Array.isArray(value) && value[0] instanceof Date) setCalendarValue(value[0]);
+            }}
+            value={calendarValue}
+            tileContent={({ date, view }) => {
+              const dateStr = dayjs(date).format('YYYY-MM-DD');
+              const posts = postsByDate[dateStr] || [];
+              if (posts.length > 0) {
+                // Color dots by post status
+                return (
+                  <div className="flex justify-center mt-1 gap-1">
+                    {posts.map((post, idx) => (
+                      <span
+                        key={idx}
+                        className={`w-2 h-2 rounded-full inline-block transition-transform duration-300 scale-90 hover:scale-125 shadow-md ${
+                          post.status === 'Posted'
+                            ? 'bg-gradient-to-br from-green-400 to-green-600 shadow-green-200'
+                            : post.status === 'Scheduled'
+                            ? 'bg-gradient-to-br from-purple-400 to-purple-600 shadow-purple-200'
+                            : post.status === 'Draft'
+                            ? 'bg-gradient-to-br from-blue-400 to-blue-600 shadow-blue-200'
+                            : 'bg-gradient-to-br from-slate-400 to-slate-600 shadow-slate-200'
+                        } animate-pulse`}
+                        title={`${post.status}: ${post.title}`}
+                      />
+                    ))}
+                  </div>
+                );
+              }
+              return null;
+            }}
+            className="!border-0 !shadow-none !bg-transparent calendar-theme w-full max-w-md md:max-w-lg lg:max-w-xl"
+            tileClassName={({ date, view }) => {
+              const dateStr = dayjs(date).format('YYYY-MM-DD');
+              return postsByDate[dateStr] ? '!bg-slate-100 !rounded-xl !transition-colors !duration-200 hover:!bg-orange-50 focus:!bg-orange-100' : '';
+            }}
+          />
+          {/* Legend */}
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-6 mt-6 text-sm">
+            <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-gradient-to-br from-green-400 to-green-600 inline-block"></span>Posted</div>
+            <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 inline-block"></span>Scheduled</div>
+            <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 inline-block"></span>Draft</div>
+            <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-gradient-to-br from-slate-400 to-slate-600 inline-block"></span>Other</div>
+          </div>
+        </div>
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
@@ -223,7 +284,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 mb-8">
           <div className="p-6 border-b border-slate-200">
             <h2 className="text-lg font-semibold text-slate-900">Recent Activity</h2>
           </div>

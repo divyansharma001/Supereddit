@@ -15,7 +15,7 @@ The content is organized as follows:
 2. Repository information
 3. Directory structure
 4. Repository files (if enabled)
-4. Repository files, each consisting of:
+5. Multiple file entries, each consisting of:
   - File path as an attribute
   - Full contents of the file
 </file_format>
@@ -36,10 +36,6 @@ The content is organized as follows:
 - Files matching default ignore patterns are excluded
 - Files are sorted by Git change count (files with more changes are at the bottom)
 </notes>
-
-<additional_info>
-
-</additional_info>
 
 </file_summary>
 
@@ -79,9 +75,11 @@ client/src/app/reddit-connect/page.tsx
 client/src/app/register/page.tsx
 client/src/app/socket-test/page.tsx
 client/src/components/CoordinationPanel.tsx
+client/src/components/PostAnalyticsChart.tsx
 client/src/contexts/SocketContext.tsx
 client/src/lib/auth.tsx
 client/src/lib/axios.ts
+client/src/lib/reporting.ts
 client/src/lib/theme.tsx
 client/src/lib/utils.ts
 client/tailwind.config.ts
@@ -954,97 +952,134 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 }
 </file>
 
-<file path="client/src/components/CoordinationPanel.tsx">
-// client/src/components/CoordinationPanel.tsx
+<file path="client/src/components/PostAnalyticsChart.tsx">
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import api from '@/lib/axios';
+import React, { useState, useEffect } from "react";
+import api from "@/lib/axios";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+import dayjs from "dayjs";
 
-// A simple Alert component
-const Alert = ({ children }: { children: React.ReactNode }) => (
-    <div className="p-3 mb-4 text-sm text-yellow-800 bg-yellow-100 border border-yellow-200 rounded-lg">
-        <strong>Warning:</strong> {children}
-    </div>
-);
+interface AnalyticsDataPoint {
+  upvotes: number;
+  comments: number;
+  createdAt: string;
+}
 
-export function CoordinationPanel({ postId }: { postId: string }) {
-    const [amount, setAmount] = useState<number>(10);
-    const [history, setHistory] = useState<{created_at: string, amount: number, service: string}[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
+export function PostAnalyticsChart({ postId }: { postId: string }) {
+  const [data, setData] = useState<AnalyticsDataPoint[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        // Fetch vote history when component mounts
-        const fetchHistory = async () => {
-            const res = await api.get(`/api/posts/${postId}/vote-history`);
-            setHistory(res.data as { created_at: string; amount: number; service: string }[]);
-        };
-        fetchHistory();
-    }, [postId, isLoading]); // Refetch after a purchase attempt
-
-    const handlePurchase = async () => {
-        setIsLoading(true);
-        setError('');
-        setSuccess('');
-        try {
-            const res = await api.post('/api/votes/purchase', { postId, amount });
-            setSuccess(`Order placed successfully for ${amount} upvotes! Order ID: ${(res.data as { orderId: string }).orderId}`);
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'Failed to place order.');
-        } finally {
-            setIsLoading(false);
-        }
+  useEffect(() => {
+    if (!postId) return;
+    const fetchAnalytics = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await api.get<{ analytics: AnalyticsDataPoint[] }>(
+          `/api/posts/${postId}/analytics`
+        );
+        setData(res.data.analytics);
+      } catch (err) {
+        setError("Failed to load analytics data.");
+      } finally {
+        setLoading(false);
+      }
     };
+    fetchAnalytics();
+  }, [postId]);
 
+  if (loading) {
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <h3 className="text-lg font-semibold text-slate-900 mb-4">Engagement Coordination</h3>
-            <Alert>
-                Purchasing votes violates Reddit ToS and may lead to account suspension. Use for sandboxed testing only.
-            </Alert>
-            <div className="space-y-3 mt-4">
-                <div>
-                    <label htmlFor="amount" className="block text-sm font-medium text-slate-700 mb-1">
-                        Upvote Amount
-                    </label>
-                    <input
-                        type="number"
-                        id="amount"
-                        value={amount}
-                        onChange={(e) => setAmount(Number(e.target.value))}
-                        className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        min="1"
-                    />
-                </div>
-                <button
-                    onClick={handlePurchase}
-                    disabled={isLoading || amount <= 0}
-                    className="w-full px-4 py-2 font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:bg-slate-400 flex items-center justify-center"
-                >
-                    {isLoading ? 'Processing...' : 'Purchase Upvotes'}
-                </button>
-                {success && <div className="text-sm text-green-600">{success}</div>}
-                {error && <div className="text-sm text-red-600">{error}</div>}
-            </div>
-
-            <div className="mt-6 pt-4 border-t border-slate-200">
-                <h4 className="text-md font-semibold text-slate-800 mb-2">Order History</h4>
-                {history.length > 0 ? (
-                    <ul className="space-y-2 text-sm">
-                        {history.map((item, index) => (
-                            <li key={index} className="flex justify-between p-2 bg-slate-50 rounded-md">
-                                <span>{item.amount} votes via {item.service}</span>
-                                <span className="text-slate-500">{new Date(item.created_at).toLocaleString()}</span>
-                            </li>
-                        ))}
-                    </ul>
-                ) : (
-                    <p className="text-sm text-slate-500">No orders placed for this post yet.</p>
-                )}
-            </div>
+      <div className="flex items-center justify-center h-64 text-slate-500">
+        <div className="flex flex-col items-center gap-2">
+            <div className="w-6 h-6 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"></div>
+            <span>Loading chart...</span>
         </div>
+      </div>
     );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64 text-red-500 bg-red-50 rounded-lg">
+        <p>{error}</p>
+      </div>
+    );
+  }
+
+  if (data.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64 text-slate-500 bg-slate-50 rounded-lg">
+        <div className="text-center">
+            <p className="font-semibold">No analytics data yet.</p>
+            <p className="text-xs mt-1">Check back later. Data is updated hourly for posted content.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const formattedData = data.map((d) => ({
+    ...d,
+    name: dayjs(d.createdAt).format("MMM D, hA"),
+  }));
+
+  return (
+    <div style={{ width: "100%", height: 300 }}>
+      <ResponsiveContainer>
+        <LineChart
+          data={formattedData}
+          margin={{
+            top: 5,
+            right: 20,
+            left: -10,
+            bottom: 5,
+          }}
+        >
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
+          <YAxis yAxisId="left" stroke="#3b82f6" fontSize={12} tickLine={false} axisLine={false} />
+          <YAxis yAxisId="right" orientation="right" stroke="#8b5cf6" fontSize={12} tickLine={false} axisLine={false} />
+          <Tooltip
+            contentStyle={{
+              background: "#ffffff",
+              border: "1px solid #e2e8f0",
+              borderRadius: "0.5rem",
+            }}
+          />
+          <Legend wrapperStyle={{ fontSize: "14px" }} />
+          <Line
+            yAxisId="left"
+            type="monotone"
+            dataKey="upvotes"
+            stroke="#3b82f6"
+            strokeWidth={2}
+            dot={{ r: 4, fill: "#3b82f6" }}
+            activeDot={{ r: 6 }}
+          />
+          <Line
+            yAxisId="right"
+            type="monotone"
+            dataKey="comments"
+            stroke="#8b5cf6"
+            strokeWidth={2}
+            dot={{ r: 4, fill: "#8b5cf6" }}
+            activeDot={{ r: 6 }}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
 }
 </file>
 
@@ -1129,6 +1164,129 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 };
 
 export const useSocketContext = () => useContext(SocketContext);
+</file>
+
+<file path="client/src/lib/reporting.ts">
+import jsPDF from "jspdf";
+import { Post } from "@/app/posts/[id]/page"; // Assuming type export from the page
+
+// A helper function to add a styled header
+const addHeader = (doc: jsPDF, clientName: string) => {
+  doc.setFillColor("#2d3748"); // slate-800
+  doc.rect(0, 0, doc.internal.pageSize.getWidth(), 25, "F");
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(16);
+  doc.setTextColor("#ffffff");
+  doc.text("Post Performance Report", 14, 16);
+
+  doc.setFontSize(10);
+  doc.setTextColor("#cbd5e0"); // slate-400
+  doc.text(clientName, doc.internal.pageSize.getWidth() - 14, 16, {
+    align: "right",
+  });
+};
+
+// A helper function to add a section title
+const addSectionTitle = (doc: jsPDF, title: string, y: number) => {
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(14);
+  doc.setTextColor("#2d3748"); // slate-800
+  doc.text(title, 14, y);
+  doc.setDrawColor("#e2e8f0"); // slate-200
+  doc.line(14, y + 2, doc.internal.pageSize.getWidth() - 14, y + 2);
+  return y + 10;
+};
+
+// A helper to add key-value pairs
+const addInfoPair = (doc: jsPDF, key: string, value: string, y: number) => {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor("#4a5568"); // slate-700
+    doc.text(key, 14, y);
+
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor("#718096"); // slate-500
+    doc.text(value, 50, y);
+    return y + 6;
+};
+
+export const generatePostReport = async (
+  post: Post,
+  chartElement: HTMLElement | null,
+  clientName: string,
+) => {
+  if (!chartElement) {
+    alert("Chart element not found. Cannot generate report.");
+    return;
+  }
+  
+  // Use html2canvas to render the chart as an image
+  const { default: html2canvas } = await import("html2canvas");
+  const canvas = await html2canvas(chartElement, {
+    backgroundColor: "#ffffff", // Ensure background is white
+    scale: 2 // Increase resolution
+  });
+  const chartImage = canvas.toDataURL("image/png");
+
+  const doc = new jsPDF({
+    orientation: "portrait",
+    unit: "mm",
+    format: "a4",
+  });
+
+  addHeader(doc, clientName);
+  
+  let y = 40; // Initial y position after header
+
+  // --- Post Summary Section ---
+  y = addSectionTitle(doc, "Post Summary", y);
+  y = addInfoPair(doc, "Title:", post.title, y);
+  y = addInfoPair(doc, "Subreddit:", `r/${post.subreddit}`, y);
+  y = addInfoPair(doc, "Posted On:", new Date(post.posted_at!).toLocaleString(), y);
+  y = addInfoPair(doc, "Final Upvotes:", post.current_upvotes?.toString() ?? 'N/A', y);
+  y = addInfoPair(doc, "Final Comments:", post.current_comments?.toString() ?? 'N/A', y);
+  y += 5;
+
+  // --- Performance Chart Section ---
+  y = addSectionTitle(doc, "Engagement Over Time", y);
+  // A4 width is 210mm, with 14mm margins on each side = 182mm available
+  const imgWidth = 182;
+  const imgHeight = (canvas.height * imgWidth) / canvas.width;
+  doc.addImage(chartImage, "PNG", 14, y, imgWidth, imgHeight);
+  y += imgHeight + 10;
+  
+  // --- Post Content Section ---
+  y = addSectionTitle(doc, "Post Content", y);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.setTextColor("#4a5568"); // slate-700
+  const splitBody = doc.splitTextToSize(post.body, 182);
+  
+  // Check if content will overflow and add new page if needed
+  if (y + (splitBody.length * 5) > 280) {
+      doc.addPage();
+      y = 20; // Reset y on new page
+  }
+  
+  doc.text(splitBody, 14, y);
+  
+  // Save the PDF
+  doc.save(`report_${post.subreddit}_${post.id.slice(0, 8)}.pdf`);
+};
+
+// Add Post interface here if not exported from page
+declare module "@/app/posts/[id]/page" {
+    interface Post {
+        id: string;
+        title: string;
+        body: string;
+        subreddit: string;
+        status: "Draft" | "Scheduled" | "Posted" | "Error";
+        posted_at?: string;
+        current_upvotes?: number;
+        current_comments?: number;
+    }
+}
 </file>
 
 <file path="client/src/lib/utils.ts">
@@ -1872,334 +2030,6 @@ export const getMentions = async (req: Request, res: Response): Promise<void> =>
 };
 </file>
 
-<file path="server/src/controllers/post.controller.ts">
-import { Request, Response } from 'express';
-import { prisma } from '../utils/prisma';
-
-/**
- * Controller for post-related endpoints
- */
-export class PostController {
-  /**
-   * Create a new post
-   */
-  static async createPost(req: Request, res: Response): Promise<void> {
-    try {
-      const { title, body, subreddit, scheduled_at } = req.body;
-      const { userId, clientId } = req.user!;
-
-      // Validate input
-      if (!title || !body || !subreddit) {
-        res.status(400).json({ error: 'Title, body, and subreddit are required' });
-        return;
-      }
-
-      // Create post
-      const post = await prisma.post.create({
-        data: {
-          title,
-          body,
-          subreddit,
-          scheduled_at: scheduled_at ? new Date(scheduled_at) : null,
-          authorId: userId,
-          clientId
-        },
-        include: {
-          author: {
-            select: { email: true }
-          }
-        }
-      });
-
-      res.status(201).json({
-        message: 'Post created successfully',
-        post
-      });
-    } catch (error) {
-      console.error('Create post error:', error);
-      res.status(500).json({ error: 'Failed to create post' });
-    }
-  }
-
-  /**
-   * Get all posts for the authenticated user's client
-   */
-  static async getPosts(req: Request, res: Response): Promise<void> {
-    try {
-      const { clientId } = req.user!;
-      const { status, page = 1, limit = 10 } = req.query;
-
-      const skip = (Number(page) - 1) * Number(limit);
-      const take = Number(limit);
-
-      // Build where clause
-      const where: any = { clientId };
-      if (status && typeof status === 'string') {
-        where.status = status;
-      }
-
-      // Get posts with pagination
-      const [posts, total] = await Promise.all([
-        prisma.post.findMany({
-          where,
-          include: {
-            author: {
-              select: { email: true }
-            },
-            redditAccount: {
-              select: { reddit_username: true }
-            }
-          },
-          orderBy: { createdAt: 'desc' },
-          skip,
-          take
-        }),
-        prisma.post.count({ where })
-      ]);
-
-      res.json({
-        posts,
-        pagination: {
-          page: Number(page),
-          limit: Number(limit),
-          total,
-          pages: Math.ceil(total / Number(limit))
-        }
-      });
-    } catch (error) {
-      console.error('Get posts error:', error);
-      res.status(500).json({ error: 'Failed to fetch posts' });
-    }
-  }
-
-  /**
-   * Get a specific post by ID
-   */
-  static async getPost(req: Request, res: Response): Promise<void> {
-    try {
-      const { id } = req.params;
-      const { clientId } = req.user!;
-
-      if (!id) {
-        res.status(400).json({ error: 'Post ID is required' });
-        return;
-      }
-
-      const post = await prisma.post.findFirst({
-        where: {
-          id,
-          clientId
-        },
-        include: {
-          author: {
-            select: { email: true }
-          },
-          redditAccount: {
-            select: { reddit_username: true }
-          }
-        }
-      });
-
-      if (!post) {
-        res.status(404).json({ error: 'Post not found' });
-        return;
-      }
-
-      res.json({ post });
-    } catch (error) {
-      console.error('Get post error:', error);
-      res.status(500).json({ error: 'Failed to fetch post' });
-    }
-  }
-
-  /**
-   * Update a post
-   */
-  static async updatePost(req: Request, res: Response): Promise<void> {
-    try {
-      const { id } = req.params;
-      const { title, body, subreddit, scheduled_at, status } = req.body;
-      const { clientId } = req.user!;
-
-      if (!id) {
-        res.status(400).json({ error: 'Post ID is required' });
-        return;
-      }
-
-      // Check if post exists and belongs to user's client
-      const existingPost = await prisma.post.findFirst({
-        where: {
-          id,
-          clientId
-        }
-      });
-
-      if (!existingPost) {
-        res.status(404).json({ error: 'Post not found' });
-        return;
-      }
-
-      // Only allow updates if post is not already posted
-      if (existingPost.status === 'Posted') {
-        res.status(400).json({ error: 'Cannot update a posted post' });
-        return;
-      }
-
-      // Build update data
-      const updateData: any = {};
-      if (title !== undefined) updateData.title = title;
-      if (body !== undefined) updateData.body = body;
-      if (subreddit !== undefined) updateData.subreddit = subreddit;
-      if (scheduled_at !== undefined) updateData.scheduled_at = scheduled_at ? new Date(scheduled_at) : null;
-      if (status !== undefined) updateData.status = status;
-
-      const post = await prisma.post.update({
-        where: { id },
-        data: updateData,
-        include: {
-          author: {
-            select: { email: true }
-          }
-        }
-      });
-
-      res.json({
-        message: 'Post updated successfully',
-        post
-      });
-    } catch (error) {
-      console.error('Update post error:', error);
-      res.status(500).json({ error: 'Failed to update post' });
-    }
-  }
-
-  /**
-   * Delete a post
-   */
-  static async deletePost(req: Request, res: Response): Promise<void> {
-    try {
-      const { id } = req.params;
-      const { clientId } = req.user!;
-
-      if (!id) {
-        res.status(400).json({ error: 'Post ID is required' });
-        return;
-      }
-
-      // Check if post exists and belongs to user's client
-      const existingPost = await prisma.post.findFirst({
-        where: {
-          id,
-          clientId
-        }
-      });
-
-      if (!existingPost) {
-        res.status(404).json({ error: 'Post not found' });
-        return;
-      }
-
-      // Only allow deletion if post is not already posted
-      if (existingPost.status === 'Posted') {
-        res.status(400).json({ error: 'Cannot delete a posted post' });
-        return;
-      }
-
-      await prisma.post.delete({
-        where: { id }
-      });
-
-      res.json({ message: 'Post deleted successfully' });
-    } catch (error) {
-      console.error('Delete post error:', error);
-      res.status(500).json({ error: 'Failed to delete post' });
-    }
-  }
-
-  /**
-   * Schedule a post for posting
-   */
-  static async schedulePost(req: Request, res: Response): Promise<void> {
-    try {
-      const { id } = req.params;
-      const { scheduled_at, redditAccountId } = req.body || {};
-      const { clientId } = req.user!;
-
-      if (!id) {
-        res.status(400).json({ error: 'Post ID is required' });
-        return;
-      }
-
-      if (!scheduled_at) {
-        res.status(400).json({ 
-          error: 'Scheduled time is required',
-          message: 'Please provide scheduled_at in the request body'
-        });
-        return;
-      }
-
-      // Check if post exists and belongs to user's client
-      const existingPost = await prisma.post.findFirst({
-        where: {
-          id,
-          clientId
-        }
-      });
-
-      if (!existingPost) {
-        res.status(404).json({ error: 'Post not found' });
-        return;
-      }
-
-      if (existingPost.status === 'Posted') {
-        res.status(400).json({ error: 'Cannot schedule a posted post' });
-        return;
-      }
-
-      // Verify reddit account belongs to client
-      if (redditAccountId) {
-        const redditAccount = await prisma.redditAccount.findFirst({
-          where: {
-            id: redditAccountId,
-            clientId
-          }
-        });
-
-        if (!redditAccount) {
-          res.status(400).json({ error: 'Invalid Reddit account' });
-          return;
-        }
-      }
-
-      const post = await prisma.post.update({
-        where: { id },
-        data: {
-          scheduled_at: new Date(scheduled_at),
-          status: 'Scheduled',
-          redditAccountId
-        },
-        include: {
-          author: {
-            select: { email: true }
-          },
-          redditAccount: {
-            select: { reddit_username: true }
-          }
-        }
-      });
-
-      res.json({
-        message: 'Post scheduled successfully',
-        post
-      });
-    } catch (error) {
-      console.error('Schedule post error:', error);
-      res.status(500).json({ error: 'Failed to schedule post' });
-    }
-  }
-}
-</file>
-
 <file path="server/src/controllers/vote.controller.ts">
 import { Request, Response } from 'express';
 import { prisma } from '../utils/prisma';
@@ -2552,72 +2382,6 @@ router.use(authenticateToken);
 router.post('/purchase', VoteController.purchaseVotes);
 
 export default router;
-</file>
-
-<file path="server/src/services/analytics.service.ts">
-import cron, { ScheduledTask } from 'node-cron';
-import axios from 'axios';
-import { prisma } from '../utils/prisma';
-
-// This service will fetch up-to-date analytics for posted content.
-export class AnalyticsService {
-  private static task: ScheduledTask;
-
-  static initialize() {
-    // Run the job every hour.
-    this.task = cron.schedule('0 * * * *', this.fetchAnalytics, {
-      timezone: "UTC"
-    });
-    console.log('📈 Analytics service initialized. Will run hourly.');
-  }
-
-  static stop() {
-    if (this.task) this.task.stop();
-    console.log('📈 Analytics service stopped.');
-  }
-
-  static async fetchAnalytics() {
-    console.log('Fetching post analytics...');
-    const postsToUpdate = await prisma.post.findMany({
-      where: {
-        status: 'Posted',
-        reddit_post_id: { not: null },
-      },
-      select: { id: true, reddit_post_id: true }
-    });
-
-    if (postsToUpdate.length === 0) {
-        console.log('No posts to update analytics for.');
-        return;
-    }
-    
-    // Reddit's info endpoint can take a comma-separated list of fullnames (e.g., t3_xyz)
-    const postIds = postsToUpdate.map(p => p.reddit_post_id).join(',');
-
-    try {
-      // Using the public .json endpoint doesn't require auth for basic info.
-      const response = await axios.get(`https://www.reddit.com/api/info.json?id=${postIds}`);
-      const postsData = response.data.data.children;
-
-      for (const postData of postsData) {
-        const { name, score, num_comments } = postData.data;
-        const postToUpdate = postsToUpdate.find(p => p.reddit_post_id === name);
-        if (!postToUpdate?.id) continue; // skip if id is undefined
-        await prisma.post.update({
-          where: { id: postToUpdate.id },
-          data: {
-            current_upvotes: score,
-            current_comments: num_comments,
-            analytics_last_updated: new Date(),
-          },
-        });
-      }
-      console.log(`Successfully updated analytics for ${postsData.length} posts.`);
-    } catch (error) {
-      console.error('Failed to fetch analytics from Reddit:', error);
-    }
-  }
-}
 </file>
 
 <file path="server/src/services/encryption.service.ts">
@@ -4335,6 +4099,362 @@ export class AuthController {
 }
 </file>
 
+<file path="server/src/controllers/post.controller.ts">
+import { Request, Response } from 'express';
+import { prisma } from '../utils/prisma';
+
+/**
+ * Controller for post-related endpoints
+ */
+export class PostController {
+  /**
+   * Create a new post
+   */
+  static async createPost(req: Request, res: Response): Promise<void> {
+    try {
+      const { title, body, subreddit, scheduled_at } = req.body;
+      const { userId, clientId } = req.user!;
+
+      // Validate input
+      if (!title || !body || !subreddit) {
+        res.status(400).json({ error: 'Title, body, and subreddit are required' });
+        return;
+      }
+
+      // Create post
+      const post = await prisma.post.create({
+        data: {
+          title,
+          body,
+          subreddit,
+          scheduled_at: scheduled_at ? new Date(scheduled_at) : null,
+          authorId: userId,
+          clientId
+        },
+        include: {
+          author: {
+            select: { email: true }
+          }
+        }
+      });
+
+      res.status(201).json({
+        message: 'Post created successfully',
+        post
+      });
+    } catch (error) {
+      console.error('Create post error:', error);
+      res.status(500).json({ error: 'Failed to create post' });
+    }
+  }
+
+  /**
+   * Get all posts for the authenticated user's client
+   */
+  static async getPosts(req: Request, res: Response): Promise<void> {
+    try {
+      const { clientId } = req.user!;
+      const { status, page = 1, limit = 10 } = req.query;
+
+      const skip = (Number(page) - 1) * Number(limit);
+      const take = Number(limit);
+
+      // Build where clause
+      const where: any = { clientId };
+      if (status && typeof status === 'string') {
+        where.status = status;
+      }
+
+      // Get posts with pagination
+      const [posts, total] = await Promise.all([
+        prisma.post.findMany({
+          where,
+          include: {
+            author: {
+              select: { email: true }
+            },
+            redditAccount: {
+              select: { reddit_username: true }
+            }
+          },
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take
+        }),
+        prisma.post.count({ where })
+      ]);
+
+      res.json({
+        posts,
+        pagination: {
+          page: Number(page),
+          limit: Number(limit),
+          total,
+          pages: Math.ceil(total / Number(limit))
+        }
+      });
+    } catch (error) {
+      console.error('Get posts error:', error);
+      res.status(500).json({ error: 'Failed to fetch posts' });
+    }
+  }
+
+  /**
+   * Get a specific post by ID
+   */
+  static async getPost(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const { clientId } = req.user!;
+
+      if (!id) {
+        res.status(400).json({ error: 'Post ID is required' });
+        return;
+      }
+
+      const post = await prisma.post.findFirst({
+        where: {
+          id,
+          clientId
+        },
+        include: {
+          author: {
+            select: { email: true }
+          },
+          redditAccount: {
+            select: { reddit_username: true }
+          }
+        }
+      });
+
+      if (!post) {
+        res.status(404).json({ error: 'Post not found' });
+        return;
+      }
+
+      res.json({ post });
+    } catch (error) {
+      console.error('Get post error:', error);
+      res.status(500).json({ error: 'Failed to fetch post' });
+    }
+  }
+
+  /**
+   * Update a post
+   */
+  static async updatePost(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const { title, body, subreddit, scheduled_at, status } = req.body;
+      const { clientId } = req.user!;
+
+      if (!id) {
+        res.status(400).json({ error: 'Post ID is required' });
+        return;
+      }
+
+      // Check if post exists and belongs to user's client
+      const existingPost = await prisma.post.findFirst({
+        where: {
+          id,
+          clientId
+        }
+      });
+
+      if (!existingPost) {
+        res.status(404).json({ error: 'Post not found' });
+        return;
+      }
+
+      // Only allow updates if post is not already posted
+      if (existingPost.status === 'Posted') {
+        res.status(400).json({ error: 'Cannot update a posted post' });
+        return;
+      }
+
+      // Build update data
+      const updateData: any = {};
+      if (title !== undefined) updateData.title = title;
+      if (body !== undefined) updateData.body = body;
+      if (subreddit !== undefined) updateData.subreddit = subreddit;
+      if (scheduled_at !== undefined) updateData.scheduled_at = scheduled_at ? new Date(scheduled_at) : null;
+      if (status !== undefined) updateData.status = status;
+
+      const post = await prisma.post.update({
+        where: { id },
+        data: updateData,
+        include: {
+          author: {
+            select: { email: true }
+          }
+        }
+      });
+
+      res.json({
+        message: 'Post updated successfully',
+        post
+      });
+    } catch (error) {
+      console.error('Update post error:', error);
+      res.status(500).json({ error: 'Failed to update post' });
+    }
+  }
+
+  /**
+   * Delete a post
+   */
+  static async deletePost(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const { clientId } = req.user!;
+
+      if (!id) {
+        res.status(400).json({ error: 'Post ID is required' });
+        return;
+      }
+
+      // Check if post exists and belongs to user's client
+      const existingPost = await prisma.post.findFirst({
+        where: {
+          id,
+          clientId
+        }
+      });
+
+      if (!existingPost) {
+        res.status(404).json({ error: 'Post not found' });
+        return;
+      }
+
+      // Only allow deletion if post is not already posted
+      if (existingPost.status === 'Posted') {
+        res.status(400).json({ error: 'Cannot delete a posted post' });
+        return;
+      }
+
+      await prisma.post.delete({
+        where: { id }
+      });
+
+      res.json({ message: 'Post deleted successfully' });
+    } catch (error) {
+      console.error('Delete post error:', error);
+      res.status(500).json({ error: 'Failed to delete post' });
+    }
+  }
+
+  /**
+   * Schedule a post for posting
+   */
+  static async schedulePost(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const { scheduled_at, redditAccountId } = req.body || {};
+      const { clientId } = req.user!;
+
+      if (!id) {
+        res.status(400).json({ error: 'Post ID is required' });
+        return;
+      }
+
+      if (!scheduled_at) {
+        res.status(400).json({ 
+          error: 'Scheduled time is required',
+          message: 'Please provide scheduled_at in the request body'
+        });
+        return;
+      }
+
+      // Check if post exists and belongs to user's client
+      const existingPost = await prisma.post.findFirst({
+        where: {
+          id,
+          clientId
+        }
+      });
+
+      if (!existingPost) {
+        res.status(404).json({ error: 'Post not found' });
+        return;
+      }
+
+      if (existingPost.status === 'Posted') {
+        res.status(400).json({ error: 'Cannot schedule a posted post' });
+        return;
+      }
+
+      // Verify reddit account belongs to client
+      if (redditAccountId) {
+        const redditAccount = await prisma.redditAccount.findFirst({
+          where: {
+            id: redditAccountId,
+            clientId
+          }
+        });
+
+        if (!redditAccount) {
+          res.status(400).json({ error: 'Invalid Reddit account' });
+          return;
+        }
+      }
+
+      const post = await prisma.post.update({
+        where: { id },
+        data: {
+          scheduled_at: new Date(scheduled_at),
+          status: 'Scheduled',
+          redditAccountId
+        },
+        include: {
+          author: {
+            select: { email: true }
+          },
+          redditAccount: {
+            select: { reddit_username: true }
+          }
+        }
+      });
+
+      res.json({
+        message: 'Post scheduled successfully',
+        post
+      });
+    } catch (error) {
+      console.error('Schedule post error:', error);
+      res.status(500).json({ error: 'Failed to schedule post' });
+    }
+  }
+
+  /**
+   * Get analytics time series for a post
+   */
+  static async getPostAnalytics(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      if (!id) {
+        res.status(400).json({ error: 'Post ID is required' });
+        return;
+      }
+      const { clientId } = req.user!;
+      // Ensure the post belongs to the client
+      const post = await prisma.post.findFirst({ where: { id, clientId } });
+      if (!post) {
+        res.status(404).json({ error: 'Post not found' });
+        return;
+      }
+      const analytics = await prisma.postAnalytics.findMany({
+        where: { postId: id },
+        orderBy: { createdAt: 'asc' },
+      });
+      res.json({ analytics });
+    } catch (error) {
+      console.error('Get post analytics error:', error);
+      res.status(500).json({ error: 'Failed to fetch post analytics' });
+    }
+  }
+}
+</file>
+
 <file path="server/src/routes/auth.routes.ts">
 import { Router } from 'express';
 import { AuthController } from '../controllers/auth.controller';
@@ -4387,66 +4507,74 @@ router.get('/reddit/accounts', authenticateToken, AuthController.getRedditAccoun
 export default router;
 </file>
 
-<file path="server/src/routes/post.routes.ts">
-import { Router } from 'express';
-import { PostController } from '../controllers/post.controller';
-import { authenticateToken } from '../middleware/auth.middleware';
-
-const router = Router();
-
-// All routes require authentication
-router.use(authenticateToken);
+<file path="server/src/services/analytics.service.ts">
+import cron from 'node-cron';
+import axios from 'axios';
+import { prisma } from '../utils/prisma';
 
 /**
- * @route POST /api/posts
- * @desc Create a new post
- * @access Private
+ * AnalyticsService: Periodically snapshots upvotes/comments for all posted posts
+ * Now fetches live data from Reddit API before snapshotting.
  */
-router.post('/', PostController.createPost);
+export class AnalyticsService {
+  static initialize(): void {
+    // Run every hour
+    cron.schedule('0 * * * *', async () => {
+      await AnalyticsService.snapshotAllPostedPosts();
+    });
+    console.log('AnalyticsService initialized - snapshotting post analytics every hour');
+  }
 
-/**
- * @route GET /api/posts
- * @desc Get all posts for the authenticated user's client
- * @access Private
- */
-router.get('/', PostController.getPosts);
-
-/**
- * @route GET /api/posts/:id/vote-history
- * @desc Get vote order history for a post
- * @access Private
- */
-router.get('/:id/vote-history', require('../controllers/vote.controller').VoteController.getVoteHistory);
-
-/**
- * @route GET /api/posts/:id
- * @desc Get a specific post by ID
- * @access Private
- */
-router.get('/:id', PostController.getPost);
-
-/**
- * @route PUT /api/posts/:id
- * @desc Update a post
- * @access Private
- */
-router.put('/:id', PostController.updatePost);
-
-/**
- * @route DELETE /api/posts/:id
- * @desc Delete a post
- * @access Private
- */
-router.delete('/:id', PostController.deletePost);
-
-/**
- * @route POST /api/posts/:id/schedule
- * @desc Schedule a post for posting
- * @access Private
- */
-router.post('/:id/schedule', PostController.schedulePost);
-
-export default router;
+  static async snapshotAllPostedPosts(): Promise<void> {
+    try {
+      // Get all posted posts with reddit_post_id
+      const posts = await prisma.post.findMany({
+        where: { status: 'Posted', reddit_post_id: { not: null } },
+        select: { id: true, reddit_post_id: true }
+      });
+      if (posts.length === 0) return;
+      // Reddit API allows batching: up to 100 ids per request
+      const batchSize = 100;
+      for (let i = 0; i < posts.length; i += batchSize) {
+        const batch = posts.slice(i, i + batchSize);
+        const ids = batch.map(p => p.reddit_post_id).join(',');
+        try {
+          // Use Reddit's public info endpoint (no auth needed for public posts)
+          const resp = await axios.get(`https://www.reddit.com/api/info.json?id=${ids}`);
+          const children = resp.data?.data?.children || [];
+          for (const child of children) {
+            const redditId = child.data.name; // e.g., t3_xxxxx
+            const upvotes = child.data.score;
+            const comments = child.data.num_comments;
+            const post = batch.find(p => p.reddit_post_id === redditId);
+            if (!post) continue;
+            // Update Post with latest values
+            await prisma.post.update({
+              where: { id: post.id },
+              data: {
+                current_upvotes: upvotes,
+                current_comments: comments,
+                analytics_last_updated: new Date(),
+              }
+            });
+            // Snapshot to PostAnalytics
+            await prisma.postAnalytics.create({
+              data: {
+                postId: post.id,
+                upvotes,
+                comments,
+              }
+            });
+          }
+        } catch (err) {
+          console.error('Reddit API fetch error:', err);
+        }
+      }
+    } catch (error) {
+      console.error('Error snapshotting post analytics:', error);
+    }
+  }
+}
 </file>
 
 <file path="server/src/services/monitoring.service.ts">
@@ -5048,6 +5176,64 @@ export default function RedditConnectPage() {
 }
 </file>
 
+<file path="client/src/components/CoordinationPanel.tsx">
+// client/src/components/CoordinationPanel.tsx
+
+import React, { useState } from 'react';
+
+export function CoordinationPanel() {
+    const [amount] = useState<number>(10);
+    // Dummy history for visual effect
+    const history = [
+        { created_at: new Date().toISOString(), amount: 10, service: 'DemoService' },
+        { created_at: new Date().toISOString(), amount: 20, service: 'DemoService' }
+    ];
+    return (
+        <div className="relative bg-white rounded-xl shadow-sm border border-slate-200 p-6 overflow-hidden">
+            {/* Overlay */}
+            <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center z-10 pointer-events-auto">
+                <span className="text-slate-400 font-semibold text-base">Engagement features coming soon</span>
+            </div>
+            <div className="blur-sm opacity-60 pointer-events-none select-none">
+                <h3 className="text-lg font-semibold text-slate-900 mb-4">Engagement Coordination</h3>
+                <div className="space-y-3 mt-4">
+                    <div>
+                        <label htmlFor="amount" className="block text-sm font-medium text-slate-700 mb-1">
+                            Upvote Amount
+                        </label>
+                        <input
+                            type="number"
+                            id="amount"
+                            value={amount}
+                            disabled
+                            className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-100"
+                            min="1"
+                        />
+                    </div>
+                    <button
+                        disabled
+                        className="w-full px-4 py-2 font-semibold text-white bg-red-600 rounded-lg flex items-center justify-center opacity-70 cursor-not-allowed"
+                    >
+                        Purchase Upvotes
+                    </button>
+                </div>
+                <div className="mt-6 pt-4 border-t border-slate-200">
+                    <h4 className="text-md font-semibold text-slate-800 mb-2">Order History</h4>
+                    <ul className="space-y-2 text-sm">
+                        {history.map((item, index) => (
+                            <li key={index} className="flex justify-between p-2 bg-slate-50 rounded-md">
+                                <span>{item.amount} votes via {item.service}</span>
+                                <span className="text-slate-500">{new Date(item.created_at).toLocaleString()}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    );
+}
+</file>
+
 <file path="client/src/lib/axios.ts">
 // If you haven't already, run: npm install axios @types/axios
 import axios from "axios";
@@ -5125,323 +5311,67 @@ export default api;
 }
 </file>
 
-<file path="server/prisma/schema.prisma">
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+<file path="server/src/routes/post.routes.ts">
+import { Router } from 'express';
+import { PostController } from '../controllers/post.controller';
+import { authenticateToken } from '../middleware/auth.middleware';
 
-generator client {
-  provider = "prisma-client-js"
-}
+const router = Router();
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
+// All routes require authentication
+router.use(authenticateToken);
 
-enum Role {
-  ADMIN
-  CLIENT_USER
-}
+/**
+ * @route POST /api/posts
+ * @desc Create a new post
+ * @access Private
+ */
+router.post('/', PostController.createPost);
 
-enum PostStatus {
-  Draft
-  Scheduled
-  Posted
-  Error
-}
+/**
+ * @route GET /api/posts
+ * @desc Get all posts for the authenticated user's client
+ * @access Private
+ */
+router.get('/', PostController.getPosts);
 
-model Client {
-  id        String   @id @default(cuid())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+/**
+ * @route GET /api/posts/:id/vote-history
+ * @desc Get vote order history for a post
+ * @access Private
+ */
+router.get('/:id/vote-history', require('../controllers/vote.controller').VoteController.getVoteHistory);
 
-  users           User[]
-  redditAccounts  RedditAccount[]
-  posts           Post[]
-  keywords        Keyword[]
-  mentions        Mention[]
-  voteOrderLogs   VoteOrderLog[] // Add this relation
+/**
+ * @route GET /api/posts/:id
+ * @desc Get a specific post by ID
+ * @access Private
+ */
+router.get('/:id', PostController.getPost);
+router.get('/:id/analytics', PostController.getPostAnalytics);
 
-  @@map("clients")
-}
+/**
+ * @route PUT /api/posts/:id
+ * @desc Update a post
+ * @access Private
+ */
+router.put('/:id', PostController.updatePost);
 
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  role      Role     @default(CLIENT_USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+/**
+ * @route DELETE /api/posts/:id
+ * @desc Delete a post
+ * @access Private
+ */
+router.delete('/:id', PostController.deletePost);
 
-  client   Client @relation(fields: [clientId], references: [id])
-  clientId String
+/**
+ * @route POST /api/posts/:id/schedule
+ * @desc Schedule a post for posting
+ * @access Private
+ */
+router.post('/:id/schedule', PostController.schedulePost);
 
-  posts         Post[]
-  voteOrderLogs VoteOrderLog[] // Add this relation
-
-  @@map("users")
-}
-
-model RedditAccount {
-  id                String    @id @default(cuid())
-  reddit_username   String
-  access_token      String    // Encrypted
-  refresh_token     String    // Encrypted
-  token_expires_at  DateTime
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-
-  client   Client @relation(fields: [clientId], references: [id])
-  clientId String
-
-  posts Post[]
-
-  @@map("reddit_accounts")
-}
-
-model Post {
-  id              String     @id @default(cuid())
-  title           String
-  body            String
-  subreddit       String
-  status          PostStatus @default(Draft)
-  scheduled_at    DateTime?
-  posted_at       DateTime?
-  reddit_post_id  String?
-  error_message   String?
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-
-  // --- PHASE 3 ADDITIONS ---
-  source_url            String?    // Full URL to the Reddit post
-  current_upvotes       Int?       // Cached upvote count
-  current_comments      Int?       // Cached comment count
-  analytics_last_updated DateTime? // Timestamp of the last analytics update
-  // --- END PHASE 3 ADDITIONS ---
-  
-  author   User @relation(fields: [authorId], references: [id])
-  authorId String
-
-  client   Client @relation(fields: [clientId], references: [id])
-  clientId String
-
-  redditAccount   RedditAccount? @relation(fields: [redditAccountId], references: [id])
-  redditAccountId String?
-
-  voteOrderLogs   VoteOrderLog[] // Add this relation
-
-  @@map("posts")
-}
-
-// --- Monitoring & Analytics Additions ---
-enum Sentiment {
-  POSITIVE
-  NEUTRAL
-  NEGATIVE
-  UNKNOWN
-}
-
-model Keyword {
-  id            String    @id @default(cuid())
-  term          String
-  is_active     Boolean   @default(true)
-  createdAt     DateTime  @default(now())
-  lastScannedAt DateTime?
-  client        Client    @relation(fields: [clientId], references: [id])
-  clientId      String
-  mentions      Mention[]
-
-  @@unique([term, clientId])
-  @@map("keywords")
-}
-
-model Mention {
-  id            String    @id @default(cuid())
-  source_url    String    @unique
-  content_snippet String  @db.Text
-  author        String
-  subreddit     String
-  sentiment     Sentiment @default(UNKNOWN)
-  found_at      DateTime
-  keyword       Keyword   @relation(fields: [keywordId], references: [id], onDelete: Cascade)
-  keywordId     String
-  client        Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  clientId      String
-
-  @@map("mentions")
-}
-
-// --- PHASE 3: NEW MODEL ---
-model VoteOrderLog {
-  id           String   @id @default(cuid())
-  service      String   // e.g., "upvote.shop"
-  amount       Int      // Number of upvotes ordered
-  external_ref String?  // Optional: Order ID from the external service
-  created_at   DateTime @default(now())
-
-  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
-  postId String
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String
-
-  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  clientId String
-
-  @@map("vote_order_logs")
-}
-</file>
-
-<file path="server/src/index.ts">
-// server/src/index.ts
-
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import { createServer } from 'http';
-import { Server as SocketIOServer } from 'socket.io';
-import jwt, { JwtPayload } from 'jsonwebtoken';
-import { prisma } from './utils/prisma';
-import { SchedulerService } from './services/scheduler.service';
-import { triggerMonitoringJob } from './services/monitoring.service'; // Import the monitoring service
-
-// Import routes
-import authRoutes from './routes/auth.routes';
-import postRoutes from './routes/post.routes';
-import aiRoutes from './routes/ai.routes';
-import testRoutes from './routes/test.routes';
-import keywordRoutes from './routes/keyword.routes';
-import mentionRoutes from './routes/mention.routes';
-import voteRoutes from './routes/vote.routes'; // <-- Added
-
-// Load environment variables
-dotenv.config();
-
-const app = express();
-const server = createServer(app);
-const io = new SocketIOServer(server, {
-  cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-    credentials: true,
-  },
-});
-export { io };
-
-// Socket.io authentication middleware
-io.use(async (socket: any, next: (err?: Error) => void) => {
-  try {
-    const token = socket.handshake.auth.token;
-    if (!token) return next(new Error('Authentication error: token required'));
-    const jwtSecret = process.env.JWT_SECRET;
-    if (!jwtSecret) return next(new Error('JWT secret not configured'));
-    const decoded = jwt.verify(token, jwtSecret) as JwtPayload;
-    // Attach clientId to socket
-    socket.clientId = decoded.clientId;
-    socket.join(decoded.clientId);
-    next();
-  } catch (err) {
-    next(new Error('Authentication error: invalid token'));
-  }
-});
-
-io.on('connection', (socket: any) => {
-  const clientId = socket.clientId;
-  console.log(`Socket connected for clientId: ${clientId}`);
-  socket.on('disconnect', () => {
-    console.log(`Socket disconnected for clientId: ${clientId}`);
-  });
-});
-
-const PORT = process.env.PORT || 3001;
-
-// Middleware
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-  credentials: true
-}));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
-  });
-});
-
-// API routes
-app.use('/api/auth', authRoutes);
-app.use('/api/posts', postRoutes); // Ensure post routes can handle the new history route
-app.use('/api/votes', voteRoutes); // Add this line
-app.use('/api/ai', aiRoutes);
-app.use('/api/test', testRoutes);
-app.use('/api/keywords', keywordRoutes);
-app.use('/api/mentions', mentionRoutes);
-
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
-});
-
-// Global error handler
-app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Global error handler:', error);
-  
-  if (error.type === 'entity.parse.failed') {
-    return res.status(400).json({ error: 'Invalid JSON payload' });
-  }
-  
-  return res.status(500).json({ error: 'Internal server error' });
-});
-
-// Graceful shutdown
-process.on('SIGTERM', async () => {
-  console.log('SIGTERM received, shutting down gracefully...');
-  SchedulerService.stop();
-  await prisma.$disconnect();
-  process.exit(0);
-});
-
-process.on('SIGINT', async () => {
-  console.log('SIGINT received, shutting down gracefully...');
-  SchedulerService.stop();
-  await prisma.$disconnect();
-  process.exit(0);
-});
-
-// Start server
-async function startServer() {
-  try {
-    // Test database connection
-    await prisma.$connect();
-    console.log('✅ Database connected successfully');
-
-    // Initialize scheduler for posts
-    SchedulerService.initialize();
-    
-    // Start monitoring service job immediately on start in development for faster feedback
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Running initial monitoring job in development mode...');
-      // Use setImmediate to run it right after the current event loop finishes
-      setImmediate(triggerMonitoringJob);
-    }
-
-    server.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`📊 Health check: http://localhost:${PORT}/health`);
-      console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
-      console.log(`🔌 Socket.io running on port ${PORT}`);
-    });
-  } catch (error) {
-    console.error('❌ Failed to start server:', error);
-    process.exit(1);
-  }
-}
-
-startServer();
+export default router;
 </file>
 
 <file path="server/src/services/scheduler.service.ts">
@@ -6474,6 +6404,339 @@ export default function RegisterPage() {
 }
 </file>
 
+<file path="server/prisma/schema.prisma">
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  CLIENT_USER
+}
+
+enum PostStatus {
+  Draft
+  Scheduled
+  Posted
+  Error
+}
+
+model Client {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users           User[]
+  redditAccounts  RedditAccount[]
+  posts           Post[]
+  keywords        Keyword[]
+  mentions        Mention[]
+  voteOrderLogs   VoteOrderLog[] // Add this relation
+
+  @@map("clients")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  role      Role     @default(CLIENT_USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  client   Client @relation(fields: [clientId], references: [id])
+  clientId String
+
+  posts         Post[]
+  voteOrderLogs VoteOrderLog[] // Add this relation
+
+  @@map("users")
+}
+
+model RedditAccount {
+  id                String    @id @default(cuid())
+  reddit_username   String
+  access_token      String    // Encrypted
+  refresh_token     String    // Encrypted
+  token_expires_at  DateTime
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  client   Client @relation(fields: [clientId], references: [id])
+  clientId String
+
+  posts Post[]
+
+  @@map("reddit_accounts")
+}
+
+model Post {
+  id              String     @id @default(cuid())
+  title           String
+  body            String
+  subreddit       String
+  status          PostStatus @default(Draft)
+  scheduled_at    DateTime?
+  posted_at       DateTime?
+  reddit_post_id  String?
+  error_message   String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  // --- PHASE 3 ADDITIONS ---
+  source_url            String?    // Full URL to the Reddit post
+  current_upvotes       Int?       // Cached upvote count
+  current_comments      Int?       // Cached comment count
+  analytics_last_updated DateTime? // Timestamp of the last analytics update
+  // --- END PHASE 3 ADDITIONS ---
+  
+  author   User @relation(fields: [authorId], references: [id])
+  authorId String
+
+  client   Client @relation(fields: [clientId], references: [id])
+  clientId String
+
+  redditAccount   RedditAccount? @relation(fields: [redditAccountId], references: [id])
+  redditAccountId String?
+
+  voteOrderLogs   VoteOrderLog[] // Add this relation
+  postAnalytics   PostAnalytics[]
+
+  @@map("posts")
+}
+
+// --- Monitoring & Analytics Additions ---
+enum Sentiment {
+  POSITIVE
+  NEUTRAL
+  NEGATIVE
+  UNKNOWN
+}
+
+model Keyword {
+  id            String    @id @default(cuid())
+  term          String
+  is_active     Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  lastScannedAt DateTime?
+  client        Client    @relation(fields: [clientId], references: [id])
+  clientId      String
+  mentions      Mention[]
+
+  @@unique([term, clientId])
+  @@map("keywords")
+}
+
+model Mention {
+  id            String    @id @default(cuid())
+  source_url    String    @unique
+  content_snippet String  @db.Text
+  author        String
+  subreddit     String
+  sentiment     Sentiment @default(UNKNOWN)
+  found_at      DateTime
+  keyword       Keyword   @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+  keywordId     String
+  client        Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId      String
+
+  @@map("mentions")
+}
+
+// --- PHASE 3: NEW MODEL ---
+model VoteOrderLog {
+  id           String   @id @default(cuid())
+  service      String   // e.g., "upvote.shop"
+  amount       Int      // Number of upvotes ordered
+  external_ref String?  // Optional: Order ID from the external service
+  created_at   DateTime @default(now())
+
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId String
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId String
+
+  @@map("vote_order_logs")
+}
+
+model PostAnalytics {
+  id        String   @id @default(cuid())
+  postId    String
+  upvotes   Int
+  comments  Int
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id])
+}
+</file>
+
+<file path="server/src/index.ts">
+// server/src/index.ts
+
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { createServer } from 'http';
+import { Server as SocketIOServer } from 'socket.io';
+import jwt, { JwtPayload } from 'jsonwebtoken';
+import { prisma } from './utils/prisma';
+import { SchedulerService } from './services/scheduler.service';
+import { triggerMonitoringJob } from './services/monitoring.service'; // Import the monitoring service
+import { AnalyticsService } from './services/analytics.service';
+
+// Import routes
+import authRoutes from './routes/auth.routes';
+import postRoutes from './routes/post.routes';
+import aiRoutes from './routes/ai.routes';
+import testRoutes from './routes/test.routes';
+import keywordRoutes from './routes/keyword.routes';
+import mentionRoutes from './routes/mention.routes';
+import voteRoutes from './routes/vote.routes'; // <-- Added
+
+// Load environment variables
+dotenv.config();
+
+const app = express();
+const server = createServer(app);
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    credentials: true,
+  },
+});
+export { io };
+
+// Socket.io authentication middleware
+io.use(async (socket: any, next: (err?: Error) => void) => {
+  try {
+    const token = socket.handshake.auth.token;
+    if (!token) return next(new Error('Authentication error: token required'));
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) return next(new Error('JWT secret not configured'));
+    const decoded = jwt.verify(token, jwtSecret) as JwtPayload;
+    // Attach clientId to socket
+    socket.clientId = decoded.clientId;
+    socket.join(decoded.clientId);
+    next();
+  } catch (err) {
+    next(new Error('Authentication error: invalid token'));
+  }
+});
+
+io.on('connection', (socket: any) => {
+  const clientId = socket.clientId;
+  console.log(`Socket connected for clientId: ${clientId}`);
+  socket.on('disconnect', () => {
+    console.log(`Socket disconnected for clientId: ${clientId}`);
+  });
+});
+
+const PORT = process.env.PORT || 3001;
+
+// Middleware
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  credentials: true
+}));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// API routes
+app.use('/api/auth', authRoutes);
+app.use('/api/posts', postRoutes); // Ensure post routes can handle the new history route
+app.use('/api/votes', voteRoutes); // Add this line
+app.use('/api/ai', aiRoutes);
+app.use('/api/test', testRoutes);
+app.use('/api/keywords', keywordRoutes);
+app.use('/api/mentions', mentionRoutes);
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
+// Global error handler
+app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('Global error handler:', error);
+  
+  if (error.type === 'entity.parse.failed') {
+    return res.status(400).json({ error: 'Invalid JSON payload' });
+  }
+  
+  return res.status(500).json({ error: 'Internal server error' });
+});
+
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM received, shutting down gracefully...');
+  SchedulerService.stop();
+  await prisma.$disconnect();
+  process.exit(0);
+});
+
+process.on('SIGINT', async () => {
+  console.log('SIGINT received, shutting down gracefully...');
+  SchedulerService.stop();
+  await prisma.$disconnect();
+  process.exit(0);
+});
+
+// Start server
+async function startServer() {
+  try {
+    // Test database connection
+    await prisma.$connect();
+    console.log('✅ Database connected successfully');
+
+    // Initialize scheduler for posts
+    SchedulerService.initialize();
+    
+    // Start monitoring service job immediately on start in development for faster feedback
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Running initial monitoring job in development mode...');
+      // Use setImmediate to run it right after the current event loop finishes
+      setImmediate(triggerMonitoringJob);
+    }
+
+    // Start analytics snapshot service
+    AnalyticsService.initialize();
+
+    server.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`📊 Health check: http://localhost:${PORT}/health`);
+      console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
+      console.log(`🔌 Socket.io running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
+</file>
+
 <file path="client/package.json">
 {
   "name": "nextjs-tailwind",
@@ -7204,6 +7467,67 @@ export default function DashboardPage() {
 }
 </file>
 
+<file path="client/src/app/layout.tsx">
+// client/src/app/layout.tsx
+
+import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+import "./globals.css";
+import ClientBody from "./ClientBody";
+import Script from "next/script";
+import { AuthProvider } from "@/lib/auth"; // No useAuth here
+import React from "react";
+import Navbar from "./Navbar";
+import { ThemeProvider } from "@/lib/theme";
+import { SocketProvider } from '@/contexts/SocketContext';
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+export const metadata: Metadata = {
+  title: "Supereddit",
+  description: "Supereddit: AI Reddit Post Writing, Smart Scheduler, Keyword Tracking, Upvote Coordination, Analytics, and more for agencies & brands.",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  // We can no longer determine the navbar state here on the server
+  // This will be handled client-side or with a different pattern if needed.
+  // For now, we simplify and let the Navbar decide its own state.
+
+  return (
+    <html lang="en" className={`light ${geistSans.variable} ${geistMono.variable}`}>
+      <head>
+        <Script
+          crossOrigin="anonymous"
+          src="//unpkg.com/same-runtime/dist/index.global.js"
+        />
+      </head>
+      <body suppressHydrationWarning className="antialiased pt-16"> {/* Add padding for fixed navbar */}
+        <ThemeProvider>
+          <AuthProvider>
+            <SocketProvider> {/* SocketProvider now wraps everything */}
+              <Navbar />
+              <ClientBody>{children}</ClientBody>
+            </SocketProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}
+</file>
+
 <file path="client/src/app/Navbar.tsx">
 // client/src/app/Navbar.tsx
 
@@ -7247,7 +7571,7 @@ export default function Navbar() {
   return (
     <nav className="w-full flex items-center justify-between py-3 px-4 sm:px-6 lg:px-8 bg-white shadow-sm fixed top-0 left-0 z-30 border-b border-slate-100">
       <div className="flex items-center">
-        <Link href="/dashboard" className="flex items-center mr-8" title="Dashboard">
+        <Link href="/" className="flex items-center mr-8" title="Home">
           <span className="font-bold text-lg tracking-tight text-slate-900">Supereddit</span>
         </Link>
         <div className="hidden md:flex items-center space-x-6">
@@ -7288,13 +7612,15 @@ export default function Navbar() {
 
 <file path="client/src/app/posts/[id]/page.tsx">
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import api from "@/lib/axios";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import { CoordinationPanel } from "@/components/CoordinationPanel";
+import { generatePostReport } from "@/lib/reporting";
+import { PostAnalyticsChart } from "@/components/PostAnalyticsChart";
 
 // --- Improvement: Type-safe data model based on your API docs ---
 type PostStatus = "Draft" | "Scheduled" | "Posted" | "Error";
@@ -7353,10 +7679,14 @@ export default function PostDetailPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isScheduling, setIsScheduling] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Add state for accounts and selected account
   const [accounts, setAccounts] = useState<{ id: string; reddit_username: string }[]>([]);
   const [selectedAccountId, setSelectedAccountId] = useState("");
+
+  // Ref for the chart container (for PDF screenshot)
+  const chartRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -7469,6 +7799,20 @@ export default function PostDetailPage() {
     }
   };
 
+  const handleDownloadReport = async () => {
+    if (!post || !user) return;
+    setIsDownloading(true);
+    try {
+        // Use user.clientName or fallback to user.email or 'Client'
+        await generatePostReport(post, chartRef.current, user.clientName || user.email || 'Client');
+    } catch (e) {
+        console.error("Failed to generate report:", e);
+        setError("Could not generate the report. Please try again.");
+    } finally {
+        setIsDownloading(false);
+    }
+  };
+
   if (authLoading || loading) {
     return (
       <main className="flex items-center justify-center min-h-screen bg-slate-50">
@@ -7494,13 +7838,13 @@ export default function PostDetailPage() {
     );
   }
 
-  const canEdit = post.status !== "Posted";
+  const canEdit = post.status === "Draft" || post.status === "Scheduled";
+  const isPosted = post.status === "Posted";
 
   return (
     <main className="min-h-screen bg-slate-50">
-      {/* Header with Breadcrumbs */}
       <div className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-2 text-sm">
              <Link href="/dashboard" className="text-slate-500 hover:text-blue-600">Dashboard</Link>
              <span className="text-slate-400">/</span>
@@ -7511,53 +7855,54 @@ export default function PostDetailPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Alerts for success and error messages */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {success && <div className="mb-4 p-4 text-sm text-green-800 bg-green-100 border border-green-200 rounded-lg">{success}</div>}
         {error && <div className="mb-4 p-4 text-sm text-red-800 bg-red-100 border border-red-200 rounded-lg">{error}</div>}
-      
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content (Left Column) */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200">
-                {isEditing && canEdit ? (
-                    <form onSubmit={handleSaveChanges}>
-                        <div className="p-6 space-y-4">
-                            <div>
-                                <label htmlFor="title" className="block text-sm font-medium text-slate-700 mb-1">Title</label>
-                                <input id="title" type="text" value={form.title} onChange={e => setForm(f => ({...f, title: e.target.value}))} className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
-                            </div>
-                            <div>
-                                <label htmlFor="subreddit" className="block text-sm font-medium text-slate-700 mb-1">Subreddit (r/)</label>
-                                <input id="subreddit" type="text" value={form.subreddit} onChange={e => setForm(f => ({...f, subreddit: e.target.value}))} className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
-                            </div>
-                             <div>
-                                <label htmlFor="body" className="block text-sm font-medium text-slate-700 mb-1">Body</label>
-                                <textarea id="body" value={form.body} onChange={e => setForm(f => ({...f, body: e.target.value}))} className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[250px]" required />
-                            </div>
-                        </div>
-                        <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-3">
-                            <button type="button" onClick={() => setIsEditing(false)} className="px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50">Cancel</button>
-                            <button type="submit" disabled={isSaving} className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-slate-400 flex items-center">
-                                {isSaving && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>}
-                                {isSaving ? 'Saving...' : 'Save Changes'}
-                            </button>
-                        </div>
-                    </form>
-                ) : (
-                    <div className="p-6">
-                        <h1 className="text-2xl font-bold text-slate-900">{post.title}</h1>
-                        <p className="text-sm text-slate-500 mt-1">in <span className="font-semibold">r/{post.subreddit}</span></p>
-                        <div className="mt-6 prose prose-slate max-w-none">
-                            <ReactMarkdown>{post.body}</ReactMarkdown>
-                        </div>
+
+        <div className="flex flex-col lg:flex-row gap-8 items-start">
+          {/* Main Post Content */}
+          <div className="flex-1 w-full">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 mb-8">
+              {isEditing && canEdit ? (
+                <form onSubmit={handleSaveChanges}>
+                  <div className="p-6 space-y-4">
+                    {/* Edit form fields */}
+                    <div>
+                      <label htmlFor="title" className="block text-sm font-medium text-slate-700 mb-1">Title</label>
+                      <input id="title" type="text" value={form.title} onChange={e => setForm(f => ({...f, title: e.target.value}))} className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
                     </div>
-                )}
+                    <div>
+                      <label htmlFor="subreddit" className="block text-sm font-medium text-slate-700 mb-1">Subreddit (r/)</label>
+                      <input id="subreddit" type="text" value={form.subreddit} onChange={e => setForm(f => ({...f, subreddit: e.target.value}))} className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                    </div>
+                    <div>
+                      <label htmlFor="body" className="block text-sm font-medium text-slate-700 mb-1">Body</label>
+                      <textarea id="body" value={form.body} onChange={e => setForm(f => ({...f, body: e.target.value}))} className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[250px]" required />
+                    </div>
+                  </div>
+                  <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-3">
+                    <button type="button" onClick={() => setIsEditing(false)} className="px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50">Cancel</button>
+                    <button type="submit" disabled={isSaving} className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-slate-400 flex items-center">
+                      {isSaving && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>}
+                      {isSaving ? 'Saving...' : 'Save Changes'}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="p-8">
+                  <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">{post.title}</h1>
+                  <p className="text-sm text-slate-500 mb-6">in <span className="font-semibold">r/{post.subreddit}</span></p>
+                  <div className="prose prose-slate max-w-none text-base">
+                    <ReactMarkdown>{post.body}</ReactMarkdown>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-          
-          {/* Sidebar (Right Column) */}
-          <div className="space-y-6">
+
+          {/* Right Sidebar: sticky on desktop */}
+          <aside className="w-full lg:w-[340px] flex flex-col gap-6 top-8 lg:sticky self-start">
+            {/* Post Status */}
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
               <h3 className="text-lg font-semibold text-slate-900 mb-4">Post Status</h3>
               <div className="flex items-center justify-between">
@@ -7565,117 +7910,76 @@ export default function PostDetailPage() {
                 <StatusBadge status={post.status} />
               </div>
               <ul className="mt-4 space-y-2 text-sm text-slate-600 border-t border-slate-200 pt-4">
-                 <li><strong>Created:</strong> {new Date(post.createdAt).toLocaleString()}</li>
-                 <li><strong>Last Updated:</strong> {new Date(post.updatedAt).toLocaleString()}</li>
-                 <li><strong>Scheduled for:</strong> {post.scheduled_at ? new Date(post.scheduled_at).toLocaleString() : 'N/A'}</li>
-                 <li><strong>Posted at:</strong> {post.posted_at ? new Date(post.posted_at).toLocaleString() : 'N/A'}</li>
+                <li><strong>Created:</strong> {new Date(post.createdAt).toLocaleString()}</li>
+                <li><strong>Last Updated:</strong> {new Date(post.updatedAt).toLocaleString()}</li>
+                <li><strong>Scheduled for:</strong> {post.scheduled_at ? new Date(post.scheduled_at).toLocaleString() : 'N/A'}</li>
+                <li><strong>Posted at:</strong> {post.posted_at ? new Date(post.posted_at).toLocaleString() : 'N/A'}</li>
               </ul>
             </div>
-            {canEdit && (
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                    <h3 className="text-lg font-semibold text-slate-900 mb-4">Actions</h3>
-                    <div className="space-y-3">
-                        {!isEditing && <button onClick={() => setIsEditing(true)} className="w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">Edit Post</button>}
-                        <form onSubmit={handleSchedule} className="space-y-2">
-                          <div>
-                            <label htmlFor="redditAccount" className="block text-sm font-medium text-slate-700 mb-1">Post with Account</label>
-                            <select
-                              id="redditAccount"
-                              value={selectedAccountId}
-                              onChange={e => setSelectedAccountId(e.target.value)}
-                              className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              required
-                            >
-                              <option value="" disabled>Select an account</option>
-                              {accounts.map(acc => (
-                                <option key={acc.id} value={acc.id}>
-                                  {acc.reddit_username}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                          <input name="scheduleAt" type="datetime-local" className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                          <button type="submit" disabled={isScheduling || !selectedAccountId} className="w-full px-4 py-2 font-semibold text-white bg-purple-600 rounded-lg hover:bg-purple-700 disabled:bg-slate-400 flex items-center justify-center">
-                            {isScheduling && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>}
-                            {isScheduling ? 'Scheduling...' : 'Schedule'}
-                          </button>
-                        </form>
-                        <button onClick={handleDelete} disabled={isDeleting} className="w-full px-4 py-2 font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:bg-slate-400 flex items-center justify-center">
-                            {isDeleting && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>}
-                            {isDeleting ? 'Deleting...' : 'Delete Post'}
-                        </button>
-                    </div>
-                </div>
+
+            {/* Actions */}
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+              <h3 className="text-lg font-semibold text-slate-900 mb-4">Actions</h3>
+              <div className="space-y-3">
+                {canEdit && !isEditing && (
+                  <button onClick={() => setIsEditing(true)} className="w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">Edit Post</button>
+                )}
+                {canEdit && (
+                  <button onClick={handleDelete} disabled={isDeleting} className="w-full px-4 py-2 font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:bg-slate-400 flex items-center justify-center">
+                    {isDeleting && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>}
+                    {isDeleting ? 'Deleting...' : 'Delete Post'}
+                  </button>
+                )}
+                {isPosted && post.source_url && (
+                  <a href={post.source_url} target="_blank" rel="noopener noreferrer" className="w-full block text-center px-4 py-2 font-semibold text-white bg-slate-700 rounded-lg hover:bg-slate-800">View on Reddit ↗</a>
+                )}
+                {isPosted && (
+                  <button onClick={handleDownloadReport} disabled={isDownloading} className="w-full px-4 py-2 font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:bg-slate-400 flex items-center justify-center">
+                    {isDownloading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>}
+                    {isDownloading ? 'Generating...' : 'Download Report'}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Analytics Chart */}
+            {isPosted && (
+              <div ref={chartRef} className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                <h3 className="text-lg font-semibold text-slate-900 mb-4">Performance Analytics</h3>
+                <PostAnalyticsChart postId={post.id} />
+              </div>
             )}
-            {/* CoordinationPanel: Upvote purchase & history */}
-            {post.status === "Posted" && post.source_url && (
-              <CoordinationPanel postId={post.id} />
+
+            {/* Coordination Panel */}
+            {isPosted && <CoordinationPanel />}
+
+            {/* Schedule Form (only for Draft, not editing) */}
+            {post.status === "Draft" && !isEditing && (
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                <h3 className="text-lg font-semibold text-slate-900 mb-4">Schedule Post</h3>
+                <form onSubmit={handleSchedule} className="space-y-3">
+                  <div>
+                    <label htmlFor="redditAccount" className="block text-sm font-medium text-slate-700 mb-1">Post with Account</label>
+                    <select id="redditAccount" value={selectedAccountId} onChange={e => setSelectedAccountId(e.target.value)} className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                      <option value="" disabled>Select an account</option>
+                      {accounts.map(acc => ( <option key={acc.id} value={acc.id}> {acc.reddit_username} </option>))}
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="scheduleAt" className="block text-sm font-medium text-slate-700 mb-1">Date and Time</label>
+                    <input id="scheduleAt" name="scheduleAt" type="datetime-local" className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  </div>
+                  <button type="submit" disabled={isScheduling || !selectedAccountId} className="w-full px-4 py-2 font-semibold text-white bg-purple-600 rounded-lg hover:bg-purple-700 disabled:bg-slate-400 flex items-center justify-center">
+                    {isScheduling && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>}
+                    {isScheduling ? 'Scheduling...' : 'Schedule This Post'}
+                  </button>
+                </form>
+              </div>
             )}
-          </div>
+          </aside>
         </div>
       </div>
     </main>
-  );
-}
-</file>
-
-<file path="client/src/app/layout.tsx">
-// client/src/app/layout.tsx
-
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import ClientBody from "./ClientBody";
-import Script from "next/script";
-import { AuthProvider } from "@/lib/auth"; // No useAuth here
-import React from "react";
-import Navbar from "./Navbar";
-import { ThemeProvider } from "@/lib/theme";
-import { SocketProvider } from '@/contexts/SocketContext';
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-export const metadata: Metadata = {
-  title: "Supereddit",
-  description: "Supereddit: AI Reddit Post Writing, Smart Scheduler, Keyword Tracking, Upvote Coordination, Analytics, and more for agencies & brands.",
-};
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  // We can no longer determine the navbar state here on the server
-  // This will be handled client-side or with a different pattern if needed.
-  // For now, we simplify and let the Navbar decide its own state.
-
-  return (
-    <html lang="en" className={`light ${geistSans.variable} ${geistMono.variable}`}>
-      <head>
-        <Script
-          crossOrigin="anonymous"
-          src="//unpkg.com/same-runtime/dist/index.global.js"
-        />
-      </head>
-      <body suppressHydrationWarning className="antialiased pt-16"> {/* Add padding for fixed navbar */}
-        <ThemeProvider>
-          <AuthProvider>
-            <SocketProvider> {/* SocketProvider now wraps everything */}
-              <Navbar />
-              <ClientBody>{children}</ClientBody>
-            </SocketProvider>
-          </AuthProvider>
-        </ThemeProvider>
-      </body>
-    </html>
   );
 }
 </file>
