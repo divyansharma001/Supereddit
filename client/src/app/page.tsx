@@ -476,7 +476,7 @@ export default function Home() {
     <p className="text-slate-600 text-center mb-8 animate-fade-slide" style={{animationDelay: '0.1s'}}>
       Sign up now and unlock the power of AI-driven community management.
     </p>
-    <a href="/" className="bento-btn bg-slate-900 text-white font-bold px-8 py-4 rounded-2xl shadow hover:bg-slate-800 transition-all text-lg animate-fade-slide" style={{animationDelay: '0.2s'}}>Get Started Free</a>
+    <Link href="/" className="bento-btn bg-slate-900 text-white font-bold px-8 py-4 rounded-2xl shadow hover:bg-slate-800 transition-all text-lg animate-fade-slide" style={{animationDelay: '0.2s'}}>Get Started Free</Link>
   </div>
   {/* Modern Footer */}
   <footer className="relative w-full mt-16 pt-10 border-t border-slate-200/50 bg-white text-center animate-fade-slide overflow-hidden" style={{animationDelay: '0.3s'}}>
@@ -504,9 +504,9 @@ export default function Home() {
         <div className="flex flex-col items-center md:items-start gap-3">
           <h3 className="font-bold text-slate-800 text-sm">Account</h3>
           <nav className="flex flex-wrap md:flex-col items-center md:items-start justify-center gap-3 text-sm font-medium text-slate-600">
-            <a href="/" className="hover:text-[#FF4500] transition-colors">Login</a>
-            <a href="/" className="hover:text-[#FF4500] transition-colors">Register</a>
-            <a href="/" className="hover:text-[#FF4500] transition-colors">AI Playground</a>
+            <Link href="/" className="hover:text-[#FF4500] transition-colors">Login</Link>
+            <Link href="/" className="hover:text-[#FF4500] transition-colors">Register</Link>
+            <Link href="/" className="hover:text-[#FF4500] transition-colors">AI Playground</Link>
           </nav>
         </div>
         <div className="flex flex-col items-center md:items-start gap-3">
