@@ -58,6 +58,9 @@ export default function Navbar() {
           <Link href="/keywords" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/keywords') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
             Monitoring
           </Link>
+          <Link href="/find-subreddit" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/find-subreddit') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
+            Find Subreddit
+          </Link>
         </div>
       </div>
       <div className="flex items-center space-x-4">

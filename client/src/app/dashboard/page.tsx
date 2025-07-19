@@ -276,7 +276,7 @@ export default function DashboardPage() {
                   <span className="text-2xl">📝</span>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">Manage Posts</h3>
+                  <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">Schedule Posts</h3>
                   <p className="text-sm text-slate-600 mt-1">View, create, and edit your content</p>
                 </div>
               </div>
@@ -308,30 +308,46 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Recent Activity */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 mb-8">
-          <div className="p-6 border-b border-slate-200">
-            <h2 className="text-lg font-semibold text-slate-900">Recent Activity</h2>
-          </div>
-          <div className="p-6">
-            <div className="space-y-4">
-              {recentPosts.length === 0 ? (
-                <div className="text-slate-500 text-sm">No recent activity.</div>
-              ) : (
-                recentPosts.map((post, idx) => (
-                  <div key={post.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
-                    <div className={`w-2 h-2 rounded-full ${post.status === "Posted" ? "bg-green-500" : post.status === "Scheduled" ? "bg-purple-500" : post.status === "Draft" ? "bg-blue-500" : "bg-slate-400"}`}></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-slate-900">
-                        {post.status === "Posted" ? "Post published successfully" : post.status === "Scheduled" ? "Post scheduled" : post.status === "Draft" ? "Draft saved" : "Post updated"}
-                      </p>
-                      <p className="text-xs text-slate-600">
-                        {post.subreddit ? `r/${post.subreddit}` : ""} • {dayjs((post.updatedAt as string) || (post.createdAt as string) || '').fromNow()}
-                      </p>
+        {/* Recent Activity + Find Subreddit */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 mb-8 overflow-hidden">
+          <div className="flex flex-col md:flex-row">
+            {/* Recent Activity Section */}
+            <div className="flex-[3] p-6 border-b md:border-b-0 md:border-r border-slate-200 min-w-0">
+              <h2 className="text-lg font-semibold text-slate-900 mb-4">Recent Activity</h2>
+              <div className="space-y-4">
+                {recentPosts.length === 0 ? (
+                  <div className="text-slate-500 text-sm">No recent activity.</div>
+                ) : (
+                  recentPosts.map((post, idx) => (
+                    <div key={post.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                      <div className={`w-2 h-2 rounded-full ${post.status === "Posted" ? "bg-green-500" : post.status === "Scheduled" ? "bg-purple-500" : post.status === "Draft" ? "bg-blue-500" : "bg-slate-400"}`}></div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-slate-900">
+                          {post.status === "Posted" ? "Post published successfully" : post.status === "Scheduled" ? "Post scheduled" : post.status === "Draft" ? "Draft saved" : "Post updated"}
+                        </p>
+                        <p className="text-xs text-slate-600">
+                          {post.subreddit ? `r/${post.subreddit}` : ""} • {dayjs((post.updatedAt as string) || (post.createdAt as string) || '').fromNow()}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))
-              )}
+                  ))
+                )}
+              </div>
+            </div>
+            {/* Find Subreddit Section */}
+            <div className="flex-[1] p-6 flex flex-col items-center justify-center bg-gradient-to-br from-[#FFF7F0] via-[#FF6B35]/10 to-[#FFF7F0] min-w-0">
+              <div className="flex flex-col items-center text-center w-full max-w-xs mx-auto">
+                <svg className="w-12 h-12 text-[#FF4500] mb-3" fill="none" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="20" cy="20" r="20" fill="#FF4500"/>
+                  <ellipse cx="20" cy="28" rx="10" ry="6" fill="#fff"/>
+                  <ellipse cx="14.5" cy="18" rx="2.5" ry="2.5" fill="#fff"/>
+                  <ellipse cx="25.5" cy="18" rx="2.5" ry="2.5" fill="#fff"/>
+                  <circle cx="20" cy="20" r="1.5" fill="#FF4500"/>
+                </svg>
+                <h3 className="text-xl font-bold text-[#FF4500] mb-2">Find Subreddit</h3>
+                <p className="text-slate-700 mb-4 text-sm">Discover the best subreddits for your product or niche and see key info at a glance.</p>
+                <Link href="/find-subreddit" className="px-5 py-2 rounded-xl font-bold bg-[#FF4500] text-white hover:bg-[#FF6B35] transition-all text-sm shadow-lg">Try it now</Link>
+              </div>
             </div>
           </div>
         </div>
