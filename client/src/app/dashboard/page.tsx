@@ -111,6 +111,29 @@ export default function DashboardPage() {
     );
   }
 
+  // Calculate dynamic stats for card footers
+  const now = dayjs();
+  const thisMonth = now.month();
+  const lastMonth = now.subtract(1, 'month').month();
+  const thisYear = now.year();
+  const lastMonthYear = lastMonth === 11 ? thisYear - 1 : thisYear;
+  const posts = recentPosts;
+  const postsThisMonth = posts.filter(p => {
+    const d = dayjs(p.createdAt || p.scheduled_at);
+    return d.year() === thisYear && d.month() === thisMonth;
+  });
+  const postsLastMonth = posts.filter(p => {
+    const d = dayjs(p.createdAt || p.scheduled_at);
+    return d.year() === lastMonthYear && d.month() === lastMonth;
+  });
+  const percentChange = postsLastMonth.length === 0 ? null : Math.round(((postsThisMonth.length - postsLastMonth.length) / Math.max(postsLastMonth.length, 1)) * 100);
+  const nextScheduled = posts
+    .filter(p => p.status === 'Scheduled' && p.scheduled_at && dayjs(p.scheduled_at).isAfter(now))
+    .sort((a, b) => dayjs(a.scheduled_at).valueOf() - dayjs(b.scheduled_at).valueOf())[0];
+  const timeToNextScheduled = nextScheduled ? dayjs(nextScheduled.scheduled_at).fromNow(true) : null;
+  const draftsReady = stats.draftPosts;
+  const aiPercent = stats.totalPosts > 0 ? Math.round((stats.aiGeneratedContent / stats.totalPosts) * 100) : 0;
+
   return (
     <main className="min-h-screen bg-slate-50">
       {/* Header */}
@@ -198,7 +221,9 @@ export default function DashboardPage() {
                 <span className="text-2xl">📊</span>
               </div>
             </div>
-            <p className="text-sm text-green-600 mt-2">+12% from last month</p>
+            <p className="text-sm text-green-600 mt-2">
+              {percentChange !== null ? `${percentChange > 0 ? '+' : ''}${percentChange}% from last month` : `${postsThisMonth.length} new this month`}
+            </p>
           </div>
 
           <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
@@ -211,7 +236,7 @@ export default function DashboardPage() {
                 <span className="text-2xl">⏰</span>
               </div>
             </div>
-            <p className="text-sm text-blue-600 mt-2">Next post in 2 hours</p>
+            <p className="text-sm text-blue-600 mt-2">{timeToNextScheduled ? `Next post in ${timeToNextScheduled}` : 'No posts scheduled'}</p>
           </div>
 
           <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
@@ -224,7 +249,7 @@ export default function DashboardPage() {
                 <span className="text-2xl">📝</span>
               </div>
             </div>
-            <p className="text-sm text-slate-600 mt-2">Ready to publish</p>
+            <p className="text-sm text-slate-600 mt-2">{draftsReady > 0 ? `${draftsReady} ready to publish` : 'No drafts'}</p>
           </div>
 
           <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
@@ -237,7 +262,7 @@ export default function DashboardPage() {
                 <span className="text-2xl">🤖</span>
               </div>
             </div>
-            <p className="text-sm text-purple-600 mt-2">50% of total content</p>
+            <p className="text-sm text-purple-600 mt-2">{aiPercent > 0 ? `${aiPercent}% of total content` : 'No AI content'}</p>
           </div>
         </div>
 
