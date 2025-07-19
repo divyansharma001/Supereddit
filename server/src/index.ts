@@ -20,6 +20,7 @@ import keywordRoutes from './routes/keyword.routes';
 import mentionRoutes from './routes/mention.routes';
 import voteRoutes from './routes/vote.routes'; // <-- Added
 import subredditRoutes from './routes/subreddit.routes';
+import waitlistRoutes from './routes/waitlist.routes';
 
 // Load environment variables
 dotenv.config();
@@ -87,6 +88,7 @@ app.use('/api/test', testRoutes);
 app.use('/api/keywords', keywordRoutes);
 app.use('/api/mentions', mentionRoutes);
 app.use('/api/subreddits', subredditRoutes);
+app.use('/api/waitlist', waitlistRoutes);
 
 // 404 handler
 app.use((req, res) => {

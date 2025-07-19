@@ -45,20 +45,20 @@ export default function Navbar() {
         </Link>
         <div className="hidden md:flex items-center space-x-6">
           {user && (
-            <Link href="/dashboard" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/dashboard') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
+            <Link href="/" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/dashboard') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
               Dashboard
             </Link>
           )}
-           <Link href="/posts" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/posts') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
+           <Link href="/" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/posts') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
             Posts
           </Link>
-          <Link href="/ai" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/ai') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
+          <Link href="/" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/ai') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
             AI
           </Link>
-          <Link href="/keywords" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/keywords') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
+          <Link href="/" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/keywords') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
             Monitoring
           </Link>
-          <Link href="/find-subreddit" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/find-subreddit') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
+          <Link href="/" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/find-subreddit') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
             Find Subreddit
           </Link>
         </div>
@@ -68,12 +68,13 @@ export default function Navbar() {
           <UserMenu />
         ) : (
           <>
-            <Link href="/login" className="py-1.5 px-3 font-medium text-sm text-slate-600 hover:text-[#FF4500] transition-colors">
+            {/* Login and Signup buttons hidden for waitlisting phase */}
+            {/* <Link href="/login" className="py-1.5 px-3 font-medium text-sm text-slate-600 hover:text-[#FF4500] transition-colors">
               Login
             </Link>
             <Link href="/register" className="py-1.5 px-4 rounded-md font-medium text-sm bg-[#FF4500] hover:bg-[#FF4500]/90 text-white transition-colors">
               Sign Up
-            </Link>
+            </Link> */}
           </>
         )}
       </div>
