@@ -8,24 +8,24 @@ export default function Home() {
   const [open, setOpen] = React.useState<number | null>(null);
   const faqs = [
     {
-      q: "What is RedditMVP?",
-      a: "RedditMVP is an AI-powered platform to help you create, manage, and grow Reddit communities with smart tools and analytics."
+      q: "What is Supereddit?",
+      a: "Supereddit is an AI-powered platform that helps you dominate Reddit with AI-generated posts, smart scheduling, keyword monitoring, and coordinated engagement tools."
     },
     {
-      q: "Is my data private and secure?",
-      a: "Absolutely. Your data is encrypted and you have full control over your community’s information."
+      q: "How does the AI post generation work?",
+      a: "Simply enter your keywords and choose a tone (story, question, experience). Our AI creates engaging titles and body content tailored to your target subreddit."
     },
     {
-      q: "Can I try RedditMVP for free?",
-      a: "Yes! You can get started for free and explore all the core features. Premium features are available with a free trial."
+      q: "Can I schedule posts in advance?",
+      a: "Yes! Use our calendar interface to schedule posts to specific subreddits. Track status: Draft, Scheduled, Posted."
     },
     {
-      q: "Do I need to know coding to use RedditMVP?",
-      a: "No coding required. Everything is designed to be user-friendly and accessible to everyone."
+      q: "What is keyword monitoring?",
+      a: "Monitor Reddit for mentions of your brand, competitors, or trends. Get real-time alerts and sentiment analysis."
     },
     {
-      q: "How do I get support?",
-      a: "Our support team is available via chat and email to help you with any questions or issues."
+      q: "How does the coordination feature work?",
+      a: "Trigger comment or upvote boosts via our platform. We track all activity and provide analytics on engagement performance."
     }
   ];
   return (
@@ -52,11 +52,11 @@ export default function Home() {
   </div>
           
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] text-slate-900 mb-6 tracking-tight text-center" style={{fontFamily: 'Plus Jakarta Sans'}}>
-            Your <span style={{ color: '#FF4500', fontWeight: 'bold',  }}>Unfair</span> Advantage on <span style={{ color: '#FF4500', fontWeight: 'bold', textDecoration: 'underline' }}>Reddit</span>.
+            Dominate <span style={{ color: '#FF4500', fontWeight: 'bold',  }}>Reddit</span> with AI-Powered <span style={{ color: '#FF4500', fontWeight: 'bold', textDecoration: 'underline' }}>Automation</span>
           </h1>
           
           <p className="mt-4 text-slate-600 text-lg sm:text-xl font-normal max-w-2xl mx-auto leading-relaxed" style={{fontFamily: 'Plus Jakarta Sans'}}>
-            Scale your presence with <span className="font-bold">AI post generation</span>, <span className="font-bold ">automated scheduling</span>, and a <span className="font-bold">powerful client analytics dashboard</span>.
+            Generate viral posts with AI, schedule content automatically, monitor keywords in real-time, and coordinate engagement campaigns. <span className="font-bold">Your unfair advantage on Reddit.</span>
           </p>
 
           {/* === THE NEW WAITLIST COMPONENT IS PLACED HERE === */}
@@ -121,7 +121,7 @@ export default function Home() {
         <div className="relative z-10 w-full flex flex-col items-center p-4 sm:p-8 md:p-12">
             
             <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-3 text-center" style={{fontFamily: 'Plus Jakarta Sans'}}>See Supereddit in Action</h2>
-            <p className="text-slate-600 text-lg sm:text-2xl mb-8 text-center max-w-2xl" style={{fontFamily: 'Plus Jakarta Sans'}}>Watch how you can create, manage, and grow your Reddit community with powerful, easy-to-use tools.</p>
+            <p className="text-slate-600 text-lg sm:text-2xl mb-8 text-center max-w-2xl" style={{fontFamily: 'Plus Jakarta Sans'}}>Watch how you can automate your Reddit presence with AI-generated content, smart scheduling, and real-time monitoring.</p>
             <div className="w-full aspect-video rounded-2xl overflow-hidden shadow-xl border border-slate-100 bg-slate-100 flex items-center justify-center">
                 <div style={{padding:'55.42% 0 0 0',position:'relative',width:'100%'}}>
                 <iframe 
@@ -140,10 +140,10 @@ export default function Home() {
       <section className="w-full flex flex-col justify-center items-center px-4 sm:px-6 md:px-8 pb-28">
         <div className="flex flex-col items-center mb-12 sm:mb-16">
           <h2 className="text-4xl sm:text-5xl font-extrabold text-center text-slate-900 animate-fade-slide">
-            Discover What You Can Do
+            Everything You Need to Dominate Reddit
           </h2>
           <p className="mt-4 max-w-2xl text-center text-slate-600 text-lg sm:text-xl animate-fade-slide" style={{animationDelay: '0.2s'}}>
-            Powerful tools to help you build, manage and grow your Reddit community
+            AI-powered tools to create, schedule, monitor, and coordinate your Reddit presence
           </p>
         </div>
         
@@ -155,10 +155,10 @@ export default function Home() {
               <div className="flex flex-col gap-3 sm:gap-4">
                 <div className="flex items-start justify-between">
                   <span className="text-3xl sm:text-4xl bento-icon">🤖</span>
-                  <span className="bg-[#FF4500]/10 text-[#FF4500] rounded-full px-3 py-1 text-xs font-bold tracking-wide bento-badge">NEW</span>
+                  <span className="bg-[#FF4500]/10 text-[#FF4500] rounded-full px-3 py-1 text-xs font-bold tracking-wide bento-badge">AI</span>
                 </div>
-                <h3 className="text-xl sm:text-2xl font-extrabold bento-title mt-1 text-slate-900">AI Content Generator</h3>
-                <p className="text-sm sm:text-base md:text-lg font-medium text-slate-600 max-w-md">Create engaging posts and comments tailored to your community's interests using advanced AI that learns from successful content.</p>
+                <h3 className="text-xl sm:text-2xl font-extrabold bento-title mt-1 text-slate-900">AI Post Generator</h3>
+                <p className="text-sm sm:text-base md:text-lg font-medium text-slate-600 max-w-md">Generate viral Reddit posts with AI. Choose tone (story, question, experience) and get pre-filled titles and body content ready for approval.</p>
               </div>
               <div className="flex items-center gap-3 mt-4">
                 <button className="bento-btn bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-5 py-2.5 rounded-xl">Try it now</button>
@@ -172,153 +172,144 @@ export default function Home() {
             </div>
           </div>
           
-          {/* Card 2: Analytics Dashboard */}
+          {/* Card 2: Smart Scheduler */}
           <div className="bento-card bento-shine col-span-1 sm:col-span-2 md:col-span-3 row-span-2 bg-[#23272f] rounded-2xl overflow-hidden relative">
             <div className="h-full flex flex-col justify-between p-5 sm:p-6 md:p-7 text-white relative z-10">
               <div className="flex flex-col gap-2">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-xl sm:text-2xl font-extrabold bento-title">Analytics Dashboard</h3>
-                  <span className="bento-icon text-2xl sm:text-3xl">📊</span>
+                  <h3 className="text-xl sm:text-2xl font-extrabold bento-title">Smart Scheduler</h3>
+                  <span className="bento-icon text-2xl sm:text-3xl">📅</span>
                 </div>
-                <p className="text-white/80 mb-3 sm:mb-4">Track your community's growth and engagement</p>
+                <p className="text-white/80 mb-3 sm:mb-4">Schedule posts to specific subreddits with calendar interface</p>
                 
                 <div className="grid grid-cols-2 gap-3 sm:gap-4 mt-1">
                   <div className="bg-white/10 rounded-xl p-3 sm:p-4">
-                    <div className="text-white/70 text-xs sm:text-sm mb-1">New Members</div>
+                    <div className="text-white/70 text-xs sm:text-sm mb-1">Status</div>
                     <div className="text-base sm:text-xl font-bold flex items-center">
-                      247
-                      <span className="text-green-400 text-xs sm:text-sm ml-2 flex items-center">
+                      Draft
+                      <span className="text-blue-400 text-xs sm:text-sm ml-2 flex items-center">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 sm:h-4 sm:w-4" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clipRule="evenodd" />
                         </svg>
-                        23%
+                        Ready
                       </span>
                     </div>
                   </div>
                   <div className="bg-white/10 rounded-xl p-3 sm:p-4">
-                    <div className="text-white/70 text-xs sm:text-sm mb-1">Engagement</div>
+                    <div className="text-white/70 text-xs sm:text-sm mb-1">Scheduled</div>
                     <div className="text-base sm:text-xl font-bold flex items-center">
-                      89%
-                      <span className="text-green-400 text-xs sm:text-sm ml-2 flex items-center">
+                      12
+                      <span className="text-purple-400 text-xs sm:text-sm ml-2 flex items-center">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 sm:h-4 sm:w-4" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clipRule="evenodd" />
                         </svg>
-                        7%
+                        Posts
                       </span>
                     </div>
                   </div>
                 </div>
-                
-                <div className="mt-4 relative h-12 sm:h-16">
-                  <div className="absolute inset-0">
-                    <svg className="w-full h-full" viewBox="0 0 400 100">
-                      <path d="M0,50 C50,30 100,90 150,50 C200,10 250,50 300,40 C350,30 400,60 400,50" fill="none" stroke="#FF4500" strokeWidth="3" />
-                      <path d="M0,50 C50,30 100,90 150,50 C200,10 250,50 300,40 C350,30 400,60 400,50" fill="none" stroke="#ffffff" strokeWidth="1" strokeOpacity="0.3" strokeDasharray="5,5" />
-                      <circle cx="150" cy="50" r="4" fill="#FF4500" />
-                      <circle cx="300" cy="40" r="4" fill="#FF4500" />
-                    </svg>
-                  </div>
-                </div>
               </div>
-              <button className="bento-btn bg-white text-slate-900 hover:bg-white/90 font-bold px-5 py-2.5 rounded-xl mt-4 w-fit">View analytics</button>
+              <div className="flex items-center gap-3 mt-4">
+                <button className="bento-btn bg-white/10 hover:bg-white/20 text-white font-bold px-5 py-2.5 rounded-xl">Schedule Post</button>
+                <button className="bento-btn bg-white/10 hover:bg-white/20 text-white font-bold px-4 py-2.5 rounded-xl flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                  </svg>
+                  View Calendar
+                </button>
+              </div>
             </div>
           </div>
           
-          {/* Card 3: Community Builder */}
-          <div className="bento-card bento-shine col-span-1 sm:col-span-2 md:col-span-2 row-span-2 bg-white rounded-2xl overflow-hidden relative border border-slate-100">
-            <div className="h-full flex flex-col justify-between p-5 sm:p-6 md:p-7 text-slate-800 relative">
-              <div className="flex flex-col gap-3">
+          {/* Card 3: Keyword Monitoring */}
+          <div className="bento-card bento-shine col-span-1 sm:col-span-2 md:col-span-2 row-span-1 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl overflow-hidden relative border border-blue-200">
+            <div className="h-full flex flex-col justify-between p-5 sm:p-6 text-slate-800 relative">
+              <div className="flex flex-col gap-2">
                 <div className="flex items-start justify-between">
-                  <span className="text-3xl sm:text-4xl bento-icon">🏆</span>
-                  <span className="text-xs text-slate-500 font-medium px-2 py-0.5 bg-slate-100 rounded-full">Pro</span>
+                  <span className="text-2xl sm:text-3xl bento-icon">🔍</span>
+                  <span className="bg-blue-500/10 text-blue-600 rounded-full px-2 py-1 text-xs font-bold tracking-wide bento-badge">MONITOR</span>
                 </div>
-                <h3 className="text-xl sm:text-2xl font-extrabold bento-title mt-1 text-slate-900">Community Builder</h3>
-                <p className="text-sm sm:text-base text-slate-600 font-medium">Tools and templates to grow your community from scratch with proven strategies.</p>
-                
-                <div className="mt-3 bg-slate-50 rounded-xl p-3">
-                  <div className="flex justify-between items-center mb-2">
-                    <h4 className="font-bold text-slate-700 text-sm">Growth Plan</h4>
-                    <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">ACTIVE</span>
-                  </div>
-                  <div className="w-full bg-slate-200 rounded-full h-1.5 sm:h-2">
-                    <div className="bg-slate-700 h-1.5 sm:h-2 rounded-full" style={{ width: '65%' }}></div>
-                  </div>
-                  <div className="flex justify-between text-xs mt-2 text-slate-500">
-                    <span>Step 3 of 5</span>
-                    <span>65% Complete</span>
-                  </div>
-                </div>
+                <h3 className="text-lg sm:text-xl font-extrabold bento-title mt-1 text-slate-900">Keyword Tracking</h3>
+                <p className="text-sm sm:text-base font-medium text-slate-600">Monitor Reddit for brand mentions, competitors, and trends with real-time alerts.</p>
               </div>
-              <button className="bento-btn bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-5 py-2.5 rounded-xl mt-4 w-fit">Continue setup</button>
-            </div>
-          </div>
-          
-          {/* Card 4: Content Calendar */}
-          <div className="bento-card bento-shine col-span-1 sm:col-span-1 md:col-span-2 row-span-1 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl overflow-hidden relative border border-slate-100">
-            <div className="h-full flex justify-between p-4 sm:p-5 text-slate-800 relative">
-              <div className="flex flex-col gap-2 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-xl sm:text-2xl bento-icon">📅</span>
-                  <h3 className="text-base sm:text-lg font-extrabold bento-title">Content Calendar</h3>
-                </div>
-                <p className="text-slate-600 text-xs sm:text-sm font-medium mt-1">Schedule and automate posts</p>
-              </div>
-              
-              <div className="flex items-end">
-                <button className="bento-btn bg-slate-700 hover:bg-slate-800 text-white font-medium px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm">View</button>
+              <div className="flex items-center gap-2 mt-3">
+                <button className="bento-btn bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold px-4 py-2 rounded-xl text-sm">Set Alerts</button>
+                <button className="bento-btn bg-white border border-blue-200 hover:bg-blue-50 text-blue-700 font-bold px-3 py-2 rounded-xl text-sm flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                  </svg>
+                  View
+                </button>
               </div>
             </div>
           </div>
           
-          {/* Card 5: Integrations */}
-          <div className="bento-card bento-shine col-span-1 sm:col-span-1 md:col-span-2 row-span-1 bg-white rounded-2xl overflow-hidden border border-slate-100 relative">
-            <div className="h-full flex items-center p-4 sm:p-5 text-slate-800 relative">
-              <div className="grid grid-cols-3 gap-2 sm:gap-3 w-full">
-                <div className="flex flex-col items-center">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-50 rounded-lg shadow-sm flex items-center justify-center">
-                    <svg className="h-4 w-4 sm:h-5 sm:w-5 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
-                  <span className="text-xs mt-1 font-medium">Tasks</span>
+          {/* Card 4: Coordination */}
+          <div className="bento-card bento-shine col-span-1 sm:col-span-2 md:col-span-2 row-span-1 bg-gradient-to-br from-green-50 to-green-100 rounded-2xl overflow-hidden relative border border-green-200">
+            <div className="h-full flex flex-col justify-between p-5 sm:p-6 text-slate-800 relative">
+              <div className="flex flex-col gap-2">
+                <div className="flex items-start justify-between">
+                  <span className="text-2xl sm:text-3xl bento-icon">⚡</span>
+                  <span className="bg-green-500/10 text-green-600 rounded-full px-2 py-1 text-xs font-bold tracking-wide bento-badge">BOOST</span>
                 </div>
-                <div className="flex flex-col items-center">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-50 rounded-lg shadow-sm flex items-center justify-center">
-                    <svg className="h-4 w-4 sm:h-5 sm:w-5 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                    </svg>
-                  </div>
-                  <span className="text-xs mt-1 font-medium">Notes</span>
-                </div>
-                <div className="flex flex-col items-center">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-50 rounded-lg shadow-sm flex items-center justify-center">
-                    <svg className="h-4 w-4 sm:h-5 sm:w-5 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="10"></circle>
-                      <polyline points="12 6 12 12 16 14"></polyline>
-                    </svg>
-                  </div>
-                  <span className="text-xs mt-1 font-medium">Time</span>
-                </div>
+                <h3 className="text-lg sm:text-xl font-extrabold bento-title mt-1 text-slate-900">Engagement Coordination</h3>
+                <p className="text-sm sm:text-base font-medium text-slate-600">Trigger comment or upvote boosts with built-in tracking dashboard.</p>
               </div>
-              <div className="absolute top-2 right-3">
-                <span className="text-xs text-slate-500 font-semibold">+ More</span>
+              <div className="flex items-center gap-2 mt-3">
+                <button className="bento-btn bg-green-100 hover:bg-green-200 text-green-800 font-bold px-4 py-2 rounded-xl text-sm">Boost Post</button>
+                <button className="bento-btn bg-white border border-green-200 hover:bg-green-50 text-green-700 font-bold px-3 py-2 rounded-xl text-sm flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                  </svg>
+                  Analytics
+                </button>
               </div>
             </div>
           </div>
           
-          {/* Card 6: Call to Action */}
-          <div className="bento-card bento-shine col-span-1 sm:col-span-2 md:col-span-4 row-span-1 bg-gradient-to-r from-slate-800 to-slate-900 rounded-2xl overflow-hidden relative">
-            <div className="absolute right-0 bottom-0 w-20 h-20 sm:w-24 sm:h-24 opacity-10">
-              <svg viewBox="0 0 24 24" fill="white">
-                <path d="M13 2.05v3.03c3.39.49 6 3.39 6 6.92 0 .9-.18 1.75-.5 2.54l2.6 1.53c.56-1.24.9-2.62.9-4.07 0-5.18-3.95-9.45-9-9.95zM12 19c-3.87 0-7-3.13-7-7 0-3.53 2.61-6.43 6-6.92V2.05c-5.06.5-9 4.76-9 9.95 0 5.52 4.47 10 9.99 10 3.31 0 6.24-1.61 8.06-4.09l-2.6-1.53C16.17 17.98 14.21 19 12 19z" />
-              </svg>
-            </div>
-            <div className="h-full flex items-center justify-between p-5 sm:p-6 md:p-7 text-white relative">
-              <div className="flex flex-col gap-1 max-w-xl">
-                <h3 className="text-lg sm:text-xl md:text-2xl font-extrabold bento-title">Get premium features for 30 days</h3>
-                <p className="text-white/80 text-sm sm:text-base font-medium">Unlock all analytics and premium templates.</p>
+          {/* Card 5: Client Dashboard */}
+          <div className="bento-card bento-shine col-span-1 sm:col-span-2 md:col-span-2 row-span-1 bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl overflow-hidden relative border border-purple-200">
+            <div className="h-full flex flex-col justify-between p-5 sm:p-6 text-slate-800 relative">
+              <div className="flex flex-col gap-2">
+                <div className="flex items-start justify-between">
+                  <span className="text-2xl sm:text-3xl bento-icon">📊</span>
+                  <span className="bg-purple-500/10 text-purple-600 rounded-full px-2 py-1 text-xs font-bold tracking-wide bento-badge">DASHBOARD</span>
+                </div>
+                <h3 className="text-lg sm:text-xl font-extrabold bento-title mt-1 text-slate-900">Client Analytics</h3>
+                <p className="text-sm sm:text-base font-medium text-slate-600">Secure client access with visual calendar and read-only analytics.</p>
               </div>
-              <button className="bento-btn bg-white text-slate-900 font-bold px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl hover:bg-opacity-90 transition-all shadow">Try Free</button>
+              <div className="flex items-center gap-2 mt-3">
+                <button className="bento-btn bg-purple-100 hover:bg-purple-200 text-purple-800 font-bold px-4 py-2 rounded-xl text-sm">View Reports</button>
+                <button className="bento-btn bg-white border border-purple-200 hover:bg-purple-50 text-purple-700 font-bold px-3 py-2 rounded-xl text-sm flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                  </svg>
+                  Export
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          {/* Card 6: Reporting */}
+          <div className="bento-card bento-shine col-span-1 sm:col-span-2 md:col-span-2 row-span-1 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl overflow-hidden relative border border-orange-200">
+            <div className="h-full flex flex-col justify-between p-5 sm:p-6 text-slate-800 relative">
+              <div className="flex flex-col gap-2">
+                <div className="flex items-start justify-between">
+                  <span className="text-2xl sm:text-3xl bento-icon">📈</span>
+                  <span className="bg-orange-500/10 text-orange-600 rounded-full px-2 py-1 text-xs font-bold tracking-wide bento-badge">REPORTS</span>
+                </div>
+                <h3 className="text-lg sm:text-xl font-extrabold bento-title mt-1 text-slate-900">Performance Analytics</h3>
+                <p className="text-sm sm:text-base font-medium text-slate-600">Track views, upvotes, CTR, and engagement with exportable PDF reports.</p>
+              </div>
+              <div className="flex items-center gap-2 mt-3">
+                <button className="bento-btn bg-orange-100 hover:bg-orange-200 text-orange-800 font-bold px-4 py-2 rounded-xl text-sm">View Stats</button>
+                <button className="bento-btn bg-white border border-orange-200 hover:bg-orange-50 text-orange-700 font-bold px-3 py-2 rounded-xl text-sm flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                  </svg>
+                  Export
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -415,7 +406,7 @@ export default function Home() {
               Frequently Asked Questions
             </h2>
             <p className="text-slate-600 text-center text-lg max-w-2xl">
-              Everything you need to know about RedditMVP and how it can help your community grow.
+              Everything you need to know about Supereddit and how it can help your community grow.
             </p>
           </div>
         </div>

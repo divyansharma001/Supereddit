@@ -153,13 +153,13 @@ export default function KeywordsPage() {
                     {/* Badge */}
                     <div className="mb-4 inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 shadow-sm">
                         <span className="w-2 h-2 bg-yellow-500 rounded-full mr-2 animate-pulse"></span>
-                        <span className="text-sm font-medium text-slate-700">Keyword Monitoring</span>
+                        <span className="text-sm font-medium text-slate-700">Reddit Keyword Monitoring</span>
                     </div>
                     <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight text-slate-900 mb-3 tracking-tight" style={{fontFamily: 'Plus Jakarta Sans'}}>
-                        Real-time Reddit Monitoring
+                        Monitor Reddit in Real-Time
                     </h1>
                     <p className="text-slate-700 text-lg sm:text-xl font-medium mb-2" style={{fontFamily: 'Plus Jakarta Sans'}}>
-                        Track brand mentions, competitors, and topics across Reddit in real time.
+                        Track brand mentions, competitors, and trending topics across Reddit with instant alerts and sentiment analysis.
                     </p>
                 </div>
             </div>
@@ -170,13 +170,13 @@ export default function KeywordsPage() {
                     {/* Left Column: Keyword Management */}
                     <div className="lg:col-span-1 space-y-6">
                         <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
-                            <h2 className="text-lg font-semibold text-slate-900 mb-4">Add Keyword</h2>
+                            <h2 className="text-lg font-semibold text-slate-900 mb-4">Add Monitoring Keyword</h2>
                             <form onSubmit={handleAddKeyword} className="space-y-3">
                                 <input
                                     type="text"
                                     value={newKeyword}
                                     onChange={e => setNewKeyword(e.target.value)}
-                                    placeholder="e.g., 'customer service'"
+                                    placeholder="e.g., 'your brand name', 'competitor name'"
                                     className="w-full px-4 py-2 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
                                 <button
@@ -184,7 +184,7 @@ export default function KeywordsPage() {
                                     disabled={isSubmitting || !newKeyword.trim()}
                                     className="w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-slate-400 disabled:cursor-not-allowed flex items-center justify-center"
                                 >
-                                    {isSubmitting ? 'Adding...' : 'Add Keyword'}
+                                    {isSubmitting ? 'Adding...' : 'Start Monitoring'}
                                 </button>
                             </form>
                         </div>
@@ -193,7 +193,7 @@ export default function KeywordsPage() {
                             {loading ? (
                                 <p className="text-slate-500">Loading keywords...</p>
                             ) : keywords.length === 0 ? (
-                                <p className="text-slate-500 text-sm">You are not tracking any keywords. Add one above to start.</p>
+                                <p className="text-slate-500 text-sm">You are not tracking any keywords yet. Add one above to start monitoring Reddit mentions.</p>
                             ) : (
                                 <ul className="space-y-3">
                                     {keywords.map(kw => (

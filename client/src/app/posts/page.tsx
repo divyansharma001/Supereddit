@@ -111,7 +111,7 @@ function PostsPageContent() {
       <main className="flex items-center justify-center min-h-screen bg-slate-50">
         <div className="flex flex-col items-center gap-4">
           <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <div className="text-lg text-slate-600 font-medium">Loading...</div>
+          <div className="text-lg text-slate-600 font-medium">Loading your Reddit posts...</div>
         </div>
       </main>
     );
@@ -129,16 +129,16 @@ function PostsPageContent() {
           {/* Badge */}
           <div className="mb-4 inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 shadow-sm">
             <span className="w-2 h-2 bg-blue-500 rounded-full mr-2 animate-pulse"></span>
-            <span className="text-sm font-medium text-slate-700">Your Posts</span>
+            <span className="text-sm font-medium text-slate-700">Reddit Post Management</span>
           </div>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight text-slate-900 mb-3 tracking-tight" style={{fontFamily: 'Plus Jakarta Sans'}}>
-            Manage & Schedule Posts
+            Your Reddit Content Hub
           </h1>
           <p className="text-slate-700 text-lg sm:text-xl font-medium mb-2" style={{fontFamily: 'Plus Jakarta Sans'}}>
-            All your Reddit content in one place
+            Create, schedule, and manage all your Reddit posts in one place
           </p>
           <Link href="/posts/new" className="mt-4 px-6 py-3 text-base font-semibold text-white bg-blue-600 rounded-xl shadow-lg hover:bg-blue-700 transition-all">
-            + New Post
+            + Create New Post
           </Link>
         </div>
       </div>
@@ -161,7 +161,7 @@ function PostsPageContent() {
             </div>
             <div className="flex-1 flex justify-end">
               <Link href="/posts/new" className="hidden sm:inline-block px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
-                + New Post
+                + Create Post
               </Link>
             </div>
           </div>
@@ -179,13 +179,13 @@ function PostsPageContent() {
               </thead>
               <tbody className="bg-white divide-y divide-slate-200">
                 {loading ? (
-                  <tr><td colSpan={5} className="text-center py-12 text-slate-500">Loading posts...</td></tr>
+                  <tr><td colSpan={5} className="text-center py-12 text-slate-500">Loading your Reddit posts...</td></tr>
                 ) : posts.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="text-center py-12">
-                      <h3 className="text-lg font-semibold text-slate-800">No Posts Found</h3>
-                      <p className="text-slate-500 mt-1">Try a different filter or create a new post.</p>
-                      <Link href="/posts/new" className="mt-4 inline-block px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">Create your first post</Link>
+                      <h3 className="text-lg font-semibold text-slate-800">No Reddit Posts Found</h3>
+                      <p className="text-slate-500 mt-1">Try a different filter or create your first Reddit post.</p>
+                      <Link href="/posts/new" className="mt-4 inline-block px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">Create your first Reddit post</Link>
                     </td>
                   </tr>
                 ) : posts.map(post => (

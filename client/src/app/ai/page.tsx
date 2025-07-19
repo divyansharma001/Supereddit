@@ -97,7 +97,7 @@ export default function AIPage() {
       <main className="flex items-center justify-center min-h-screen bg-slate-50">
         <div className="flex flex-col items-center gap-4">
           <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <div className="text-lg text-slate-600 font-medium">Loading AI Generator...</div>
+          <div className="text-lg text-slate-600 font-medium">Loading AI Reddit Post Generator...</div>
         </div>
       </main>
     );
@@ -116,13 +116,13 @@ export default function AIPage() {
           {/* Badge */}
           <div className="mb-4 inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 shadow-sm">
             <span className="w-2 h-2 bg-purple-500 rounded-full mr-2 animate-pulse"></span>
-            <span className="text-sm font-medium text-slate-700">AI Content Generator</span>
+            <span className="text-sm font-medium text-slate-700">AI Reddit Post Generator</span>
           </div>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight text-slate-900 mb-3 tracking-tight" style={{fontFamily: 'Plus Jakarta Sans'}}>
-            Generate Reddit Content with AI
+            Generate Viral Reddit Posts with AI
           </h1>
           <p className="text-slate-700 text-lg sm:text-xl font-medium mb-2" style={{fontFamily: 'Plus Jakarta Sans'}}>
-            Instantly create high-quality post ideas and drafts
+            Create engaging content that dominates any subreddit with custom tone and style
           </p>
         </div>
       </div>
@@ -132,17 +132,17 @@ export default function AIPage() {
           {/* Form Card */}
           <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
             <h2 className="text-xl font-semibold text-slate-900 mb-4">
-              1. Enter Your Idea
+              1. Describe Your Reddit Post Idea
             </h2>
             <form className="space-y-4" onSubmit={handleGenerate}>
               <div>
                 <label htmlFor="keywords" className="block text-sm font-medium text-slate-700 mb-1">
-                  Keywords
+                  Keywords & Topic
                 </label>
                 <input
                   id="keywords"
                   type="text"
-                  placeholder="e.g., productivity hacks for developers"
+                  placeholder="e.g., productivity tips for developers, funny programming stories"
                   className="w-full px-4 py-2 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={keywords}
                   onChange={(e) => setKeywords(e.target.value)}
@@ -151,7 +151,7 @@ export default function AIPage() {
               </div>
               <div>
                 <label htmlFor="tone" className="block text-sm font-medium text-slate-700 mb-1">
-                  Tone of Voice
+                  Post Tone & Style
                 </label>
                 <select
                   id="tone"
@@ -160,7 +160,7 @@ export default function AIPage() {
                   onChange={(e) => setTone(e.target.value)}
                   required
                 >
-                  <option value="" disabled>Select a tone</option>
+                  <option value="" disabled>Select a tone for your Reddit post</option>
                   {tones.map((t) => (
                     <option key={t.value} value={t.value}>
                       {t.label}
@@ -175,7 +175,7 @@ export default function AIPage() {
                 disabled={generating}
               >
                 {generating && <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>}
-                {generating ? "Generating..." : "Generate Content"}
+                {generating ? "Generating Reddit Post..." : "Generate Viral Post"}
               </button>
               {error && (
                 <div className="text-red-600 text-sm text-center font-medium p-3 bg-red-50 rounded-lg border border-red-200">
@@ -188,12 +188,12 @@ export default function AIPage() {
           {/* Result Card */}
           <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
             <h2 className="text-xl font-semibold text-slate-900 mb-4">
-              2. Review Your Draft
+              2. Review Your AI-Generated Post
             </h2>
             {generating ? (
                 <div className="flex flex-col items-center justify-center h-64 text-slate-500">
                     <span className="text-4xl mb-4">🤖</span>
-                    <p className="font-semibold">Our AI is writing...</p>
+                    <p className="font-semibold">Our AI is crafting your Reddit post...</p>
                     <p className="text-sm">This may take a few moments.</p>
                 </div>
             ) : result ? (

@@ -16,7 +16,7 @@ export class SubredditController {
       // Use Reddit API to search for subreddits
       const redditClientId = process.env.REDDIT_CLIENT_ID;
       const redditSecret = process.env.REDDIT_CLIENT_SECRET;
-      const redditUserAgent = process.env.REDDIT_USER_AGENT || 'RedditMVP/1.0';
+      const redditUserAgent = process.env.REDDIT_USER_AGENT || 'Supereddit/1.0';
 
       if (!redditClientId || !redditSecret) {
         res.status(500).json({ error: 'Reddit API credentials not configured' });

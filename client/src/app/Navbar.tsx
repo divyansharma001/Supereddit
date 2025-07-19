@@ -53,7 +53,7 @@ export default function Navbar() {
             Posts
           </Link>
           <Link href="/" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/ai') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
-            AI
+            AI Generator
           </Link>
           <Link href="/" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/keywords') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
             Monitoring

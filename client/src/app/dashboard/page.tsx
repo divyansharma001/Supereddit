@@ -105,7 +105,7 @@ export default function DashboardPage() {
       <main className="flex items-center justify-center min-h-screen bg-slate-50">
         <div className="flex flex-col items-center gap-4">
           <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <div className="text-lg text-slate-600 font-medium">Loading dashboard...</div>
+          <div className="text-lg text-slate-600 font-medium">Loading your Reddit automation dashboard...</div>
         </div>
       </main>
     );
@@ -146,13 +146,13 @@ export default function DashboardPage() {
           {/* Badge */}
           <div className="mb-4 inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 shadow-sm">
             <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
-            <span className="text-sm font-medium text-slate-700">Welcome to your dashboard</span>
+            <span className="text-sm font-medium text-slate-700">Reddit Automation Dashboard</span>
           </div>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight text-slate-900 mb-3 tracking-tight" style={{fontFamily: 'Plus Jakarta Sans'}}>
-            Dashboard
+            Your Reddit Command Center
           </h1>
           <p className="text-slate-700 text-lg sm:text-xl font-medium mb-2" style={{fontFamily: 'Plus Jakarta Sans'}}>
-            Welcome back, {user.clientName || user.email}
+            Welcome back, {user.clientName || user.email} - Ready to dominate Reddit?
           </p>
         </div>
       </div>
@@ -160,7 +160,7 @@ export default function DashboardPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-6">
         {/* Calendar View - moved to top and beautified */}
         <div className="relative bg-gradient-to-r from-[#FF4500]/20 via-[#FF6B35]/20 to-[#FFF7F0]/0 rounded-3xl shadow-lg border border-slate-200 p-4 sm:p-6 md:p-8 mb-12 flex flex-col items-center animate-fade-in">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-4 text-center" style={{fontFamily: 'Plus Jakarta Sans'}}>Your Activity Calendar</h2>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-4 text-center" style={{fontFamily: 'Plus Jakarta Sans'}}>Your Reddit Content Calendar</h2>
           <Calendar
             onChange={(value) => {
               if (value instanceof Date) setCalendarValue(value);
