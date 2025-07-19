@@ -15,7 +15,7 @@ The content is organized as follows:
 2. Repository information
 3. Directory structure
 4. Repository files (if enabled)
-5. Multiple file entries, each consisting of:
+4. Repository files, each consisting of:
   - File path as an attribute
   - Full contents of the file
 </file_format>
@@ -36,6 +36,10 @@ The content is organized as follows:
 - Files matching default ignore patterns are excluded
 - Files are sorted by Git change count (files with more changes are at the bottom)
 </notes>
+
+<additional_info>
+
+</additional_info>
 
 </file_summary>
 
@@ -114,210 +118,6 @@ server/tsconfig.json
 
 <files>
 This section contains the contents of the repository's files.
-
-<file path="client/src/components/CoordinationPanel.tsx">
-// client/src/components/CoordinationPanel.tsx
-
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-
-// A simple Alert component
-const Alert = ({ children }: { children: React.ReactNode }) => (
-    <div className="p-3 mb-4 text-sm text-yellow-800 bg-yellow-100 border border-yellow-200 rounded-lg">
-        <strong>Warning:</strong> {children}
-    </div>
-);
-
-export function CoordinationPanel({ postId }: { postId: string }) {
-    const [amount, setAmount] = useState<number>(10);
-    const [history, setHistory] = useState<{created_at: string, amount: number, service: string}[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
-
-    useEffect(() => {
-        // Fetch vote history when component mounts
-        const fetchHistory = async () => {
-            const res = await axios.get(`/api/posts/${postId}/vote-history`);
-            setHistory(res.data as { created_at: string; amount: number; service: string }[]);
-        };
-        fetchHistory();
-    }, [postId, isLoading]); // Refetch after a purchase attempt
-
-    const handlePurchase = async () => {
-        setIsLoading(true);
-        setError('');
-        setSuccess('');
-        try {
-            const res = await axios.post('/api/votes/purchase', { postId, amount });
-            setSuccess(`Order placed successfully for ${amount} upvotes! Order ID: ${(res.data as { orderId: string }).orderId}`);
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'Failed to place order.');
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    return (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <h3 className="text-lg font-semibold text-slate-900 mb-4">Engagement Coordination</h3>
-            <Alert>
-                Purchasing votes violates Reddit ToS and may lead to account suspension. Use for sandboxed testing only.
-            </Alert>
-            <div className="space-y-3 mt-4">
-                <div>
-                    <label htmlFor="amount" className="block text-sm font-medium text-slate-700 mb-1">
-                        Upvote Amount
-                    </label>
-                    <input
-                        type="number"
-                        id="amount"
-                        value={amount}
-                        onChange={(e) => setAmount(Number(e.target.value))}
-                        className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        min="1"
-                    />
-                </div>
-                <button
-                    onClick={handlePurchase}
-                    disabled={isLoading || amount <= 0}
-                    className="w-full px-4 py-2 font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:bg-slate-400 flex items-center justify-center"
-                >
-                    {isLoading ? 'Processing...' : 'Purchase Upvotes'}
-                </button>
-                {success && <div className="text-sm text-green-600">{success}</div>}
-                {error && <div className="text-sm text-red-600">{error}</div>}
-            </div>
-
-            <div className="mt-6 pt-4 border-t border-slate-200">
-                <h4 className="text-md font-semibold text-slate-800 mb-2">Order History</h4>
-                {history.length > 0 ? (
-                    <ul className="space-y-2 text-sm">
-                        {history.map((item, index) => (
-                            <li key={index} className="flex justify-between p-2 bg-slate-50 rounded-md">
-                                <span>{item.amount} votes via {item.service}</span>
-                                <span className="text-slate-500">{new Date(item.created_at).toLocaleString()}</span>
-                            </li>
-                        ))}
-                    </ul>
-                ) : (
-                    <p className="text-sm text-slate-500">No orders placed for this post yet.</p>
-                )}
-            </div>
-        </div>
-    );
-}
-</file>
-
-<file path="server/src/controllers/vote.controller.ts">
-import { Request, Response } from 'express';
-import { prisma } from '../utils/prisma';
-import axios from 'axios';
-
-export class VoteController {
-  // POST /api/votes/purchase
-  static async purchaseVotes(req: Request, res: Response) {
-    // WARNING: This action violates Reddit ToS and will likely result in account bans.
-    // For sandboxed testing purposes only.
-    const { postId, amount } = req.body;
-    const { userId, clientId } = req.user!;
-
-    if (!postId || !amount || typeof amount !== 'number' || amount <= 0) {
-      return res.status(400).json({ message: 'A valid postId and a positive amount are required.' });
-    }
-
-    const post = await prisma.post.findFirst({
-      where: { id: postId, clientId }, // Ensure user owns the post
-    });
-
-    if (!post || !post.source_url) {
-      return res.status(404).json({ message: 'Post not found or has not been published yet.' });
-    }
-
-    const apiKey = process.env.UPVOTESHOP_API_KEY;
-    if (!apiKey) {
-      console.error("UPVOTESHOP_API_KEY is not set in .env");
-      return res.status(500).json({ message: 'Vote service is not configured.' });
-    }
-
-    const UPVOTE_SHOP_API_URL = 'https://upvote.shop/api/v2'; // Their actual API URL
-
-    try {
-      const response = await axios.post(UPVOTE_SHOP_API_URL, {
-        key: apiKey,
-        action: 'add',
-        service: 1, // Service ID for Reddit Upvotes (confirm from their docs)
-        link: post.source_url,
-        quantity: amount,
-      });
-
-      if (!response.data || response.data.error) {
-        throw new Error(response.data.error || 'Unknown error from upvote service');
-      }
-
-      // Log the successful order.
-      await prisma.voteOrderLog.create({
-        data: {
-          service: 'upvote.shop',
-          amount,
-          external_ref: String(response.data.order),
-          postId: post.id,
-          userId: userId,
-          clientId: clientId,
-        },
-      });
-
-      return res.status(200).json({ message: 'Order placed successfully.', orderId: response.data.order });
-
-    } catch (error: any) {
-      console.error("Upvote.shop API error:", error.message);
-      return res.status(500).json({ message: 'Failed to place order with upvote service.' });
-    }
-  }
-
-  // GET /api/posts/:id/vote-history
-  static async getVoteHistory(req: Request, res: Response) {
-    const { id } = req.params;
-    const { clientId } = req.user!;
-
-    if (!id) {
-      return res.status(400).json({ message: 'Post ID is required.' });
-    }
-
-    const history = await prisma.voteOrderLog.findMany({
-        where: {
-            postId: id,
-            clientId,
-        },
-        orderBy: {
-            created_at: 'desc',
-        },
-        select: {
-            created_at: true,
-            amount: true,
-            service: true,
-        },
-    });
-
-    return res.status(200).json(history);
-  }
-}
-</file>
-
-<file path="server/src/routes/vote.routes.ts">
-import { Router } from 'express';
-import { authenticateToken } from '../middleware/auth.middleware';
-import { VoteController } from '../controllers/vote.controller';
-
-const router = Router();
-
-// All routes here are protected
-router.use(authenticateToken);
-
-router.post('/purchase', VoteController.purchaseVotes);
-
-export default router;
-</file>
 
 <file path=".cursor/rules/ai-integration.mdc">
 # AI Integration & Post Generation
@@ -1154,6 +954,100 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 }
 </file>
 
+<file path="client/src/components/CoordinationPanel.tsx">
+// client/src/components/CoordinationPanel.tsx
+
+import React, { useState, useEffect } from 'react';
+import api from '@/lib/axios';
+
+// A simple Alert component
+const Alert = ({ children }: { children: React.ReactNode }) => (
+    <div className="p-3 mb-4 text-sm text-yellow-800 bg-yellow-100 border border-yellow-200 rounded-lg">
+        <strong>Warning:</strong> {children}
+    </div>
+);
+
+export function CoordinationPanel({ postId }: { postId: string }) {
+    const [amount, setAmount] = useState<number>(10);
+    const [history, setHistory] = useState<{created_at: string, amount: number, service: string}[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
+
+    useEffect(() => {
+        // Fetch vote history when component mounts
+        const fetchHistory = async () => {
+            const res = await api.get(`/api/posts/${postId}/vote-history`);
+            setHistory(res.data as { created_at: string; amount: number; service: string }[]);
+        };
+        fetchHistory();
+    }, [postId, isLoading]); // Refetch after a purchase attempt
+
+    const handlePurchase = async () => {
+        setIsLoading(true);
+        setError('');
+        setSuccess('');
+        try {
+            const res = await api.post('/api/votes/purchase', { postId, amount });
+            setSuccess(`Order placed successfully for ${amount} upvotes! Order ID: ${(res.data as { orderId: string }).orderId}`);
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'Failed to place order.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <h3 className="text-lg font-semibold text-slate-900 mb-4">Engagement Coordination</h3>
+            <Alert>
+                Purchasing votes violates Reddit ToS and may lead to account suspension. Use for sandboxed testing only.
+            </Alert>
+            <div className="space-y-3 mt-4">
+                <div>
+                    <label htmlFor="amount" className="block text-sm font-medium text-slate-700 mb-1">
+                        Upvote Amount
+                    </label>
+                    <input
+                        type="number"
+                        id="amount"
+                        value={amount}
+                        onChange={(e) => setAmount(Number(e.target.value))}
+                        className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        min="1"
+                    />
+                </div>
+                <button
+                    onClick={handlePurchase}
+                    disabled={isLoading || amount <= 0}
+                    className="w-full px-4 py-2 font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:bg-slate-400 flex items-center justify-center"
+                >
+                    {isLoading ? 'Processing...' : 'Purchase Upvotes'}
+                </button>
+                {success && <div className="text-sm text-green-600">{success}</div>}
+                {error && <div className="text-sm text-red-600">{error}</div>}
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-slate-200">
+                <h4 className="text-md font-semibold text-slate-800 mb-2">Order History</h4>
+                {history.length > 0 ? (
+                    <ul className="space-y-2 text-sm">
+                        {history.map((item, index) => (
+                            <li key={index} className="flex justify-between p-2 bg-slate-50 rounded-md">
+                                <span>{item.amount} votes via {item.service}</span>
+                                <span className="text-slate-500">{new Date(item.created_at).toLocaleString()}</span>
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    <p className="text-sm text-slate-500">No orders placed for this post yet.</p>
+                )}
+            </div>
+        </div>
+    );
+}
+</file>
+
 <file path="client/src/contexts/SocketContext.tsx">
 // client/src/contexts/SocketContext.tsx
 
@@ -1697,315 +1591,6 @@ Evolve the application from a simple content publisher into a proactive market i
 ---
 
 By following this plan, you will create a highly valuable and technically impressive feature that functions as a cohesive, end-to-end system.
-</file>
-
-<file path="server/README.md">
-# Reddit Post Management SaaS - Backend
-
-A robust, scalable backend for managing Reddit posts with AI-assisted content generation, secure token storage, and automated scheduling.
-
-## 🚀 Features
-
-- **User Authentication**: JWT-based authentication with bcrypt password hashing
-- **Client Management**: Multi-tenant architecture with client isolation
-- **Reddit OAuth Integration**: Secure connection to Reddit accounts with encrypted token storage
-- **AI-Powered Content Generation**: OpenAI integration for creating engaging Reddit posts
-- **Post Scheduling**: Automated posting with token refresh and error handling
-- **RESTful API**: Clean, well-documented endpoints with proper error handling
-
-## 🛠 Tech Stack
-
-- **Runtime**: Node.js with TypeScript
-- **Framework**: Express.js
-- **Database**: PostgreSQL with Prisma ORM
-- **Authentication**: JWT with bcryptjs
-- **Encryption**: Node.js crypto module (AES-256-CBC)
-- **AI Integration**: OpenAI API
-- **Scheduling**: node-cron
-- **HTTP Client**: axios
-
-## 📁 Project Structure
-
-```
-server/
-├── prisma/
-│   └── schema.prisma          # Database schema
-├── src/
-│   ├── controllers/
-│   │   ├── auth.controller.ts     # Authentication logic
-│   │   ├── post.controller.ts     # Post management
-│   │   └── ai.controller.ts       # AI content generation
-│   ├── routes/
-│   │   ├── auth.routes.ts         # Auth endpoints
-│   │   ├── post.routes.ts         # Post endpoints
-│   │   └── ai.routes.ts           # AI endpoints
-│   ├── services/
-│   │   ├── encryption.service.ts  # Token encryption
-│   │   └── scheduler.service.ts   # Post scheduling
-│   ├── middleware/
-│   │   └── auth.middleware.ts     # JWT authentication
-│   ├── utils/
-│   │   └── prisma.ts             # Database client
-│   └── index.ts                   # Main server file
-├── .env.example                  # Environment variables template
-├── package.json                  # Dependencies and scripts
-└── tsconfig.json                 # TypeScript configuration
-```
-
-## 🚀 Quick Start
-
-### 1. Prerequisites
-
-- Node.js 18+ 
-- PostgreSQL database
-- Reddit Developer Account
-- OpenAI API Key
-
-### 2. Installation
-
-```bash
-# Install dependencies
-npm install
-
-# Copy environment variables
-cp .env.example .env
-
-# Generate Prisma client
-npm run db:generate
-```
-
-### 3. Environment Setup
-
-Edit `.env` file with your configuration:
-
-```bash
-# Generate secure keys
-node -e "console.log('JWT_SECRET:', require('crypto').randomBytes(64).toString('hex'))"
-node -e "console.log('ENCRYPTION_KEY:', require('crypto').randomBytes(32).toString('hex'))"
-node -e "console.log('ENCRYPTION_IV:', require('crypto').randomBytes(16).toString('hex'))"
-```
-
-### 4. Database Setup
-
-```bash
-# Push schema to database
-npm run db:push
-
-# Or run migrations
-npm run db:migrate
-```
-
-### 5. Start Development Server
-
-```bash
-npm run dev
-```
-
-Server will start on `http://localhost:3000`
-
-## 📚 API Documentation
-
-### Authentication Endpoints
-
-#### POST `/api/auth/register`
-Register a new user and client.
-
-**Request Body:**
-```json
-{
-  "email": "user@example.com",
-  "password": "securepassword",
-  "clientName": "My Company"
-}
-```
-
-#### POST `/api/auth/login`
-Login user and get JWT token.
-
-**Request Body:**
-```json
-{
-  "email": "user@example.com",
-  "password": "securepassword"
-}
-```
-
-#### POST `/api/auth/reddit/oauth/connect`
-Get Reddit OAuth URL (requires authentication).
-
-#### GET `/api/auth/reddit/oauth/callback`
-Handle Reddit OAuth callback (requires authentication).
-
-### Post Management Endpoints
-
-All post endpoints require authentication via `Authorization: Bearer <token>` header.
-
-#### POST `/api/posts`
-Create a new post.
-
-**Request Body:**
-```json
-{
-  "title": "My Reddit Post",
-  "body": "Post content here...",
-  "subreddit": "programming",
-  "scheduled_at": "2024-01-15T10:00:00Z" // Optional
-}
-```
-
-#### GET `/api/posts`
-Get all posts with pagination.
-
-**Query Parameters:**
-- `page`: Page number (default: 1)
-- `limit`: Items per page (default: 10)
-- `status`: Filter by status (Draft, Scheduled, Posted, Error)
-
-#### GET `/api/posts/:id`
-Get a specific post.
-
-#### PUT `/api/posts/:id`
-Update a post.
-
-#### DELETE `/api/posts/:id`
-Delete a post.
-
-#### POST `/api/posts/:id/schedule`
-Schedule a post for posting.
-
-**Request Body:**
-```json
-{
-  "scheduled_at": "2024-01-15T10:00:00Z",
-  "redditAccountId": "account_id" // Optional
-}
-```
-
-### AI Endpoints
-
-#### POST `/api/ai/draft`
-Generate AI-powered post content.
-
-**Request Body:**
-```json
-{
-  "keywords": "programming tips",
-  "tone": "story" // "story", "question", or "experience"
-}
-```
-
-#### GET `/api/ai/tones`
-Get available AI generation tones.
-
-## 🔐 Security Features
-
-- **Password Hashing**: bcryptjs with 12 salt rounds
-- **JWT Authentication**: Secure token-based authentication
-- **Token Encryption**: AES-256-CBC encryption for Reddit tokens
-- **Input Validation**: Comprehensive request validation
-- **CORS Protection**: Configured for frontend security
-- **Rate Limiting**: Built-in Express rate limiting
-
-## 🤖 AI Integration
-
-The AI service uses OpenAI's GPT-3.5-turbo model to generate engaging Reddit posts based on:
-
-- **Keywords**: User-provided topics
-- **Tone**: story, question, or experience
-- **Content Guidelines**: Reddit-appropriate content with proper length limits
-
-## ⏰ Automated Scheduling
-
-The scheduler service runs every minute to:
-
-1. Find scheduled posts due for posting
-2. Refresh expired Reddit tokens
-3. Submit posts to Reddit API
-4. Update post status and track errors
-
-## 🗄 Database Schema
-
-### Core Models
-
-- **Client**: Multi-tenant client organizations
-- **User**: Authenticated users with roles
-- **RedditAccount**: Encrypted Reddit OAuth tokens
-- **Post**: Reddit posts with scheduling and status tracking
-
-### Key Features
-
-- **Multi-tenancy**: Client-based data isolation
-- **Audit Trail**: Created/updated timestamps
-- **Status Tracking**: Draft → Scheduled → Posted/Error
-- **Error Handling**: Detailed error messages for failed posts
-
-## 🚀 Deployment
-
-### Production Setup
-
-1. **Environment Variables**: Configure all required environment variables
-2. **Database**: Set up PostgreSQL with proper connection string
-3. **Build**: `npm run build`
-4. **Start**: `npm start`
-
-### Docker Support
-
-```dockerfile
-FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-COPY . .
-RUN npm run build
-EXPOSE 3001
-CMD ["npm", "start"]
-```
-
-## 🔧 Development
-
-### Available Scripts
-
-- `npm run dev`: Start development server with hot reload
-- `npm run build`: Build TypeScript to JavaScript
-- `npm run start`: Start production server
-- `npm run db:generate`: Generate Prisma client
-- `npm run db:push`: Push schema to database
-- `npm run db:migrate`: Run database migrations
-- `npm run db:studio`: Open Prisma Studio
-
-### Code Quality
-
-- **TypeScript**: Strict type checking
-- **ESLint**: Code linting (configure as needed)
-- **JSDoc**: Comprehensive documentation
-- **Error Handling**: Proper error responses
-
-## 📝 Environment Variables
-
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `PORT` | Server port | No (default: 3000) |
-| `NODE_ENV` | Environment | No (default: development) |
-| `DATABASE_URL` | PostgreSQL connection | Yes |
-| `JWT_SECRET` | JWT signing secret | Yes |
-| `ENCRYPTION_KEY` | AES encryption key | Yes |
-| `ENCRYPTION_IV` | AES initialization vector | Yes |
-| `REDDIT_CLIENT_ID` | Reddit OAuth client ID | Yes |
-| `REDDIT_CLIENT_SECRET` | Reddit OAuth secret | Yes |
-| `REDDIT_REDIRECT_URI` | OAuth callback URL | Yes |
-| `OPENAI_API_KEY` | OpenAI API key | Yes |
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## 📄 License
-
-This project is licensed under the MIT License.
 </file>
 
 <file path="server/src/controllers/ai.controller.ts">
@@ -2615,6 +2200,102 @@ export class PostController {
 }
 </file>
 
+<file path="server/src/controllers/vote.controller.ts">
+import { Request, Response } from 'express';
+import { prisma } from '../utils/prisma';
+import axios from 'axios';
+
+export class VoteController {
+  // POST /api/votes/purchase
+  static async purchaseVotes(req: Request, res: Response) {
+    // WARNING: This action violates Reddit ToS and will likely result in account bans.
+    // For sandboxed testing purposes only.
+    const { postId, amount } = req.body;
+    const { userId, clientId } = req.user!;
+
+    if (!postId || !amount || typeof amount !== 'number' || amount <= 0) {
+      return res.status(400).json({ message: 'A valid postId and a positive amount are required.' });
+    }
+
+    const post = await prisma.post.findFirst({
+      where: { id: postId, clientId }, // Ensure user owns the post
+    });
+
+    if (!post || !post.source_url) {
+      return res.status(404).json({ message: 'Post not found or has not been published yet.' });
+    }
+
+    const apiKey = process.env.UPVOTESHOP_API_KEY;
+    if (!apiKey) {
+      console.error("UPVOTESHOP_API_KEY is not set in .env");
+      return res.status(500).json({ message: 'Vote service is not configured.' });
+    }
+
+    const UPVOTE_SHOP_API_URL = 'https://upvote.shop/api/v2'; // Their actual API URL
+
+    try {
+      const response = await axios.post(UPVOTE_SHOP_API_URL, {
+        key: apiKey,
+        action: 'add',
+        service: 1, // Service ID for Reddit Upvotes (confirm from their docs)
+        link: post.source_url,
+        quantity: amount,
+      });
+
+      if (!response.data || response.data.error) {
+        throw new Error(response.data.error || 'Unknown error from upvote service');
+      }
+
+      // Log the successful order.
+      await prisma.voteOrderLog.create({
+        data: {
+          service: 'upvote.shop',
+          amount,
+          external_ref: String(response.data.order),
+          postId: post.id,
+          userId: userId,
+          clientId: clientId,
+        },
+      });
+
+      return res.status(200).json({ message: 'Order placed successfully.', orderId: response.data.order });
+
+    } catch (error: any) {
+      console.error("Upvote.shop API error:", error.message);
+      return res.status(500).json({ message: 'Failed to place order with upvote service.' });
+    }
+  }
+
+  // GET /api/posts/:id/vote-history
+  static async getVoteHistory(req: Request, res: Response) {
+    const { id } = req.params;
+    const { clientId } = req.user!;
+
+    if (!id) {
+      return res.status(400).json({ message: 'Post ID is required.' });
+    }
+
+    const history = await prisma.voteOrderLog.findMany({
+        where: {
+            postId: id,
+            clientId,
+        },
+        orderBy: {
+            created_at: 'desc',
+        },
+        select: {
+            created_at: true,
+            amount: true,
+            service: true,
+        },
+    });
+
+    // Always return 200 with an array (empty if no history)
+    return res.status(200).json(history);
+  }
+}
+</file>
+
 <file path="server/src/middleware/auth.middleware.ts">
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
@@ -2779,68 +2460,6 @@ router.get('/', getMentions);
 export default router;
 </file>
 
-<file path="server/src/routes/post.routes.ts">
-import { Router } from 'express';
-import { PostController } from '../controllers/post.controller';
-import { authenticateToken } from '../middleware/auth.middleware';
-
-const router = Router();
-
-// All routes require authentication
-router.use(authenticateToken);
-
-/**
- * @route POST /api/posts
- * @desc Create a new post
- * @access Private
- */
-router.post('/', PostController.createPost);
-
-/**
- * @route GET /api/posts
- * @desc Get all posts for the authenticated user's client
- * @access Private
- */
-router.get('/', PostController.getPosts);
-
-/**
- * @route GET /api/posts/:id
- * @desc Get a specific post by ID
- * @access Private
- */
-router.get('/:id', PostController.getPost);
-
-/**
- * @route PUT /api/posts/:id
- * @desc Update a post
- * @access Private
- */
-router.put('/:id', PostController.updatePost);
-
-/**
- * @route DELETE /api/posts/:id
- * @desc Delete a post
- * @access Private
- */
-router.delete('/:id', PostController.deletePost);
-
-/**
- * @route POST /api/posts/:id/schedule
- * @desc Schedule a post for posting
- * @access Private
- */
-router.post('/:id/schedule', PostController.schedulePost);
-
-/**
- * @route GET /api/posts/:id/vote-history
- * @desc Get vote order history for a post
- * @access Private
- */
-router.get('/:id/vote-history', require('../controllers/vote.controller').VoteController.getVoteHistory);
-
-export default router;
-</file>
-
 <file path="server/src/routes/test.routes.ts">
 import { Router } from 'express';
 import { authenticateToken } from '../middleware/auth.middleware';
@@ -2916,6 +2535,21 @@ router.get('/socket-status', authenticateToken, (req, res) => {
     return res.status(500).json({ error: 'Failed to check socket status' });
   }
 });
+
+export default router;
+</file>
+
+<file path="server/src/routes/vote.routes.ts">
+import { Router } from 'express';
+import { authenticateToken } from '../middleware/auth.middleware';
+import { VoteController } from '../controllers/vote.controller';
+
+const router = Router();
+
+// All routes here are protected
+router.use(authenticateToken);
+
+router.post('/purchase', VoteController.purchaseVotes);
 
 export default router;
 </file>
@@ -3420,33 +3054,6 @@ export function useAuth() {
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
 }
-</file>
-
-<file path="client/src/lib/axios.ts">
-// If you haven't already, run: npm install axios @types/axios
-import axios from "axios";
-// TODO: Type config parameter more strictly if axios types are available
-
-const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000",
-  withCredentials: false, // CORS, but no cookies needed for JWT
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-api.interceptors.request.use((config) => {
-  if (typeof window !== "undefined") {
-    const token = localStorage.getItem("token");
-    if (token) {
-      if (!config.headers) config.headers = {};
-      config.headers["Authorization"] = `Bearer ${token}`;
-    }
-  }
-  return config;
-});
-
-export default api;
 </file>
 
 <file path="client/src/lib/theme.tsx">
@@ -4103,6 +3710,316 @@ GEMINI_API_KEY=your_google_gemini_api_key
 - Real-time monitoring alerts are sent via WebSockets. Clients must connect with a valid JWT.
 </file>
 
+<file path="server/README.md">
+# Supereddit - Backend
+
+A robust, scalable backend for Supereddit: AI Reddit Post Writing, Smart Scheduler, Keyword Tracking, Upvote Coordination, Analytics, and more for agencies & brands.
+
+## 🚀 Features
+
+- **AI Reddit Post Writing**: AI-generated post drafts based on user prompt or keywords; customize tone (story, question, experience); pre-fill titles and body for approval/edit
+- **Smart Post Scheduler**: Schedule posts to specific subreddits; calendar interface; label posts by status: Draft, Scheduled, Posted
+- **Keyword Tracking**: Monitor Reddit for keyword mentions (brand, competitors, trends); push real-time alerts to user dashboard; tag mentions by sentiment (positive/neutral/negative)
+- **Upvote & Comment Coordination**: Let users trigger comment or upvote boosts; server tracks all command activity; built-in tracking dashboard for action logs
+- **Client Dashboard**: Each client gets secure access; visual calendar to see upcoming/past posts; read-only analytics (views, engagement, keyword mentions); optional comment visibility
+- **Reporting & Analytics**: Post performance (views, upvotes, CTR); comments per post + engagement graph; keyword trigger logs; exportable PDF reports for client review
+- **Reddit API Integration**: OAuth-based access for scheduling & post tracking; API for upvotes automation
+
+## 🛠 Tech Stack
+
+- **Runtime**: Node.js with TypeScript
+- **Framework**: Express.js
+- **Database**: PostgreSQL with Prisma ORM
+- **Authentication**: JWT with bcryptjs
+- **Encryption**: Node.js crypto module (AES-256-CBC)
+- **AI Integration**: OpenAI API
+- **Scheduling**: node-cron
+- **HTTP Client**: axios
+
+## 📁 Project Structure
+
+```
+server/
+├── prisma/
+│   └── schema.prisma          # Database schema
+├── src/
+│   ├── controllers/
+│   │   ├── auth.controller.ts     # Authentication logic
+│   │   ├── post.controller.ts     # Post management
+│   │   └── ai.controller.ts       # AI content generation
+│   ├── routes/
+│   │   ├── auth.routes.ts         # Auth endpoints
+│   │   ├── post.routes.ts         # Post endpoints
+│   │   └── ai.routes.ts           # AI endpoints
+│   ├── services/
+│   │   ├── encryption.service.ts  # Token encryption
+│   │   └── scheduler.service.ts   # Post scheduling
+│   ├── middleware/
+│   │   └── auth.middleware.ts     # JWT authentication
+│   ├── utils/
+│   │   └── prisma.ts             # Database client
+│   └── index.ts                   # Main server file
+├── .env.example                  # Environment variables template
+├── package.json                  # Dependencies and scripts
+└── tsconfig.json                 # TypeScript configuration
+```
+
+## 🚀 Quick Start
+
+### 1. Prerequisites
+
+- Node.js 18+ 
+- PostgreSQL database
+- Reddit Developer Account
+- OpenAI API Key
+
+### 2. Installation
+
+```bash
+# Install dependencies
+npm install
+
+# Copy environment variables
+cp .env.example .env
+
+# Generate Prisma client
+npm run db:generate
+```
+
+### 3. Environment Setup
+
+Edit `.env` file with your configuration:
+
+```bash
+# Generate secure keys
+node -e "console.log('JWT_SECRET:', require('crypto').randomBytes(64).toString('hex'))"
+node -e "console.log('ENCRYPTION_KEY:', require('crypto').randomBytes(32).toString('hex'))"
+node -e "console.log('ENCRYPTION_IV:', require('crypto').randomBytes(16).toString('hex'))"
+```
+
+### 4. Database Setup
+
+```bash
+# Push schema to database
+npm run db:push
+
+# Or run migrations
+npm run db:migrate
+```
+
+### 5. Start Development Server
+
+```bash
+npm run dev
+```
+
+Server will start on `http://localhost:3000`
+
+## 📚 API Documentation
+
+### Authentication Endpoints
+
+#### POST `/api/auth/register`
+Register a new user and client.
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "securepassword",
+  "clientName": "My Company"
+}
+```
+
+#### POST `/api/auth/login`
+Login user and get JWT token.
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "securepassword"
+}
+```
+
+#### POST `/api/auth/reddit/oauth/connect`
+Get Reddit OAuth URL (requires authentication).
+
+#### GET `/api/auth/reddit/oauth/callback`
+Handle Reddit OAuth callback (requires authentication).
+
+### Post Management Endpoints
+
+All post endpoints require authentication via `Authorization: Bearer <token>` header.
+
+#### POST `/api/posts`
+Create a new post.
+
+**Request Body:**
+```json
+{
+  "title": "My Reddit Post",
+  "body": "Post content here...",
+  "subreddit": "programming",
+  "scheduled_at": "2024-01-15T10:00:00Z" // Optional
+}
+```
+
+#### GET `/api/posts`
+Get all posts with pagination.
+
+**Query Parameters:**
+- `page`: Page number (default: 1)
+- `limit`: Items per page (default: 10)
+- `status`: Filter by status (Draft, Scheduled, Posted, Error)
+
+#### GET `/api/posts/:id`
+Get a specific post.
+
+#### PUT `/api/posts/:id`
+Update a post.
+
+#### DELETE `/api/posts/:id`
+Delete a post.
+
+#### POST `/api/posts/:id/schedule`
+Schedule a post for posting.
+
+**Request Body:**
+```json
+{
+  "scheduled_at": "2024-01-15T10:00:00Z",
+  "redditAccountId": "account_id" // Optional
+}
+```
+
+### AI Endpoints
+
+#### POST `/api/ai/draft`
+Generate AI-powered post content.
+
+**Request Body:**
+```json
+{
+  "keywords": "programming tips",
+  "tone": "story" // "story", "question", or "experience"
+}
+```
+
+#### GET `/api/ai/tones`
+Get available AI generation tones.
+
+## 🔐 Security Features
+
+- **Password Hashing**: bcryptjs with 12 salt rounds
+- **JWT Authentication**: Secure token-based authentication
+- **Token Encryption**: AES-256-CBC encryption for Reddit tokens
+- **Input Validation**: Comprehensive request validation
+- **CORS Protection**: Configured for frontend security
+- **Rate Limiting**: Built-in Express rate limiting
+
+## 🤖 AI Integration
+
+The AI service uses OpenAI's GPT-3.5-turbo model to generate engaging Reddit posts based on:
+
+- **Keywords**: User-provided topics
+- **Tone**: story, question, or experience
+- **Content Guidelines**: Reddit-appropriate content with proper length limits
+
+## ⏰ Automated Scheduling
+
+The scheduler service runs every minute to:
+
+1. Find scheduled posts due for posting
+2. Refresh expired Reddit tokens
+3. Submit posts to Reddit API
+4. Update post status and track errors
+
+## 🗄 Database Schema
+
+### Core Models
+
+- **Client**: Multi-tenant client organizations
+- **User**: Authenticated users with roles
+- **RedditAccount**: Encrypted Reddit OAuth tokens
+- **Post**: Reddit posts with scheduling and status tracking
+
+### Key Features
+
+- **Multi-tenancy**: Client-based data isolation
+- **Audit Trail**: Created/updated timestamps
+- **Status Tracking**: Draft → Scheduled → Posted/Error
+- **Error Handling**: Detailed error messages for failed posts
+
+## 🚀 Deployment
+
+### Production Setup
+
+1. **Environment Variables**: Configure all required environment variables
+2. **Database**: Set up PostgreSQL with proper connection string
+3. **Build**: `npm run build`
+4. **Start**: `npm start`
+
+### Docker Support
+
+```dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+RUN npm run build
+EXPOSE 3001
+CMD ["npm", "start"]
+```
+
+## 🔧 Development
+
+### Available Scripts
+
+- `npm run dev`: Start development server with hot reload
+- `npm run build`: Build TypeScript to JavaScript
+- `npm run start`: Start production server
+- `npm run db:generate`: Generate Prisma client
+- `npm run db:push`: Push schema to database
+- `npm run db:migrate`: Run database migrations
+- `npm run db:studio`: Open Prisma Studio
+
+### Code Quality
+
+- **TypeScript**: Strict type checking
+- **ESLint**: Code linting (configure as needed)
+- **JSDoc**: Comprehensive documentation
+- **Error Handling**: Proper error responses
+
+## 📝 Environment Variables
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `PORT` | Server port | No (default: 3000) |
+| `NODE_ENV` | Environment | No (default: development) |
+| `DATABASE_URL` | PostgreSQL connection | Yes |
+| `JWT_SECRET` | JWT signing secret | Yes |
+| `ENCRYPTION_KEY` | AES encryption key | Yes |
+| `ENCRYPTION_IV` | AES initialization vector | Yes |
+| `REDDIT_CLIENT_ID` | Reddit OAuth client ID | Yes |
+| `REDDIT_CLIENT_SECRET` | Reddit OAuth secret | Yes |
+| `REDDIT_REDIRECT_URI` | OAuth callback URL | Yes |
+| `OPENAI_API_KEY` | OpenAI API key | Yes |
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License.
+</file>
+
 <file path="server/src/controllers/auth.controller.ts">
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
@@ -4418,157 +4335,6 @@ export class AuthController {
 }
 </file>
 
-<file path="server/src/index.ts">
-// server/src/index.ts
-
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import { createServer } from 'http';
-import { Server as SocketIOServer } from 'socket.io';
-import jwt, { JwtPayload } from 'jsonwebtoken';
-import { prisma } from './utils/prisma';
-import { SchedulerService } from './services/scheduler.service';
-import { triggerMonitoringJob } from './services/monitoring.service'; // Import the monitoring service
-
-// Import routes
-import authRoutes from './routes/auth.routes';
-import postRoutes from './routes/post.routes';
-import aiRoutes from './routes/ai.routes';
-import testRoutes from './routes/test.routes';
-import keywordRoutes from './routes/keyword.routes';
-import mentionRoutes from './routes/mention.routes';
-import voteRoutes from './routes/vote.routes'; // <-- Added
-
-// Load environment variables
-dotenv.config();
-
-const app = express();
-const server = createServer(app);
-const io = new SocketIOServer(server, {
-  cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-    credentials: true,
-  },
-});
-export { io };
-
-// Socket.io authentication middleware
-io.use(async (socket: any, next: (err?: Error) => void) => {
-  try {
-    const token = socket.handshake.auth.token;
-    if (!token) return next(new Error('Authentication error: token required'));
-    const jwtSecret = process.env.JWT_SECRET;
-    if (!jwtSecret) return next(new Error('JWT secret not configured'));
-    const decoded = jwt.verify(token, jwtSecret) as JwtPayload;
-    // Attach clientId to socket
-    socket.clientId = decoded.clientId;
-    socket.join(decoded.clientId);
-    next();
-  } catch (err) {
-    next(new Error('Authentication error: invalid token'));
-  }
-});
-
-io.on('connection', (socket: any) => {
-  const clientId = socket.clientId;
-  console.log(`Socket connected for clientId: ${clientId}`);
-  socket.on('disconnect', () => {
-    console.log(`Socket disconnected for clientId: ${clientId}`);
-  });
-});
-
-const PORT = process.env.PORT || 3001;
-
-// Middleware
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-  credentials: true
-}));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
-  });
-});
-
-// API routes
-app.use('/api/auth', authRoutes);
-app.use('/api/posts', postRoutes); // Ensure post routes can handle the new history route
-app.use('/api/votes', voteRoutes); // Add this line
-app.use('/api/ai', aiRoutes);
-app.use('/api/test', testRoutes);
-app.use('/api/keywords', keywordRoutes);
-app.use('/api/mentions', mentionRoutes);
-
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
-});
-
-// Global error handler
-app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Global error handler:', error);
-  
-  if (error.type === 'entity.parse.failed') {
-    return res.status(400).json({ error: 'Invalid JSON payload' });
-  }
-  
-  return res.status(500).json({ error: 'Internal server error' });
-});
-
-// Graceful shutdown
-process.on('SIGTERM', async () => {
-  console.log('SIGTERM received, shutting down gracefully...');
-  SchedulerService.stop();
-  await prisma.$disconnect();
-  process.exit(0);
-});
-
-process.on('SIGINT', async () => {
-  console.log('SIGINT received, shutting down gracefully...');
-  SchedulerService.stop();
-  await prisma.$disconnect();
-  process.exit(0);
-});
-
-// Start server
-async function startServer() {
-  try {
-    // Test database connection
-    await prisma.$connect();
-    console.log('✅ Database connected successfully');
-
-    // Initialize scheduler for posts
-    SchedulerService.initialize();
-    
-    // Start monitoring service job immediately on start in development for faster feedback
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Running initial monitoring job in development mode...');
-      // Use setImmediate to run it right after the current event loop finishes
-      setImmediate(triggerMonitoringJob);
-    }
-
-    server.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`📊 Health check: http://localhost:${PORT}/health`);
-      console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
-      console.log(`🔌 Socket.io running on port ${PORT}`);
-    });
-  } catch (error) {
-    console.error('❌ Failed to start server:', error);
-    process.exit(1);
-  }
-}
-
-startServer();
-</file>
-
 <file path="server/src/routes/auth.routes.ts">
 import { Router } from 'express';
 import { AuthController } from '../controllers/auth.controller';
@@ -4617,6 +4383,68 @@ router.get('/reddit/oauth/callback', authenticateToken, AuthController.handleRed
  * @access Private
  */
 router.get('/reddit/accounts', authenticateToken, AuthController.getRedditAccounts);
+
+export default router;
+</file>
+
+<file path="server/src/routes/post.routes.ts">
+import { Router } from 'express';
+import { PostController } from '../controllers/post.controller';
+import { authenticateToken } from '../middleware/auth.middleware';
+
+const router = Router();
+
+// All routes require authentication
+router.use(authenticateToken);
+
+/**
+ * @route POST /api/posts
+ * @desc Create a new post
+ * @access Private
+ */
+router.post('/', PostController.createPost);
+
+/**
+ * @route GET /api/posts
+ * @desc Get all posts for the authenticated user's client
+ * @access Private
+ */
+router.get('/', PostController.getPosts);
+
+/**
+ * @route GET /api/posts/:id/vote-history
+ * @desc Get vote order history for a post
+ * @access Private
+ */
+router.get('/:id/vote-history', require('../controllers/vote.controller').VoteController.getVoteHistory);
+
+/**
+ * @route GET /api/posts/:id
+ * @desc Get a specific post by ID
+ * @access Private
+ */
+router.get('/:id', PostController.getPost);
+
+/**
+ * @route PUT /api/posts/:id
+ * @desc Update a post
+ * @access Private
+ */
+router.put('/:id', PostController.updatePost);
+
+/**
+ * @route DELETE /api/posts/:id
+ * @desc Delete a post
+ * @access Private
+ */
+router.delete('/:id', PostController.deletePost);
+
+/**
+ * @route POST /api/posts/:id/schedule
+ * @desc Schedule a post for posting
+ * @access Private
+ */
+router.post('/:id/schedule', PostController.schedulePost);
 
 export default router;
 </file>
@@ -5220,6 +5048,33 @@ export default function RedditConnectPage() {
 }
 </file>
 
+<file path="client/src/lib/axios.ts">
+// If you haven't already, run: npm install axios @types/axios
+import axios from "axios";
+// TODO: Type config parameter more strictly if axios types are available
+
+const api = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000", // Use backend domain in production
+  withCredentials: false, // CORS, but no cookies needed for JWT
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+api.interceptors.request.use((config) => {
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("token");
+    if (token) {
+      if (!config.headers) config.headers = {};
+      config.headers["Authorization"] = `Bearer ${token}`;
+    }
+  }
+  return config;
+});
+
+export default api;
+</file>
+
 <file path="server/package.json">
 {
   "name": "server",
@@ -5436,6 +5291,157 @@ model VoteOrderLog {
 
   @@map("vote_order_logs")
 }
+</file>
+
+<file path="server/src/index.ts">
+// server/src/index.ts
+
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { createServer } from 'http';
+import { Server as SocketIOServer } from 'socket.io';
+import jwt, { JwtPayload } from 'jsonwebtoken';
+import { prisma } from './utils/prisma';
+import { SchedulerService } from './services/scheduler.service';
+import { triggerMonitoringJob } from './services/monitoring.service'; // Import the monitoring service
+
+// Import routes
+import authRoutes from './routes/auth.routes';
+import postRoutes from './routes/post.routes';
+import aiRoutes from './routes/ai.routes';
+import testRoutes from './routes/test.routes';
+import keywordRoutes from './routes/keyword.routes';
+import mentionRoutes from './routes/mention.routes';
+import voteRoutes from './routes/vote.routes'; // <-- Added
+
+// Load environment variables
+dotenv.config();
+
+const app = express();
+const server = createServer(app);
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    credentials: true,
+  },
+});
+export { io };
+
+// Socket.io authentication middleware
+io.use(async (socket: any, next: (err?: Error) => void) => {
+  try {
+    const token = socket.handshake.auth.token;
+    if (!token) return next(new Error('Authentication error: token required'));
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) return next(new Error('JWT secret not configured'));
+    const decoded = jwt.verify(token, jwtSecret) as JwtPayload;
+    // Attach clientId to socket
+    socket.clientId = decoded.clientId;
+    socket.join(decoded.clientId);
+    next();
+  } catch (err) {
+    next(new Error('Authentication error: invalid token'));
+  }
+});
+
+io.on('connection', (socket: any) => {
+  const clientId = socket.clientId;
+  console.log(`Socket connected for clientId: ${clientId}`);
+  socket.on('disconnect', () => {
+    console.log(`Socket disconnected for clientId: ${clientId}`);
+  });
+});
+
+const PORT = process.env.PORT || 3001;
+
+// Middleware
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  credentials: true
+}));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// API routes
+app.use('/api/auth', authRoutes);
+app.use('/api/posts', postRoutes); // Ensure post routes can handle the new history route
+app.use('/api/votes', voteRoutes); // Add this line
+app.use('/api/ai', aiRoutes);
+app.use('/api/test', testRoutes);
+app.use('/api/keywords', keywordRoutes);
+app.use('/api/mentions', mentionRoutes);
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
+// Global error handler
+app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('Global error handler:', error);
+  
+  if (error.type === 'entity.parse.failed') {
+    return res.status(400).json({ error: 'Invalid JSON payload' });
+  }
+  
+  return res.status(500).json({ error: 'Internal server error' });
+});
+
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM received, shutting down gracefully...');
+  SchedulerService.stop();
+  await prisma.$disconnect();
+  process.exit(0);
+});
+
+process.on('SIGINT', async () => {
+  console.log('SIGINT received, shutting down gracefully...');
+  SchedulerService.stop();
+  await prisma.$disconnect();
+  process.exit(0);
+});
+
+// Start server
+async function startServer() {
+  try {
+    // Test database connection
+    await prisma.$connect();
+    console.log('✅ Database connected successfully');
+
+    // Initialize scheduler for posts
+    SchedulerService.initialize();
+    
+    // Start monitoring service job immediately on start in development for faster feedback
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Running initial monitoring job in development mode...');
+      // Use setImmediate to run it right after the current event loop finishes
+      setImmediate(triggerMonitoringJob);
+    }
+
+    server.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`📊 Health check: http://localhost:${PORT}/health`);
+      console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
+      console.log(`🔌 Socket.io running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
 </file>
 
 <file path="server/src/services/scheduler.service.ts">
@@ -6940,6 +6946,264 @@ export default function AIPage() {
 }
 </file>
 
+<file path="client/src/app/dashboard/page.tsx">
+// client/src/app/dashboard/page.tsx
+
+"use client";
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth";
+import api from "@/lib/axios";
+import Link from "next/link";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+dayjs.extend(relativeTime);
+
+// --- API types ---
+interface Post {
+  id: string;
+  title: string;
+  body: string;
+  subreddit: string;
+  status: "Draft" | "Scheduled" | "Posted" | "Error";
+  scheduled_at?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  // ... other fields as needed
+}
+
+// --- Add RedditAccount interface ---
+interface RedditAccount {
+  id: string;
+  reddit_username: string;
+}
+
+export default function DashboardPage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+  const [accounts, setAccounts] = useState<RedditAccount[] | null>(null);
+  const [fetchingAccounts, setFetchingAccounts] = useState(true);
+  const [stats, setStats] = useState({
+    totalPosts: 0,
+    scheduledPosts: 0,
+    draftPosts: 0,
+    aiGeneratedContent: 0
+  });
+  const [recentPosts, setRecentPosts] = useState<Post[]>([]);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/login");
+    }
+  }, [user, loading, router]);
+
+  useEffect(() => {
+    if (!user) return;
+    setFetchingAccounts(true);
+    const fetchDashboardData = async () => {
+      try {
+        const [accountsRes, postsRes] = await Promise.all([
+          api.get<{ accounts: RedditAccount[] }>("/api/auth/reddit/accounts"),
+          api.get<{ posts: Post[] }>("/api/posts?limit=20")
+        ]);
+        setAccounts(accountsRes.data.accounts);
+        const posts = postsRes.data.posts || [];
+        // Calculate stats
+        const totalPosts = posts.length;
+        const scheduledPosts = posts.filter(p => p.status === "Scheduled").length;
+        const draftPosts = posts.filter(p => p.status === "Draft").length;
+        const aiGeneratedContent = posts.filter(p => p.body && p.body.includes("AI") || p.title && p.title.includes("AI")).length; // Example logic, adjust as needed
+        setStats({ totalPosts, scheduledPosts, draftPosts, aiGeneratedContent });
+        // Recent activity: sort by created/updated date, take latest 3
+        const sorted = posts
+          .slice()
+          .sort((a, b) =>
+            new Date(b.updatedAt || b.createdAt || "").getTime() -
+            new Date(a.updatedAt || a.createdAt || "").getTime()
+          );
+        setRecentPosts(sorted.slice(0, 3));
+      } catch {
+        setAccounts([]);
+        setStats({ totalPosts: 0, scheduledPosts: 0, draftPosts: 0, aiGeneratedContent: 0 });
+        setRecentPosts([]);
+      } finally {
+        setFetchingAccounts(false);
+      }
+    };
+    fetchDashboardData();
+  }, [user]);
+
+  useEffect(() => {
+    if (!fetchingAccounts && accounts && accounts.length === 0) {
+      router.replace("/reddit-connect");
+    }
+  }, [fetchingAccounts, accounts, router]);
+
+  if (loading || !user || fetchingAccounts || accounts === null) {
+    return (
+      <main className="flex items-center justify-center min-h-screen bg-slate-50">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <div className="text-lg text-slate-600 font-medium">Loading dashboard...</div>
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className="min-h-screen bg-slate-50">
+      {/* Header */}
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 md:pt-28">
+        {/* Floating/blurred background shapes */}
+        <div className="absolute left-1/2 top-8 -translate-x-1/2 w-[340px] h-[80px] bg-gradient-to-r from-[#FF4500]/20 via-[#FF6B35]/20 to-[#FFF7F0]/0 rounded-full blur-3xl opacity-60 pointer-events-none z-0"></div>
+        <div className="absolute top-1/4 left-1/4 w-40 h-40 bg-gradient-to-br from-[#FF4500]/10 to-transparent rounded-full blur-2xl opacity-40 pointer-events-none z-0"></div>
+        <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-gradient-to-br from-[#FF6B35]/10 to-transparent rounded-full blur-3xl opacity-30 pointer-events-none z-0"></div>
+        <div className="relative z-10 flex flex-col items-center text-center">
+          {/* Badge */}
+          <div className="mb-4 inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 shadow-sm">
+            <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
+            <span className="text-sm font-medium text-slate-700">Welcome to your dashboard</span>
+          </div>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight text-slate-900 mb-3 tracking-tight" style={{fontFamily: 'Plus Jakarta Sans'}}>
+            Dashboard
+          </h1>
+          <p className="text-slate-700 text-lg sm:text-xl font-medium mb-2" style={{fontFamily: 'Plus Jakarta Sans'}}>
+            Welcome back, {user.clientName || user.email}
+          </p>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-6">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-600">Total Posts</p>
+                <p className="text-3xl font-bold text-slate-900 mt-1">{stats.totalPosts}</p>
+              </div>
+              <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">📊</span>
+              </div>
+            </div>
+            <p className="text-sm text-green-600 mt-2">+12% from last month</p>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-600">Scheduled</p>
+                <p className="text-3xl font-bold text-slate-900 mt-1">{stats.scheduledPosts}</p>
+              </div>
+              <div className="w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">⏰</span>
+              </div>
+            </div>
+            <p className="text-sm text-blue-600 mt-2">Next post in 2 hours</p>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-600">Drafts</p>
+                <p className="text-3xl font-bold text-slate-900 mt-1">{stats.draftPosts}</p>
+              </div>
+              <div className="w-12 h-12 bg-orange-50 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">📝</span>
+              </div>
+            </div>
+            <p className="text-sm text-slate-600 mt-2">Ready to publish</p>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-600">AI Generated</p>
+                <p className="text-3xl font-bold text-slate-900 mt-1">{stats.aiGeneratedContent}</p>
+              </div>
+              <div className="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">🤖</span>
+              </div>
+            </div>
+            <p className="text-sm text-purple-600 mt-2">50% of total content</p>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold text-slate-900 mb-4">Quick Actions</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Link href="/posts" className="group bg-white rounded-xl p-6 shadow-sm border border-slate-200 hover:shadow-md hover:border-blue-300 transition-all duration-200">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                  <span className="text-2xl">📝</span>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">Manage Posts</h3>
+                  <p className="text-sm text-slate-600 mt-1">View, create, and edit your content</p>
+                </div>
+              </div>
+            </Link>
+
+            <Link href="/ai" className="group bg-white rounded-xl p-6 shadow-sm border border-slate-200 hover:shadow-md hover:border-purple-300 transition-all duration-200">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center group-hover:bg-purple-100 transition-colors">
+                  <span className="text-2xl">🤖</span>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-slate-900 group-hover:text-purple-600 transition-colors">AI Content Generator</h3>
+                  <p className="text-sm text-slate-600 mt-1">Generate ideas and drafts with AI</p>
+                </div>
+              </div>
+            </Link>
+
+            <Link href="/keywords" className="group bg-white rounded-xl p-6 shadow-sm border border-slate-200 hover:shadow-md hover:border-yellow-300 transition-all duration-200">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-yellow-50 rounded-lg flex items-center justify-center group-hover:bg-yellow-100 transition-colors">
+                  <span className="text-2xl">🔍</span>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-slate-900 group-hover:text-yellow-700 transition-colors">Keyword Monitoring</h3>
+                  <p className="text-sm text-slate-600 mt-1">Track mentions across Reddit</p>
+                </div>
+              </div>
+            </Link>
+          </div>
+        </div>
+
+        {/* Recent Activity */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200">
+          <div className="p-6 border-b border-slate-200">
+            <h2 className="text-lg font-semibold text-slate-900">Recent Activity</h2>
+          </div>
+          <div className="p-6">
+            <div className="space-y-4">
+              {recentPosts.length === 0 ? (
+                <div className="text-slate-500 text-sm">No recent activity.</div>
+              ) : (
+                recentPosts.map((post, idx) => (
+                  <div key={post.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                    <div className={`w-2 h-2 rounded-full ${post.status === "Posted" ? "bg-green-500" : post.status === "Scheduled" ? "bg-purple-500" : post.status === "Draft" ? "bg-blue-500" : "bg-slate-400"}`}></div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-slate-900">
+                        {post.status === "Posted" ? "Post published successfully" : post.status === "Scheduled" ? "Post scheduled" : post.status === "Draft" ? "Draft saved" : "Post updated"}
+                      </p>
+                      <p className="text-xs text-slate-600">
+                        {post.subreddit ? `r/${post.subreddit}` : ""} • {dayjs((post.updatedAt as string) || (post.createdAt as string) || '').fromNow()}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
+</file>
+
 <file path="client/src/app/Navbar.tsx">
 // client/src/app/Navbar.tsx
 
@@ -6984,7 +7248,7 @@ export default function Navbar() {
     <nav className="w-full flex items-center justify-between py-3 px-4 sm:px-6 lg:px-8 bg-white shadow-sm fixed top-0 left-0 z-30 border-b border-slate-100">
       <div className="flex items-center">
         <Link href="/dashboard" className="flex items-center mr-8" title="Dashboard">
-          <span className="font-bold text-lg tracking-tight text-slate-900">RedditMVP</span>
+          <span className="font-bold text-lg tracking-tight text-slate-900">Supereddit</span>
         </Link>
         <div className="hidden md:flex items-center space-x-6">
           {user && (
@@ -7051,6 +7315,7 @@ interface Post {
   redditAccount?: {
     reddit_username: string;
   };
+  source_url?: string; // Added source_url to the interface
 }
 
 // --- Improvement: Reusable Status Badge Component ---
@@ -7343,267 +7608,9 @@ export default function PostDetailPage() {
                 </div>
             )}
             {/* CoordinationPanel: Upvote purchase & history */}
-            {canEdit && (
+            {post.status === "Posted" && post.source_url && (
               <CoordinationPanel postId={post.id} />
             )}
-          </div>
-        </div>
-      </div>
-    </main>
-  );
-}
-</file>
-
-<file path="client/src/app/dashboard/page.tsx">
-// client/src/app/dashboard/page.tsx
-
-"use client";
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth";
-import api from "@/lib/axios";
-import Link from "next/link";
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
-dayjs.extend(relativeTime);
-
-// --- API types ---
-interface Post {
-  id: string;
-  title: string;
-  body: string;
-  subreddit: string;
-  status: "Draft" | "Scheduled" | "Posted" | "Error";
-  scheduled_at?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  // ... other fields as needed
-}
-
-// --- Add RedditAccount interface ---
-interface RedditAccount {
-  id: string;
-  reddit_username: string;
-}
-
-export default function DashboardPage() {
-  const { user, loading } = useAuth();
-  const router = useRouter();
-  const [accounts, setAccounts] = useState<RedditAccount[] | null>(null);
-  const [fetchingAccounts, setFetchingAccounts] = useState(true);
-  const [stats, setStats] = useState({
-    totalPosts: 0,
-    scheduledPosts: 0,
-    draftPosts: 0,
-    aiGeneratedContent: 0
-  });
-  const [recentPosts, setRecentPosts] = useState<Post[]>([]);
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.replace("/login");
-    }
-  }, [user, loading, router]);
-
-  useEffect(() => {
-    if (!user) return;
-    setFetchingAccounts(true);
-    const fetchDashboardData = async () => {
-      try {
-        const [accountsRes, postsRes] = await Promise.all([
-          api.get<{ accounts: RedditAccount[] }>("/api/auth/reddit/accounts"),
-          api.get<{ posts: Post[] }>("/api/posts?limit=20")
-        ]);
-        setAccounts(accountsRes.data.accounts);
-        const posts = postsRes.data.posts || [];
-        // Calculate stats
-        const totalPosts = posts.length;
-        const scheduledPosts = posts.filter(p => p.status === "Scheduled").length;
-        const draftPosts = posts.filter(p => p.status === "Draft").length;
-        const aiGeneratedContent = posts.filter(p => p.body && p.body.includes("AI") || p.title && p.title.includes("AI")).length; // Example logic, adjust as needed
-        setStats({ totalPosts, scheduledPosts, draftPosts, aiGeneratedContent });
-        // Recent activity: sort by created/updated date, take latest 3
-        const sorted = posts
-          .slice()
-          .sort((a, b) =>
-            new Date(b.updatedAt || b.createdAt || "").getTime() -
-            new Date(a.updatedAt || a.createdAt || "").getTime()
-          );
-        setRecentPosts(sorted.slice(0, 3));
-      } catch {
-        setAccounts([]);
-        setStats({ totalPosts: 0, scheduledPosts: 0, draftPosts: 0, aiGeneratedContent: 0 });
-        setRecentPosts([]);
-      } finally {
-        setFetchingAccounts(false);
-      }
-    };
-    fetchDashboardData();
-  }, [user]);
-
-  useEffect(() => {
-    if (!fetchingAccounts && accounts && accounts.length === 0) {
-      router.replace("/reddit-connect");
-    }
-  }, [fetchingAccounts, accounts, router]);
-
-  if (loading || !user || fetchingAccounts || accounts === null) {
-    return (
-      <main className="flex items-center justify-center min-h-screen bg-slate-50">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <div className="text-lg text-slate-600 font-medium">Loading dashboard...</div>
-        </div>
-      </main>
-    );
-  }
-
-  return (
-    <main className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 md:pt-28">
-        {/* Floating/blurred background shapes */}
-        <div className="absolute left-1/2 top-8 -translate-x-1/2 w-[340px] h-[80px] bg-gradient-to-r from-[#FF4500]/20 via-[#FF6B35]/20 to-[#FFF7F0]/0 rounded-full blur-3xl opacity-60 pointer-events-none z-0"></div>
-        <div className="absolute top-1/4 left-1/4 w-40 h-40 bg-gradient-to-br from-[#FF4500]/10 to-transparent rounded-full blur-2xl opacity-40 pointer-events-none z-0"></div>
-        <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-gradient-to-br from-[#FF6B35]/10 to-transparent rounded-full blur-3xl opacity-30 pointer-events-none z-0"></div>
-        <div className="relative z-10 flex flex-col items-center text-center">
-          {/* Badge */}
-          <div className="mb-4 inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 shadow-sm">
-            <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
-            <span className="text-sm font-medium text-slate-700">Welcome to your dashboard</span>
-          </div>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight text-slate-900 mb-3 tracking-tight" style={{fontFamily: 'Plus Jakarta Sans'}}>
-            Dashboard
-          </h1>
-          <p className="text-slate-700 text-lg sm:text-xl font-medium mb-2" style={{fontFamily: 'Plus Jakarta Sans'}}>
-            Welcome back, {user.clientName || user.email}
-          </p>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-6">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600">Total Posts</p>
-                <p className="text-3xl font-bold text-slate-900 mt-1">{stats.totalPosts}</p>
-              </div>
-              <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
-                <span className="text-2xl">📊</span>
-              </div>
-            </div>
-            <p className="text-sm text-green-600 mt-2">+12% from last month</p>
-          </div>
-
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600">Scheduled</p>
-                <p className="text-3xl font-bold text-slate-900 mt-1">{stats.scheduledPosts}</p>
-              </div>
-              <div className="w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center">
-                <span className="text-2xl">⏰</span>
-              </div>
-            </div>
-            <p className="text-sm text-blue-600 mt-2">Next post in 2 hours</p>
-          </div>
-
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600">Drafts</p>
-                <p className="text-3xl font-bold text-slate-900 mt-1">{stats.draftPosts}</p>
-              </div>
-              <div className="w-12 h-12 bg-orange-50 rounded-lg flex items-center justify-center">
-                <span className="text-2xl">📝</span>
-              </div>
-            </div>
-            <p className="text-sm text-slate-600 mt-2">Ready to publish</p>
-          </div>
-
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600">AI Generated</p>
-                <p className="text-3xl font-bold text-slate-900 mt-1">{stats.aiGeneratedContent}</p>
-              </div>
-              <div className="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center">
-                <span className="text-2xl">🤖</span>
-              </div>
-            </div>
-            <p className="text-sm text-purple-600 mt-2">50% of total content</p>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Link href="/posts" className="group bg-white rounded-xl p-6 shadow-sm border border-slate-200 hover:shadow-md hover:border-blue-300 transition-all duration-200">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center group-hover:bg-blue-100 transition-colors">
-                  <span className="text-2xl">📝</span>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">Manage Posts</h3>
-                  <p className="text-sm text-slate-600 mt-1">View, create, and edit your content</p>
-                </div>
-              </div>
-            </Link>
-
-            <Link href="/ai" className="group bg-white rounded-xl p-6 shadow-sm border border-slate-200 hover:shadow-md hover:border-purple-300 transition-all duration-200">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center group-hover:bg-purple-100 transition-colors">
-                  <span className="text-2xl">🤖</span>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-slate-900 group-hover:text-purple-600 transition-colors">AI Content Generator</h3>
-                  <p className="text-sm text-slate-600 mt-1">Generate ideas and drafts with AI</p>
-                </div>
-              </div>
-            </Link>
-
-            <Link href="/keywords" className="group bg-white rounded-xl p-6 shadow-sm border border-slate-200 hover:shadow-md hover:border-yellow-300 transition-all duration-200">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-yellow-50 rounded-lg flex items-center justify-center group-hover:bg-yellow-100 transition-colors">
-                  <span className="text-2xl">🔍</span>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-slate-900 group-hover:text-yellow-700 transition-colors">Keyword Monitoring</h3>
-                  <p className="text-sm text-slate-600 mt-1">Track mentions across Reddit</p>
-                </div>
-              </div>
-            </Link>
-          </div>
-        </div>
-
-        {/* Recent Activity */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200">
-          <div className="p-6 border-b border-slate-200">
-            <h2 className="text-lg font-semibold text-slate-900">Recent Activity</h2>
-          </div>
-          <div className="p-6">
-            <div className="space-y-4">
-              {recentPosts.length === 0 ? (
-                <div className="text-slate-500 text-sm">No recent activity.</div>
-              ) : (
-                recentPosts.map((post, idx) => (
-                  <div key={post.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
-                    <div className={`w-2 h-2 rounded-full ${post.status === "Posted" ? "bg-green-500" : post.status === "Scheduled" ? "bg-purple-500" : post.status === "Draft" ? "bg-blue-500" : "bg-slate-400"}`}></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-slate-900">
-                        {post.status === "Posted" ? "Post published successfully" : post.status === "Scheduled" ? "Post scheduled" : post.status === "Draft" ? "Draft saved" : "Post updated"}
-                      </p>
-                      <p className="text-xs text-slate-600">
-                        {post.subreddit ? `r/${post.subreddit}` : ""} • {dayjs((post.updatedAt as string) || (post.createdAt as string) || '').fromNow()}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
           </div>
         </div>
       </div>
@@ -7637,8 +7644,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "RedditMVP",
-  description: "AI-powered Reddit management and monitoring",
+  title: "Supereddit",
+  description: "Supereddit: AI Reddit Post Writing, Smart Scheduler, Keyword Tracking, Upvote Coordination, Analytics, and more for agencies & brands.",
 };
 
 export default function RootLayout({
@@ -7723,15 +7730,12 @@ export default function Home() {
             <span className="text-sm font-medium text-slate-700">Trusted by 10,000+ communities</span>
           </div>
           
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] text-slate-900 mb-6 tracking-tight" style={{fontFamily: 'Plus Jakarta Sans'}}>
-            Build thriving Reddit communities with{' '}
-            <span className="bg-gradient-to-r from-[#FF4500] via-[#FF6B35] to-[#FF4500] bg-clip-text text-transparent font-bold">
-              AI-powered tools
-            </span>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] text-slate-900 mb-6 tracking-tight text-center" style={{fontFamily: 'Plus Jakarta Sans'}}>
+            Your <span style={{ color: '#FF4500', fontWeight: 'bold',  }}>Unfair</span> Advantage on <span style={{ color: '#FF4500', fontWeight: 'bold', textDecoration: 'underline' }}>Reddit</span>.
           </h1>
           
           <p className="mt-4 text-slate-600 text-lg sm:text-xl font-normal max-w-2xl mx-auto leading-relaxed" style={{fontFamily: 'Plus Jakarta Sans'}}>
-            Effortlessly <span className="italic decoration-[#FF4500] decoration-2 underline-offset-4 font-semibold">grow</span> and engage your Reddit community with smart content, automated moderation, and actionable analytics—all in one place.
+            Scale your presence with <span className="font-bold">AI post generation</span>, <span className="font-bold ">automated scheduling</span>, and a <span className="font-bold">powerful client analytics dashboard</span>.
           </p>
           
           {/* Social proof */}

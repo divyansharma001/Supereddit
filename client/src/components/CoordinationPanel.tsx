@@ -33,8 +33,12 @@ export function CoordinationPanel({ postId }: { postId: string }) {
         try {
             const res = await api.post('/api/votes/purchase', { postId, amount });
             setSuccess(`Order placed successfully for ${amount} upvotes! Order ID: ${(res.data as { orderId: string }).orderId}`);
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'Failed to place order.');
+        } catch (err: unknown) {
+            if (err && typeof err === 'object' && 'response' in err && err.response && typeof err.response === 'object' && 'data' in err.response && err.response.data && typeof err.response.data === 'object' && 'message' in err.response.data) {
+                setError((err.response.data as { message?: string }).message || 'Failed to place order.');
+            } else {
+                setError('Failed to place order.');
+            }
         } finally {
             setIsLoading(false);
         }
