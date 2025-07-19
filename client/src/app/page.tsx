@@ -291,7 +291,7 @@ export default function Home() {
           </div>
           
           {/* Card 6: Reporting */}
-          <div className="bento-card bento-shine col-span-1 sm:col-span-2 md:col-span-2 row-span-1 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl overflow-hidden relative border border-orange-200">
+          {/* <div className="bento-card bento-shine col-span-1 sm:col-span-2 md:col-span-2 row-span-1 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl overflow-hidden relative border border-orange-200">
             <div className="h-full flex flex-col justify-between p-5 sm:p-6 text-slate-800 relative">
               <div className="flex flex-col gap-2">
                 <div className="flex items-start justify-between">
@@ -311,7 +311,7 @@ export default function Home() {
                 </button>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
       </section>
       {/* How It Works Section */}
