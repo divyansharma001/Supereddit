@@ -9,6 +9,7 @@ import jwt, { JwtPayload } from 'jsonwebtoken';
 import { prisma } from './utils/prisma';
 import { SchedulerService } from './services/scheduler.service';
 import { triggerMonitoringJob } from './services/monitoring.service'; // Import the monitoring service
+import { AnalyticsService } from './services/analytics.service';
 
 // Import routes
 import authRoutes from './routes/auth.routes';
@@ -132,6 +133,9 @@ async function startServer() {
       // Use setImmediate to run it right after the current event loop finishes
       setImmediate(triggerMonitoringJob);
     }
+
+    // Start analytics snapshot service
+    AnalyticsService.initialize();
 
     server.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);

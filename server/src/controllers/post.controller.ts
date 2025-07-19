@@ -322,4 +322,32 @@ export class PostController {
       res.status(500).json({ error: 'Failed to schedule post' });
     }
   }
+
+  /**
+   * Get analytics time series for a post
+   */
+  static async getPostAnalytics(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      if (!id) {
+        res.status(400).json({ error: 'Post ID is required' });
+        return;
+      }
+      const { clientId } = req.user!;
+      // Ensure the post belongs to the client
+      const post = await prisma.post.findFirst({ where: { id, clientId } });
+      if (!post) {
+        res.status(404).json({ error: 'Post not found' });
+        return;
+      }
+      const analytics = await prisma.postAnalytics.findMany({
+        where: { postId: id },
+        orderBy: { createdAt: 'asc' },
+      });
+      res.json({ analytics });
+    } catch (error) {
+      console.error('Get post analytics error:', error);
+      res.status(500).json({ error: 'Failed to fetch post analytics' });
+    }
+  }
 } 

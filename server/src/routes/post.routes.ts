@@ -34,6 +34,7 @@ router.get('/:id/vote-history', require('../controllers/vote.controller').VoteCo
  * @access Private
  */
 router.get('/:id', PostController.getPost);
+router.get('/:id/analytics', PostController.getPostAnalytics);
 
 /**
  * @route PUT /api/posts/:id

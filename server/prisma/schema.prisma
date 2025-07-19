@@ -102,6 +102,7 @@ model Post {
   redditAccountId String?
 
   voteOrderLogs   VoteOrderLog[] // Add this relation
+  postAnalytics   PostAnalytics[]
 
   @@map("posts")
 }
@@ -162,4 +163,13 @@ model VoteOrderLog {
   clientId String
 
   @@map("vote_order_logs")
+}
+
+model PostAnalytics {
+  id        String   @id @default(cuid())
+  postId    String
+  upvotes   Int
+  comments  Int
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id])
 }
