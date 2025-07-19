@@ -112,26 +112,30 @@ export default function Home() {
 
       {/* --- ALL OTHER SECTIONS OF YOUR PAGE --- */}
       {/* Video Section */}
-      <section className="w-full flex flex-col items-center -mt-10 mb-20 px-4 relative z-20">
-        <div className="w-full max-w-5xl bg-gradient-to-br from-[#FFF7F0] via-[#FF6B35]/10 to-[#FFF7F0] rounded-3xl shadow-2xl border border-slate-200 p-0 flex flex-col items-center relative overflow-hidden">
-          <div className="absolute inset-0 pointer-events-none z-0" style={{background: 'radial-gradient(circle at 70% 30%, #FF6B35 0%, transparent 70%)'}}></div>
-          <div className="relative z-10 p-12 w-full flex flex-col items-center">
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-3 text-center" style={{fontFamily: 'Plus Jakarta Sans'}}>See RedditMVP in Action</h2>
+      {/* --- UPDATED VIDEO SECTION --- */}
+<section className="w-full flex flex-col items-center -mt-10 mb-20 px-4 relative z-20">
+    <div className="w-full max-w-5xl bg-gradient-to-br from-[#FFF7F0] via-[#FF6B35]/10 to-[#FFF7F0] rounded-3xl shadow-2xl border border-slate-200 p-0 flex flex-col items-center relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none z-0" style={{background: 'radial-gradient(circle at 70% 30%, #FF6B35 0%, transparent 70%)'}}></div>
+        
+        {/* THIS IS THE LINE I'VE CHANGED - Notice the new padding classes */}
+        <div className="relative z-10 w-full flex flex-col items-center p-4 sm:p-8 md:p-12">
+            
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-3 text-center" style={{fontFamily: 'Plus Jakarta Sans'}}>See Supereddit in Action</h2>
             <p className="text-slate-600 text-lg sm:text-2xl mb-8 text-center max-w-2xl" style={{fontFamily: 'Plus Jakarta Sans'}}>Watch how you can create, manage, and grow your Reddit community with powerful, easy-to-use tools.</p>
             <div className="w-full aspect-video rounded-2xl overflow-hidden shadow-xl border border-slate-100 bg-slate-100 flex items-center justify-center">
-              <div style={{padding:'55.42% 0 0 0',position:'relative',width:'100%'}}>
+                <div style={{padding:'55.42% 0 0 0',position:'relative',width:'100%'}}>
                 <iframe 
-                  src="https://player.vimeo.com/video/1102814433?background=1&autoplay=1&loop=1&muted=1" 
-                  frameBorder="0" 
-                  allow="autoplay; fullscreen"
-                  style={{position:'absolute',top:0,left:0,width:'100%',height:'100%'}}
-                  title="Supereddit"
+                    src="https://player.vimeo.com/video/1102814433?background=1&autoplay=1&loop=1&muted=1" 
+                    frameBorder="0" 
+                    allow="autoplay; fullscreen"
+                    style={{position:'absolute',top:0,left:0,width:'100%',height:'100%'}}
+                    title="Supereddit"
                 ></iframe>
-              </div>
+                </div>
             </div>
-          </div>
         </div>
-      </section>
+    </div>
+</section>
       {/* Bento Grid Section */}
       <section className="w-full flex flex-col justify-center items-center px-4 sm:px-6 md:px-8 pb-28">
         <div className="flex flex-col items-center mb-12 sm:mb-16">
