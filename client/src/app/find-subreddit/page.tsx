@@ -1,10 +1,21 @@
 "use client";
 import React, { useState } from "react";
+import api from "@/lib/axios";
+
+interface Subreddit {
+  name: string;
+  title: string;
+  description: string;
+  subscribers: number;
+  url: string;
+  over18: boolean;
+  icon_img?: string;
+}
 
 export default function FindSubredditPage() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<Subreddit[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   async function handleSearch(e: React.FormEvent) {
@@ -14,12 +25,14 @@ export default function FindSubredditPage() {
     setError(null);
     setResults([]);
     try {
-      const res = await fetch(`http://localhost:3000/api/subreddits/search?query=${encodeURIComponent(query)}`);
-      if (!res.ok) throw new Error("Failed to fetch subreddits");
-      const data = await res.json();
-      setResults(data.subreddits || []);
-    } catch (err: any) {
-      setError(err.message || "Unknown error");
+      const res = await api.get<{ subreddits: Subreddit[] }>(`/api/subreddits/search`, { params: { query } });
+      setResults(res.data.subreddits || []);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Unknown error");
+      }
     } finally {
       setLoading(false);
     }
@@ -59,7 +72,7 @@ export default function FindSubredditPage() {
         <div className="mt-10 w-full flex flex-col gap-6">
           {results.length > 0 && (
             <div className="grid gap-6 w-full" style={{gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))'}}>
-              {results.map(sub => (
+              {results.map((sub: Subreddit) => (
                 <div key={sub.name} className="bg-white border border-slate-100 rounded-2xl shadow-lg hover:shadow-xl transition-shadow p-6 flex flex-col sm:flex-row items-center gap-5 text-left animate-fade-slide min-h-[120px]">
                   <div className="flex-shrink-0 flex items-center justify-center w-20 h-20 rounded-full bg-slate-100 border border-slate-200 overflow-hidden">
                     {sub.icon_img ? (
