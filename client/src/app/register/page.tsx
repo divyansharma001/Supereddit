@@ -63,11 +63,46 @@ export default function RegisterPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
             {/* You can place your logo here */}
+            <h1 className="text-3xl font-bold text-slate-900">Early Access</h1>
+            <p className="text-slate-600 mt-2">We're currently in early access mode. Join our waitlist to be notified when we launch!</p>
+        </div>
+
+        {/* --- Improvement: Professional card styling --- */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
+          <div className="text-center space-y-4">
+            <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center bg-orange-100 rounded-full">
+              <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold text-slate-800">Coming Soon</h3>
+            <p className="text-slate-600">Our platform is currently in development. Sign up for early access to be the first to know when we launch.</p>
+            <Link href="/" className="inline-block mt-4 px-6 py-3 bg-[#FF4500] hover:bg-[#FF6B35] text-white font-semibold rounded-lg transition-colors">
+              Join Waitlist
+            </Link>
+          </div>
+        </div>
+        
+        <div className="text-center text-sm text-slate-600 mt-6">
+          Already have an account?{' '}
+          <Link href="/login" className="font-semibold text-blue-600 hover:text-blue-700">
+            Sign in
+          </Link>
+        </div>
+      </div>
+    </main>
+  );
+
+  /* --- ORIGINAL REGISTER FORM CODE (COMMENTED FOR WAITLISTING PHASE) ---
+  return (
+    // --- Improvement: Consistent layout and background ---
+    <main className="flex items-center justify-center min-h-screen bg-slate-50 p-4">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-slate-900">Create Your Account</h1>
             <p className="text-slate-600 mt-2">Start managing your Reddit presence with ease.</p>
         </div>
 
-        {/* --- Improvement: Professional card styling --- */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
@@ -147,4 +182,5 @@ export default function RegisterPage() {
       </div>
     </main>
   );
+  */
 }
