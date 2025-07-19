@@ -40,7 +40,7 @@ export default function Navbar() {
   return (
     <nav className="w-full flex items-center justify-between py-3 px-4 sm:px-6 lg:px-8 bg-white shadow-sm fixed top-0 left-0 z-30 border-b border-slate-100">
       <div className="flex items-center">
-        <Link href="/dashboard" className="flex items-center mr-8" title="Dashboard">
+        <Link href="/" className="flex items-center mr-8" title="Home">
           <span className="font-bold text-lg tracking-tight text-slate-900">Supereddit</span>
         </Link>
         <div className="hidden md:flex items-center space-x-6">
