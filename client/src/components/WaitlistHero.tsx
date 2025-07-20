@@ -24,18 +24,17 @@ const WaitlistHero = () => {
       await api.post('/api/waitlist', { email });
       setSubmitted(true);
     } catch (err: unknown) {
-      // Use type assertion for axios error
-      if (axios && (axios as any).isAxiosError && (axios as any).isAxiosError(err)) {
-        const axiosErr = err as any;
-        if (axiosErr.response && axiosErr.response.status === 409) {
+      const maybeAxiosErr = err as { response?: { status?: number; data?: { error?: string } } };
+      if (maybeAxiosErr.response) {
+        if (maybeAxiosErr.response.status === 409) {
           setAlreadyOnWaitlist(true);
-        } else if (axiosErr.response && axiosErr.response.data && axiosErr.response.data.error) {
-          setError(axiosErr.response.data.error || '');
+        } else if (maybeAxiosErr.response.data && maybeAxiosErr.response.data.error) {
+          setError(maybeAxiosErr.response.data.error || '');
         } else {
           setError('Something went wrong. Please try again.');
         }
       } else {
-        setError((err instanceof Error ? err.message : 'Something went wrong. Please try again.'));
+        setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
       }
     } finally {
       setLoading(false);
