@@ -220,49 +220,6 @@ export default function Home() {
           </Link>
         </div>
       </section>
-      {/* Pricing Plans Section */}
-      <section className="w-full flex flex-col items-center justify-center py-16 px-4 sm:px-6 md:px-8 bg-gradient-to-b from-white via-[#FFF7F0] to-white border-t border-slate-100">
-        <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-center text-slate-900 mb-10 animate-fade-slide" style={{fontFamily: 'Plus Jakarta Sans'}}>
-          Pricing Plans
-        </h2>
-        <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Free Plan */}
-          <div className="flex flex-col items-center bg-white rounded-3xl border border-slate-200 shadow-lg p-8 transition-all hover:shadow-xl animate-fade-slide">
-            <span className="text-lg font-bold text-[#FF4500] mb-2">FREE</span>
-            <div className="text-4xl font-extrabold text-slate-900 mb-4">$0</div>
-            <ul className="text-slate-700 text-base mb-6 space-y-2 text-center">
-              <li>✔️ Post Scheduler</li>
-              <li>✔️ Subreddit Analyser</li>
-              <li>✔️ Subreddit Finder</li>
-            </ul>
-            <button className="w-full py-3 px-6 rounded-xl font-bold bg-[#FF4500] hover:bg-[#FF6B35] text-white shadow-md transition-all duration-200 border-2 border-transparent hover:border-[#FF6B35] focus:outline-none focus:ring-2 focus:ring-[#FF4500]">Get Started Free</button>
-          </div>
-          {/* Pro Plan */}
-          <div className="flex flex-col items-center bg-gradient-to-br from-[#FF4500]/10 to-white rounded-3xl border-2 border-[#FF4500] shadow-xl p-8 scale-105 z-10 animate-fade-slide">
-            <span className="text-lg font-bold text-[#FF4500] mb-2">PRO</span>
-            <div className="text-4xl font-extrabold text-slate-900 mb-1">$14.99<span className="text-lg font-medium text-slate-500">/mo</span></div>
-            <div className="text-sm text-slate-500 mb-4">Billed monthly, cancel anytime</div>
-            <ul className="text-slate-700 text-base mb-6 space-y-2 text-center">
-              <li>✔️ Everything in Free</li>
-              <li>✔️ AI Post Writer</li>
-              <li>✔️ Keyword Tracker (up to 5 keywords)</li>
-            </ul>
-            <button className="w-full py-3 px-6 rounded-xl font-bold bg-[#FF4500] hover:bg-[#FF6B35] text-white shadow-md transition-all duration-200 border-2 border-transparent hover:border-[#FF6B35] focus:outline-none focus:ring-2 focus:ring-[#FF4500]">Start 7-Day Trial</button>
-          </div>
-          {/* Lifetime Plan */}
-          <div className="flex flex-col items-center bg-white rounded-3xl border border-slate-200 shadow-lg p-8 animate-fade-slide">
-            <span className="text-lg font-bold text-purple-700 mb-2">LIFETIME</span>
-            <div className="text-4xl font-extrabold text-slate-900 mb-1">$249</div>
-            <div className="text-sm text-slate-500 mb-4">One-time payment, all features forever</div>
-            <ul className="text-slate-700 text-base mb-6 space-y-2 text-center">
-              <li>✔️ Everything in Pro</li>
-              <li>✔️ Lifetime Access & Updates</li>
-              <li>✔️ Priority Support</li>
-            </ul>
-            <button className="w-full py-3 px-6 rounded-xl font-bold bg-purple-700 hover:bg-purple-800 text-white shadow-md transition-all duration-200 border-2 border-transparent hover:border-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-700">Go Lifetime</button>
-          </div>
-        </div>
-      </section>
       {/* FAQ Section */}
       <section id="faq" className="relative w-full flex flex-col items-center px-4 sm:px-6 md:px-8 py-20 bg-gradient-to-b from-white via-[#FFF7F0] to-white border-t border-slate-100 overflow-hidden">
         {/* Decorative background shapes */}
