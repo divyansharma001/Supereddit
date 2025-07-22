@@ -43,9 +43,6 @@ export default function Navbar() {
         <Link href="/" className="flex items-center mr-8" title="Home">
           <span className="font-bold text-lg tracking-tight text-slate-900">Supereddit</span>
         </Link>
-        <span className="hidden md:inline-block text-xs font-semibold text-[#FF4500] bg-[#FF4500]/10 rounded px-3 py-1 mr-6 ml-1 whitespace-nowrap">
-          Free access to first 100 members on waitlist
-        </span>
         <div className="hidden md:flex items-center space-x-6">
           {user && (
             <Link href="/" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/dashboard') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>

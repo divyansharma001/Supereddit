@@ -71,6 +71,11 @@ const WaitlistHero = () => {
 
   return (
     <div className="mt-8 w-full max-w-lg mx-auto animate-fade-slide" style={{animationDelay: '0.2s'}}>
+      <div className="mb-3 flex justify-center">
+        <span className="inline-block text-xs font-semibold text-[#FF4500] bg-[#FF4500]/10 rounded px-3 py-1 whitespace-nowrap shadow-sm border border-[#FF4500]/20">
+          Free access to first 100 members on waitlist
+        </span>
+      </div>
       <form onSubmit={handleSubmit} className="w-full flex flex-col sm:flex-row items-center gap-3">
         <div className="relative w-full">
           <svg className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
