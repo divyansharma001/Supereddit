@@ -551,6 +551,20 @@ function BentoGrid() {
       </div>
     </div>
   );
+  const analyticsVideo = (
+    <div className="w-full max-w-3xl aspect-video bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200 overflow-hidden mx-auto">
+      <div style={{padding:'56.25% 0 0 0',position:'relative',width:'100%'}}>
+        <iframe
+          src="https://player.vimeo.com/video/1103540912?background=1&autoplay=1&loop=1&muted=1"
+          frameBorder="0"
+          allow="autoplay; fullscreen"
+          referrerPolicy="strict-origin-when-cross-origin"
+          style={{position:'absolute',top:0,left:0,width:'100%',height:'100%'}}
+          title="superedditAnalyticsDemo"
+        ></iframe>
+      </div>
+    </div>
+  );
   const videoPlaceholder = (
     <div className="w-full h-56 bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200">
       <span className="text-slate-400 text-base">[Video Here]</span>
@@ -621,7 +635,7 @@ function BentoGrid() {
       content: null,
       desc: 'Track your Reddit performance with detailed analytics and exportable reports.',
       modal: 'Get insights into your posts, engagement, and growth. Export PDF reports for clients or your own review.',
-      video: videoPlaceholder,
+      video: analyticsVideo,
     },
   ];
   return (
