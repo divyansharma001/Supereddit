@@ -537,6 +537,20 @@ function BentoGrid() {
       </div>
     </div>
   );
+  const finderVideo = (
+    <div className="w-full max-w-3xl aspect-video bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200 overflow-hidden mx-auto">
+      <div style={{padding:'56.25% 0 0 0',position:'relative',width:'100%'}}>
+        <iframe
+          src="https://player.vimeo.com/video/1103539767?background=1&autoplay=1&loop=1&muted=1"
+          frameBorder="0"
+          allow="autoplay; fullscreen"
+          referrerPolicy="strict-origin-when-cross-origin"
+          style={{position:'absolute',top:0,left:0,width:'100%',height:'100%'}}
+          title="superedditSubredditFinderDemo"
+        ></iframe>
+      </div>
+    </div>
+  );
   const videoPlaceholder = (
     <div className="w-full h-56 bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200">
       <span className="text-slate-400 text-base">[Video Here]</span>
@@ -585,7 +599,7 @@ function BentoGrid() {
       content: null,
       desc: 'Discover the best subreddits for your content and audience.',
       modal: 'Use the Subreddit Finder to identify the most relevant and high-potential communities for your posts.',
-      video: videoPlaceholder,
+      video: finderVideo,
     },
     {
       key: 'upvotes',
