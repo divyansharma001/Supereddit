@@ -1,6 +1,9 @@
 "use client";
 import React, { useState } from "react";
 import api from "@/lib/axios";
+import { useAuth } from "@/lib/auth";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 interface Subreddit {
   name: string;
@@ -13,15 +16,32 @@ interface Subreddit {
 }
 
 export default function FindSubredditPage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/login");
+    }
+  }, [user, loading, router]);
+
+  if (loading || !user) {
+    return (
+      <main className="flex items-center justify-center min-h-screen bg-slate-50">
+        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      </main>
+    );
+  }
+
   const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [results, setResults] = useState<Subreddit[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault();
     if (!query.trim()) return;
-    setLoading(true);
+    setSearchLoading(true);
     setError(null);
     setResults([]);
     try {
@@ -34,7 +54,7 @@ export default function FindSubredditPage() {
         setError("Unknown error");
       }
     } finally {
-      setLoading(false);
+      setSearchLoading(false);
     }
   }
 
@@ -63,9 +83,9 @@ export default function FindSubredditPage() {
           <button
             type="submit"
             className="ml-4 px-6 py-2 rounded-xl font-bold bg-[#FF4500] text-white hover:bg-[#FF6B35] transition-all bento-btn"
-            disabled={loading || !query.trim()}
+            disabled={searchLoading || !query.trim()}
           >
-            {loading ? "Searching..." : "Search"}
+            {searchLoading ? "Searching..." : "Search"}
           </button>
         </form>
         {error && <div className="mt-4 text-red-600">{error}</div>}
@@ -105,7 +125,7 @@ export default function FindSubredditPage() {
               ))}
             </div>
           )}
-          {results.length === 0 && !loading && (
+          {results.length === 0 && !searchLoading && (
             <div className="text-slate-500 mt-8">No results yet. Try searching for a niche or product!</div>
           )}
         </div>
