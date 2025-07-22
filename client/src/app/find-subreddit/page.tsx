@@ -19,6 +19,11 @@ export default function FindSubredditPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
 
+  const [query, setQuery] = useState("");
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [results, setResults] = useState<Subreddit[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     if (!loading && !user) {
       router.replace("/login");
@@ -32,11 +37,6 @@ export default function FindSubredditPage() {
       </main>
     );
   }
-
-  const [query, setQuery] = useState("");
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [results, setResults] = useState<Subreddit[]>([]);
-  const [error, setError] = useState<string | null>(null);
 
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault();
