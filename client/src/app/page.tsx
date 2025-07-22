@@ -110,7 +110,7 @@ export default function Home() {
             <div className="w-full aspect-video rounded-2xl overflow-hidden shadow-xl border border-slate-100 bg-slate-100 flex items-center justify-center">
                 <div style={{padding:'55.42% 0 0 0',position:'relative',width:'100%'}}>
                 <iframe 
-                    src="https://player.vimeo.com/video/1102814433?background=1&autoplay=1&loop=1&muted=1" 
+                    src="https://player.vimeo.com/video/1103520256?background=1&autoplay=1&loop=1&muted=1" 
                     frameBorder="0" 
                     allow="autoplay; fullscreen"
                     style={{position:'absolute',top:0,left:0,width:'100%',height:'100%'}}
