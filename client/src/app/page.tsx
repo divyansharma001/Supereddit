@@ -514,6 +514,20 @@ function BentoGrid() {
       <span className="text-slate-400 text-base">[Video Here]</span>
     </div>
   );
+  const keywordVideo = (
+    <div className="w-full max-w-3xl aspect-video bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200 overflow-hidden mx-auto">
+      <div style={{padding:'56.25% 0 0 0',position:'relative',width:'100%'}}>
+        <iframe
+          src="https://player.vimeo.com/video/1103535489?background=1&autoplay=1&loop=1&muted=1"
+          frameBorder="0"
+          allow="autoplay; fullscreen"
+          referrerPolicy="strict-origin-when-cross-origin"
+          style={{position:'absolute',top:0,left:0,width:'100%',height:'100%'}}
+          title="superedditKeywordTrackingDemo"
+        ></iframe>
+      </div>
+    </div>
+  );
   const cards: Card[] = [
     {
       key: 'ai',
@@ -546,7 +560,7 @@ function BentoGrid() {
       content: null,
       desc: 'Monitor Reddit for brand mentions, competitors, and trends with real-time alerts.',
       modal: 'Stay ahead of trends and protect your brand by tracking keywords across Reddit.',
-      video: videoPlaceholder,
+      video: keywordVideo,
     },
     {
       key: 'finder',
