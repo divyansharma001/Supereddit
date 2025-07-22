@@ -11,6 +11,10 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  BarChart,
+  Bar,
+  AreaChart,
+  Area,
 } from "recharts";
 import dayjs from "dayjs";
 
@@ -154,6 +158,65 @@ export function DAUMAUChart() {
           <Line type="monotone" dataKey="mau" name="MAU" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4, fill: '#3b82f6' }} activeDot={{ r: 6 }} />
         </LineChart>
       </ResponsiveContainer>
+    </div>
+  );
+}
+
+// Earnings Potential Chart
+const earningsData = [
+  { month: 'Jan', earnings: 200 },
+  { month: 'Feb', earnings: 350 },
+  { month: 'Mar', earnings: 500 },
+  { month: 'Apr', earnings: 700 },
+  { month: 'May', earnings: 900 },
+  { month: 'Jun', earnings: 1200 },
+];
+export function EarningsPotentialChart() {
+  return (
+    <div className="w-full h-32">
+      <BarChart width={220} height={100} data={earningsData}>
+        <Bar dataKey="earnings" fill="#FF4500" radius={[6, 6, 0, 0]} />
+      </BarChart>
+      <div className="text-center text-xs text-slate-500 mt-1">Sample monthly earnings ($)</div>
+    </div>
+  );
+}
+
+// Reddit DAU Chart (stat + sparkline)
+const dauData = [
+  { day: 'Mon', dau: 60000000 },
+  { day: 'Tue', dau: 61000000 },
+  { day: 'Wed', dau: 62000000 },
+  { day: 'Thu', dau: 61500000 },
+  { day: 'Fri', dau: 63000000 },
+  { day: 'Sat', dau: 64000000 },
+  { day: 'Sun', dau: 65000000 },
+];
+export function RedditDAUChart() {
+  return (
+    <div className="w-full flex flex-col items-center">
+      <div className="text-2xl font-extrabold text-[#FF4500]">65M+</div>
+      <div className="text-xs text-slate-500 mb-1">Reddit Daily Active Users</div>
+      <AreaChart width={120} height={40} data={dauData}>
+        <Area type="monotone" dataKey="dau" stroke="#FF4500" fill="#FF4500" fillOpacity={0.15} />
+      </AreaChart>
+    </div>
+  );
+}
+
+// Engagement Chart (avg upvotes/comments)
+const engagementData = [
+  { label: 'AI Post', upvotes: 120, comments: 30 },
+  { label: 'Manual', upvotes: 80, comments: 18 },
+];
+export function EngagementChart() {
+  return (
+    <div className="w-full h-32">
+      <BarChart width={220} height={100} data={engagementData}>
+        <Bar dataKey="upvotes" fill="#3b82f6" name="Upvotes" />
+        <Bar dataKey="comments" fill="#8b5cf6" name="Comments" />
+      </BarChart>
+      <div className="text-center text-xs text-slate-500 mt-1">Avg. Upvotes & Comments</div>
     </div>
   );
 } 

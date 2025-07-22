@@ -3,7 +3,8 @@ import Image from "next/image";
 import React from "react";
 import Link from "next/link";
 import WaitlistHero from '../components/WaitlistHero'; // Correctly imported from its new file
-import { DAUMAUChart } from '../components/PostAnalyticsChart';
+import { DAUMAUChart, EarningsPotentialChart, RedditDAUChart, EngagementChart } from '../components/PostAnalyticsChart';
+import { useState } from 'react';
 
 export default function Home() {
   const [open, setOpen] = React.useState<number | null>(null);
@@ -127,176 +128,10 @@ export default function Home() {
             Everything You Need to Dominate Reddit
           </h2>
           <p className="mt-4 max-w-2xl text-center text-slate-600 text-lg sm:text-xl animate-fade-slide" style={{animationDelay: '0.2s'}}>
-            AI-powered tools to create, schedule, monitor, and coordinate your Reddit presence
+            AI-powered tools, live analytics, and real earning potential for your Reddit growth
           </p>
         </div>
-        
-        <div className="grid gap-4 sm:gap-5 w-full max-w-6xl grid-cols-1 sm:grid-cols-2 md:grid-cols-6 auto-rows-[250px]">
-          {/* Card 1: AI Content Generator */}
-          <div className="bento-card bento-shine col-span-1 sm:col-span-2 md:col-span-3 row-span-2 bg-white rounded-2xl overflow-hidden relative border border-slate-100">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#FFF7F0] to-white opacity-80"></div>
-            <div className="h-full flex flex-col justify-between p-5 sm:p-6 md:p-7 text-slate-800 relative">
-              <div className="flex flex-col gap-3 sm:gap-4">
-                <div className="flex items-start justify-between">
-                  <span className="text-3xl sm:text-4xl bento-icon">🤖</span>
-                  <span className="bg-[#FF4500]/10 text-[#FF4500] rounded-full px-3 py-1 text-xs font-bold tracking-wide bento-badge">AI</span>
-                </div>
-                <h3 className="text-xl sm:text-2xl font-extrabold bento-title mt-1 text-slate-900">AI Post Generator</h3>
-                <p className="text-sm sm:text-base md:text-lg font-medium text-slate-600 max-w-md">Generate viral Reddit posts with AI. Choose tone (story, question, experience) and get pre-filled titles and body content ready for approval.</p>
-              </div>
-              <div className="flex items-center gap-3 mt-4">
-                <button className="bento-btn bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-5 py-2.5 rounded-xl">Try it now</button>
-                <button className="bento-btn bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold px-4 py-2.5 rounded-xl flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                  </svg>
-                  See demo
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          {/* Card 2: Smart Scheduler */}
-          <div className="bento-card bento-shine col-span-1 sm:col-span-2 md:col-span-3 row-span-2 bg-[#23272f] rounded-2xl overflow-hidden relative">
-            <div className="h-full flex flex-col justify-between p-5 sm:p-6 md:p-7 text-white relative z-10">
-              <div className="flex flex-col gap-2">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-xl sm:text-2xl font-extrabold bento-title">Smart Scheduler</h3>
-                  <span className="bento-icon text-2xl sm:text-3xl">📅</span>
-                </div>
-                <p className="text-white/80 mb-3 sm:mb-4">Schedule posts to specific subreddits with calendar interface</p>
-                
-                <div className="grid grid-cols-2 gap-3 sm:gap-4 mt-1">
-                  <div className="bg-white/10 rounded-xl p-3 sm:p-4">
-                    <div className="text-white/70 text-xs sm:text-sm mb-1">Status</div>
-                    <div className="text-base sm:text-xl font-bold flex items-center">
-                      Draft
-                      <span className="text-blue-400 text-xs sm:text-sm ml-2 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 sm:h-4 sm:w-4" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clipRule="evenodd" />
-                        </svg>
-                        Ready
-                      </span>
-                    </div>
-                  </div>
-                  <div className="bg-white/10 rounded-xl p-3 sm:p-4">
-                    <div className="text-white/70 text-xs sm:text-sm mb-1">Scheduled</div>
-                    <div className="text-base sm:text-xl font-bold flex items-center">
-                      12
-                      <span className="text-purple-400 text-xs sm:text-sm ml-2 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 sm:h-4 sm:w-4" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clipRule="evenodd" />
-                        </svg>
-                        Posts
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 mt-4">
-                <button className="bento-btn bg-white/10 hover:bg-white/20 text-white font-bold px-5 py-2.5 rounded-xl">Schedule Post</button>
-                <button className="bento-btn bg-white/10 hover:bg-white/20 text-white font-bold px-4 py-2.5 rounded-xl flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                  </svg>
-                  View Calendar
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          {/* Card 3: Keyword Monitoring */}
-          <div className="bento-card bento-shine col-span-1 sm:col-span-2 md:col-span-2 row-span-1 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl overflow-hidden relative border border-blue-200">
-            <div className="h-full flex flex-col justify-between p-5 sm:p-6 text-slate-800 relative">
-              <div className="flex flex-col gap-2">
-                <div className="flex items-start justify-between">
-                  <span className="text-2xl sm:text-3xl bento-icon">🔍</span>
-                  <span className="bg-blue-500/10 text-blue-600 rounded-full px-2 py-1 text-xs font-bold tracking-wide bento-badge">MONITOR</span>
-                </div>
-                <h3 className="text-lg sm:text-xl font-extrabold bento-title mt-1 text-slate-900">Keyword Tracking</h3>
-                <p className="text-sm sm:text-base font-medium text-slate-600">Monitor Reddit for brand mentions, competitors, and trends with real-time alerts.</p>
-              </div>
-              <div className="flex items-center gap-2 mt-3">
-                <button className="bento-btn bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold px-4 py-2 rounded-xl text-sm">Set Alerts</button>
-                <button className="bento-btn bg-white border border-blue-200 hover:bg-blue-50 text-blue-700 font-bold px-3 py-2 rounded-xl text-sm flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                  </svg>
-                  View
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          {/* Card 4: Coordination */}
-          <div className="bento-card bento-shine col-span-1 sm:col-span-2 md:col-span-2 row-span-1 bg-gradient-to-br from-green-50 to-green-100 rounded-2xl overflow-hidden relative border border-green-200">
-            <div className="h-full flex flex-col justify-between p-5 sm:p-6 text-slate-800 relative">
-              <div className="flex flex-col gap-2">
-                <div className="flex items-start justify-between">
-                  <span className="text-2xl sm:text-3xl bento-icon">⚡</span>
-                  <span className="bg-green-500/10 text-green-600 rounded-full px-2 py-1 text-xs font-bold tracking-wide bento-badge">BOOST</span>
-                </div>
-                <h3 className="text-lg sm:text-xl font-extrabold bento-title mt-1 text-slate-900">Engagement Coordination</h3>
-                <p className="text-sm sm:text-base font-medium text-slate-600">Trigger comment or upvote boosts with built-in tracking dashboard.</p>
-              </div>
-              <div className="flex items-center gap-2 mt-3">
-                <button className="bento-btn bg-green-100 hover:bg-green-200 text-green-800 font-bold px-4 py-2 rounded-xl text-sm">Boost Post</button>
-                <button className="bento-btn bg-white border border-green-200 hover:bg-green-50 text-green-700 font-bold px-3 py-2 rounded-xl text-sm flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                  </svg>
-                  Analytics
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          {/* Card 5: Client Dashboard */}
-          <div className="bento-card bento-shine col-span-1 sm:col-span-2 md:col-span-2 row-span-1 bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl overflow-hidden relative border border-purple-200">
-            <div className="h-full flex flex-col justify-between p-5 sm:p-6 text-slate-800 relative">
-              <div className="flex flex-col gap-2">
-                <div className="flex items-start justify-between">
-                  <span className="text-2xl sm:text-3xl bento-icon">📊</span>
-                  <span className="bg-purple-500/10 text-purple-600 rounded-full px-2 py-1 text-xs font-bold tracking-wide bento-badge">DASHBOARD</span>
-                </div>
-                <h3 className="text-lg sm:text-xl font-extrabold bento-title mt-1 text-slate-900">Client Analytics</h3>
-                <p className="text-sm sm:text-base font-medium text-slate-600">Secure client access with visual calendar and read-only analytics.</p>
-              </div>
-              <div className="flex items-center gap-2 mt-3">
-                <button className="bento-btn bg-purple-100 hover:bg-purple-200 text-purple-800 font-bold px-4 py-2 rounded-xl text-sm">View Reports</button>
-                <button className="bento-btn bg-white border border-purple-200 hover:bg-purple-50 text-purple-700 font-bold px-3 py-2 rounded-xl text-sm flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                  </svg>
-                  Export
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          {/* Card 6: Reporting */}
-          {/* <div className="bento-card bento-shine col-span-1 sm:col-span-2 md:col-span-2 row-span-1 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl overflow-hidden relative border border-orange-200">
-            <div className="h-full flex flex-col justify-between p-5 sm:p-6 text-slate-800 relative">
-              <div className="flex flex-col gap-2">
-                <div className="flex items-start justify-between">
-                  <span className="text-2xl sm:text-3xl bento-icon">📈</span>
-                  <span className="bg-orange-500/10 text-orange-600 rounded-full px-2 py-1 text-xs font-bold tracking-wide bento-badge">REPORTS</span>
-                </div>
-                <h3 className="text-lg sm:text-xl font-extrabold bento-title mt-1 text-slate-900">Performance Analytics</h3>
-                <p className="text-sm sm:text-base font-medium text-slate-600">Track views, upvotes, CTR, and engagement with exportable PDF reports.</p>
-              </div>
-              <div className="flex items-center gap-2 mt-3">
-                <button className="bento-btn bg-orange-100 hover:bg-orange-200 text-orange-800 font-bold px-4 py-2 rounded-xl text-sm">View Stats</button>
-                <button className="bento-btn bg-white border border-orange-200 hover:bg-orange-50 text-orange-700 font-bold px-3 py-2 rounded-xl text-sm flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                  </svg>
-                  Export
-                </button>
-              </div>
-            </div>
-          </div> */}
-        </div>
+        <BentoGrid />
       </section>
       {/* How It Works Section */}
       <section id="how-it-works" className="relative w-full flex flex-col items-center px-4 sm:px-6 md:px-8 py-20 bg-gradient-to-b from-white via-[#FFF7F0] to-white border-t border-slate-100 overflow-hidden">
@@ -635,5 +470,140 @@ function DownArrowSVG() {
       <circle cx="18" cy="18" r="18" fill="#fff" fillOpacity="0.7" />
       <path d="M12 16l6 6 6-6" stroke="#FF6B35" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
+  );
+}
+
+function BentoGrid() {
+  type Card = {
+    key: string;
+    title: string;
+    icon: string;
+    badge: string;
+    color: string;
+    content: React.ReactNode;
+    desc: string;
+    modal: string;
+    video?: React.ReactNode;
+  };
+  const [modal, setModal] = useState<Card | null>(null);
+  const videoPlaceholder = (
+    <div className="w-full h-72 bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200">
+      <span className="text-slate-400 text-base">[Video Here]</span>
+    </div>
+  );
+  const cards: Card[] = [
+    {
+      key: 'ai',
+      title: 'AI Post Writing',
+      icon: '🤖',
+      badge: 'AI',
+      color: 'from-white to-white border-slate-100',
+      content: null,
+      desc: 'Generate viral Reddit posts with AI. Choose tone and get pre-filled titles and body content ready for approval.',
+      modal: 'Supereddit uses advanced AI to help you create engaging Reddit posts in seconds.',
+      video: videoPlaceholder,
+    },
+    {
+      key: 'scheduler',
+      title: 'Post Scheduler',
+      icon: '📅',
+      badge: 'SCHEDULER',
+      color: 'from-[#23272f]/5 to-white border-slate-200',
+      content: null,
+      desc: 'Schedule posts to specific subreddits with a calendar interface.',
+      modal: 'Plan your Reddit campaigns in advance and let Supereddit handle the posting.',
+      video: videoPlaceholder,
+    },
+    {
+      key: 'keyword',
+      title: 'Keyword Tracking',
+      icon: '🔍',
+      badge: 'KEYWORDS',
+      color: 'from-blue-50 to-blue-100 border-blue-200',
+      content: null,
+      desc: 'Monitor Reddit for brand mentions, competitors, and trends with real-time alerts.',
+      modal: 'Stay ahead of trends and protect your brand by tracking keywords across Reddit.',
+      video: videoPlaceholder,
+    },
+    {
+      key: 'finder',
+      title: 'Subreddit Finder',
+      icon: '🔎',
+      badge: 'FINDER',
+      color: 'from-purple-50 to-purple-100 border-purple-200',
+      content: null,
+      desc: 'Discover the best subreddits for your content and audience.',
+      modal: 'Use the Subreddit Finder to identify the most relevant and high-potential communities for your posts.',
+      video: videoPlaceholder,
+    },
+    {
+      key: 'upvotes',
+      title: 'Upvotes Buying',
+      icon: '⬆️',
+      badge: 'UPVOTES',
+      color: 'from-orange-50 to-white border-orange-200',
+      content: null,
+      desc: 'Boost your posts with coordinated upvotes for maximum reach.',
+      modal: 'Purchase upvotes to give your posts an initial boost and increase visibility on Reddit.',
+      video: videoPlaceholder,
+    },
+    {
+      key: 'analytics',
+      title: 'Analytics & Reporting',
+      icon: '📊',
+      badge: 'ANALYTICS',
+      color: 'from-green-50 to-green-100 border-green-200',
+      content: null,
+      desc: 'Track your Reddit performance with detailed analytics and exportable reports.',
+      modal: 'Get insights into your posts, engagement, and growth. Export PDF reports for clients or your own review.',
+      video: videoPlaceholder,
+    },
+  ];
+  return (
+    <>
+      <div className="grid w-full max-w-7xl mx-auto grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 auto-rows-[320px] place-items-center gap-6 sm:gap-8 lg:gap-12">
+        {cards.map(card => (
+          <div
+            key={card.key}
+            className={`group relative flex flex-col bg-gradient-to-br ${card.color} rounded-2xl border shadow-lg p-4 sm:p-6 lg:p-8 transition-all duration-200 cursor-pointer hover:scale-[1.03] hover:shadow-2xl hover:border-[#FF4500] focus-within:ring-2 focus-within:ring-[#FF4500] min-h-[220px] sm:min-h-[260px] lg:min-h-[320px] w-full max-w-[98vw] sm:max-w-[500px] lg:max-w-[560px] xl:max-w-[620px] min-w-[220px]`}
+            tabIndex={0}
+            onClick={() => setModal(card)}
+            onKeyDown={e => { if (e.key === 'Enter') setModal(card); }}
+          >
+            {card.video}
+            <div className="flex flex-col flex-grow justify-end h-full pt-4">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-2xl sm:text-3xl">{card.icon}</span>
+                <span className="bg-[#FF4500]/10 text-[#FF4500] rounded-full px-2 py-0.5 text-xs font-bold tracking-wide">{card.badge}</span>
+              </div>
+              <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 mb-1 leading-tight">{card.title}</h3>
+              <p className="text-slate-600 text-sm sm:text-base mb-1 flex-1 leading-snug">{card.desc}</p>
+              {card.content && <div className="mt-2">{card.content}</div>}
+            </div>
+            <div className="absolute inset-0 rounded-2xl border-2 border-transparent group-hover:border-[#FF4500] transition-all duration-200 pointer-events-none"></div>
+          </div>
+        ))}
+        {/* Modal for interactivity */}
+        {modal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setModal(null)}>
+            <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full relative animate-fade-in" onClick={e => e.stopPropagation()}>
+              <button className="absolute top-3 right-3 text-slate-400 hover:text-[#FF4500] text-2xl font-bold" onClick={() => setModal(null)}>&times;</button>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-3xl">{modal.icon}</span>
+                <span className="bg-[#FF4500]/10 text-[#FF4500] rounded-full px-3 py-1 text-xs font-bold tracking-wide">{modal.badge}</span>
+              </div>
+              <h3 className="text-2xl font-extrabold text-slate-900 mb-2">{modal.title}</h3>
+              <p className="text-slate-600 mb-4">{modal.modal}</p>
+              {modal.content && <div className="mb-2">{modal.content}</div>}
+              {modal.video && <div className="mb-2">{modal.video}</div>}
+              <button className="mt-4 w-full py-2 rounded-xl font-bold bg-[#FF4500] hover:bg-[#FF6B35] text-white shadow-md transition-all duration-200" onClick={() => setModal(null)}>Close</button>
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="w-full flex justify-center mt-10">
+        <span className="text-base sm:text-lg font-semibold text-[#FF4500] bg-[#FF4500]/10 rounded-full px-6 py-3 shadow border border-[#FF4500]/20 animate-fade-slide">More coming soon...</span>
+      </div>
+    </>
   );
 }
