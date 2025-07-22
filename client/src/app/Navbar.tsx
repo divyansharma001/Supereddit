@@ -5,6 +5,7 @@ import React from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 function UserMenu() {
   const { user, logout } = useAuth();
@@ -36,50 +37,91 @@ function UserMenu() {
 export default function Navbar() {
   const { user } = useAuth();
   const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const navLinks = [
+    { href: "/dashboard", label: "Dashboard", show: !!user },
+    { href: "/posts", label: "Posts", show: true },
+    { href: "/ai", label: "AI Generator", show: true },
+    { href: "/keywords", label: "Monitoring", show: true },
+    { href: "/find-subreddit", label: "Find Subreddit", show: true },
+  ];
 
   return (
-    <nav className="w-full flex items-center justify-between py-3 px-4 sm:px-6 lg:px-8 bg-white shadow-sm fixed top-0 left-0 z-30 border-b border-slate-100">
-      <div className="flex items-center">
-        <Link href="/" className="flex items-center mr-8" title="Home">
-          <span className="font-bold text-lg tracking-tight text-slate-900">Supereddit</span>
+    <nav className="w-full flex items-center justify-between py-3 px-4 sm:px-6 lg:px-8 bg-white/90 shadow-md fixed top-0 left-0 z-30 border-b border-slate-100 backdrop-blur-md">
+      <div className="flex items-center gap-4">
+        <Link href="/" className="flex items-center mr-2 sm:mr-8" title="Home">
+          <span className="font-extrabold text-xl tracking-tight text-slate-900" style={{fontFamily: 'Plus Jakarta Sans'}}>Supereddit</span>
         </Link>
-        <div className="hidden md:flex items-center space-x-6">
-          {user && (
-            <Link href="/" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/dashboard') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
-              Dashboard
+        {/* Desktop Nav */}
+        <div className="hidden md:flex items-center gap-2 lg:gap-6">
+          {navLinks.filter(l => l.show).map(link => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`py-1.5 px-2 rounded-md font-medium text-sm transition-colors duration-200 ${pathname.startsWith(link.href) ? 'text-[#FF4500] bg-[#FF4500]/10' : 'text-slate-600 hover:text-[#FF4500] hover:bg-[#FF4500]/5'}`}
+              style={{fontFamily: 'Plus Jakarta Sans'}}
+            >
+              {link.label}
             </Link>
-          )}
-           <Link href="/" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/posts') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
-            Posts
-          </Link>
-          <Link href="/" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/ai') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
-            AI Generator
-          </Link>
-          <Link href="/" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/keywords') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
-            Monitoring
-          </Link>
-          <Link href="/" className={`py-1.5 font-medium text-sm transition-colors duration-200 ${pathname.startsWith('/find-subreddit') ? 'text-[#FF4500]' : 'text-slate-600 hover:text-[#FF4500]'}`}>
-            Find Subreddit
-          </Link>
+          ))}
         </div>
+        {/* Hamburger for mobile */}
+        <button
+          className="md:hidden flex items-center justify-center p-2 rounded focus:outline-none focus:ring-2 focus:ring-[#FF4500]"
+          aria-label="Open navigation menu"
+          onClick={() => setMobileOpen(o => !o)}
+        >
+          <svg className="w-6 h-6 text-slate-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            {mobileOpen ? (
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            )}
+          </svg>
+        </button>
       </div>
       <div className="flex items-center space-x-4">
         {user ? (
           <UserMenu />
         ) : (
-          <>
-            {/* Login and Signup buttons hidden for waitlisting phase */}
-            {/*
-            <Link href="/login" className="py-1.5 px-3 font-medium text-sm text-slate-600 hover:text-[#FF4500] transition-colors">
-              Login
-            </Link>
-            <Link href="/register" className="py-1.5 px-4 rounded-md font-medium text-sm bg-[#FF4500] hover:bg-[#FF4500]/90 text-white transition-colors">
-              Sign Up
-            </Link>
-            */}
-          </>
+          <Link
+            href="#waitlist"
+            className="py-2 px-4 rounded-xl font-bold text-sm bg-[#FF4500] hover:bg-[#FF6B35] text-white shadow-md transition-all duration-200 border-2 border-transparent hover:border-[#FF6B35] focus:outline-none focus:ring-2 focus:ring-[#FF4500]"
+            style={{fontFamily: 'Plus Jakarta Sans'}}
+          >
+            Join Waitlist
+          </Link>
         )}
       </div>
+      {/* Mobile Nav Drawer */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-40 md:hidden" onClick={() => setMobileOpen(false)}>
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+          <div className="absolute top-0 right-0 w-64 h-full bg-white shadow-lg border-l border-slate-200 flex flex-col p-6 animate-fade-slide">
+            <button
+              className="self-end mb-6 p-2 rounded focus:outline-none focus:ring-2 focus:ring-[#FF4500]"
+              aria-label="Close navigation menu"
+              onClick={() => setMobileOpen(false)}
+            >
+              <svg className="w-6 h-6 text-slate-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            {navLinks.filter(l => l.show).map(link => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`block py-2 px-3 rounded-md font-medium text-base mb-2 transition-colors duration-200 ${pathname.startsWith(link.href) ? 'text-[#FF4500] bg-[#FF4500]/10' : 'text-slate-700 hover:text-[#FF4500] hover:bg-[#FF4500]/5'}`}
+                style={{fontFamily: 'Plus Jakarta Sans'}}
+                onClick={() => setMobileOpen(false)}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
     </nav>
   );
 }

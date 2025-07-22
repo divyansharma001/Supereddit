@@ -70,7 +70,7 @@ const WaitlistHero = () => {
   }
 
   return (
-    <div className="mt-8 w-full max-w-lg mx-auto animate-fade-slide" style={{animationDelay: '0.2s'}}>
+    <div id="waitlist" className="mt-8 w-full max-w-lg mx-auto animate-fade-slide" style={{animationDelay: '0.2s'}}>
       <div className="mb-3 flex justify-center">
         <span className="inline-block text-xs font-semibold text-[#FF4500] bg-[#FF4500]/10 rounded px-3 py-1 whitespace-nowrap shadow-sm border border-[#FF4500]/20">
           Free access to first 100 members on waitlist
