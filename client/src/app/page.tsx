@@ -3,6 +3,7 @@ import Image from "next/image";
 import React from "react";
 import Link from "next/link";
 import WaitlistHero from '../components/WaitlistHero'; // Correctly imported from its new file
+import { DAUMAUChart } from '../components/PostAnalyticsChart';
 
 export default function Home() {
   const [open, setOpen] = React.useState<number | null>(null);
@@ -61,6 +62,11 @@ export default function Home() {
 
           {/* === THE NEW WAITLIST COMPONENT IS PLACED HERE === */}
           <WaitlistHero />
+
+          {/* DAU/MAU Reddit Graph Section */}
+          <section className="w-full flex flex-col items-center justify-center mt-8">
+            <DAUMAUChart />
+          </section>
           
           {/* Social proof */}
           <div className="mt-8 flex flex-wrap justify-center items-center gap-4 sm:gap-6 text-sm text-slate-500">
