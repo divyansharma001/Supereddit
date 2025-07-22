@@ -5,6 +5,7 @@ import Link from "next/link";
 import WaitlistHero from '../components/WaitlistHero'; // Correctly imported from its new file
 import { DAUMAUChart, EarningsPotentialChart, RedditDAUChart, EngagementChart } from '../components/PostAnalyticsChart';
 import { useState } from 'react';
+import Script from 'next/script';
 
 export default function Home() {
   const [open, setOpen] = React.useState<number | null>(null);
@@ -494,6 +495,20 @@ function BentoGrid() {
     video?: React.ReactNode;
   };
   const [modal, setModal] = useState<Card | null>(null);
+  const aiVideo = (
+    <div className="w-full max-w-3xl aspect-video bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200 overflow-hidden mx-auto">
+      <div style={{padding:'56.25% 0 0 0',position:'relative',width:'100%'}}>
+        <iframe
+          src="https://player.vimeo.com/video/1103519720?background=1&autoplay=1&loop=1&muted=1"
+          frameBorder="0"
+          allow="autoplay; fullscreen"
+          referrerPolicy="strict-origin-when-cross-origin"
+          style={{position:'absolute',top:0,left:0,width:'100%',height:'100%'}}
+          title="superedditAIPost - Made with Clipchamp"
+        ></iframe>
+      </div>
+    </div>
+  );
   const videoPlaceholder = (
     <div className="w-full h-56 bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200">
       <span className="text-slate-400 text-base">[Video Here]</span>
@@ -509,7 +524,7 @@ function BentoGrid() {
       content: null,
       desc: 'Generate viral Reddit posts with AI. Choose tone and get pre-filled titles and body content ready for approval.',
       modal: 'Supereddit uses advanced AI to help you create engaging Reddit posts in seconds.',
-      video: videoPlaceholder,
+      video: aiVideo,
     },
     {
       key: 'scheduler',
