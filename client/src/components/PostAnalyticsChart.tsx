@@ -151,7 +151,7 @@ const formatNumber = (num: number) => {
 
 export function DAUMAUChart() {
   return (
-    <div className="w-full max-w-4xl mx-auto bg-gradient-to-br from-white via-slate-50/50 to-white rounded-3xl shadow-2xl border border-slate-200/50 p-8 mb-12 animate-fade-slide backdrop-blur-sm">
+    <div className="hidden sm:block w-full max-w-4xl mx-auto bg-gradient-to-br from-white via-slate-50/50 to-white rounded-3xl shadow-2xl border border-slate-200/50 p-8 mb-12 animate-fade-slide backdrop-blur-sm">
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8">
         <div>
