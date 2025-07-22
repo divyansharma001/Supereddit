@@ -67,7 +67,7 @@ export default function Navbar() {
           ))}
         </div>
         {/* Hamburger for mobile */}
-        <button
+        {/* <button
           className="md:hidden flex items-center justify-center p-2 rounded focus:outline-none focus:ring-2 focus:ring-[#FF4500]"
           aria-label="Open navigation menu"
           onClick={() => setMobileOpen(o => !o)}
@@ -79,7 +79,7 @@ export default function Navbar() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             )}
           </svg>
-        </button>
+        </button> */}
       </div>
       <div className="flex items-center space-x-4">
         {user ? (
@@ -95,10 +95,10 @@ export default function Navbar() {
         )}
       </div>
       {/* Mobile Nav Drawer */}
-      {mobileOpen && (
+      {/* {mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden" onClick={() => setMobileOpen(false)}>
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
-          <div className="absolute top-0 right-0 w-64 h-full bg-white shadow-lg border-l border-slate-200 flex flex-col p-6 animate-fade-slide">
+          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40" />
+          <div className="fixed top-0 right-0 w-64 h-full bg-white shadow-lg border-l border-slate-200 flex flex-col p-6 animate-fade-slide z-50">
             <button
               className="self-end mb-6 p-2 rounded focus:outline-none focus:ring-2 focus:ring-[#FF4500]"
               aria-label="Close navigation menu"
@@ -121,7 +121,7 @@ export default function Navbar() {
             ))}
           </div>
         </div>
-      )}
+      )} */}
     </nav>
   );
 }
