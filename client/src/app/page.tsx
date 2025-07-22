@@ -660,6 +660,7 @@ function BentoGrid() {
               <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 mb-2 leading-tight">{card.title}</h3>
               <p className="text-slate-600 text-sm sm:text-base mb-2 flex-1 leading-snug">{card.desc}</p>
               {card.content && <div className="mt-3">{card.content}</div>}
+              <span className="inline-block mt-4 self-center bg-[#FF4500]/10 text-[#FF4500] text-xs font-medium px-3 py-1 rounded-full select-none">Click to expand</span>
             </div>
             <div className="absolute inset-0 rounded-2xl border-2 border-transparent group-hover:border-[#FF4500] transition-all duration-200 pointer-events-none"></div>
           </div>
