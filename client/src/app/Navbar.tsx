@@ -86,11 +86,11 @@ export default function Navbar() {
           <UserMenu />
         ) : (
           <Link
-            href="#waitlist"
+            href="/login"
             className="py-2 px-4 rounded-xl font-bold text-sm bg-[#FF4500] hover:bg-[#FF6B35] text-white shadow-md transition-all duration-200 border-2 border-transparent hover:border-[#FF6B35] focus:outline-none focus:ring-2 focus:ring-[#FF4500]"
             style={{fontFamily: 'Plus Jakarta Sans'}}
           >
-            Join Waitlist
+            Login
           </Link>
         )}
       </div>
