@@ -565,9 +565,11 @@ function BentoGrid() {
       </div>
     </div>
   );
-  const videoPlaceholder = (
-    <div className="w-full h-56 bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200">
-      <span className="text-slate-400 text-base">[Video Here]</span>
+  const upvotesComingSoon = (
+    <div className="w-full h-56 bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200 relative overflow-hidden">
+      <div className="absolute inset-0 bg-white/80 backdrop-blur-md flex items-center justify-center z-10">
+        <span className="text-xl font-bold text-slate-400">Coming Soon</span>
+      </div>
     </div>
   );
   const cards: Card[] = [
@@ -624,7 +626,7 @@ function BentoGrid() {
       content: null,
       desc: 'Boost your posts with coordinated upvotes for maximum reach.',
       modal: 'Purchase upvotes to give your posts an initial boost and increase visibility on Reddit.',
-      video: videoPlaceholder,
+      video: upvotesComingSoon,
     },
     {
       key: 'analytics',
