@@ -10,6 +10,7 @@ import React from "react";
 import Navbar from "./Navbar";
 import { ThemeProvider } from "@/lib/theme";
 import { SocketProvider } from '@/contexts/SocketContext';
+import { Analytics } from "@vercel/analytics/react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -52,6 +53,7 @@ export default function RootLayout({
             </SocketProvider>
           </AuthProvider>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
