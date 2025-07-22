@@ -122,7 +122,7 @@ export default function Home() {
     </div>
 </section>
       {/* Bento Grid Section */}
-      <section className="w-full flex flex-col justify-center items-center px-4 sm:px-6 md:px-8 pb-28">
+      <section className="w-full flex flex-col justify-center items-center px-4 sm:px-6 md:px-8 pb-28 pt-16">
         <div className="flex flex-col items-center mb-12 sm:mb-16">
           <h2 className="text-4xl sm:text-5xl font-extrabold text-center text-slate-900 animate-fade-slide">
             Everything You Need to Dominate Reddit
@@ -487,7 +487,7 @@ function BentoGrid() {
   };
   const [modal, setModal] = useState<Card | null>(null);
   const videoPlaceholder = (
-    <div className="w-full h-72 bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200">
+    <div className="w-full h-56 bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200">
       <span className="text-slate-400 text-base">[Video Here]</span>
     </div>
   );
@@ -561,24 +561,24 @@ function BentoGrid() {
   ];
   return (
     <>
-      <div className="grid w-full max-w-7xl mx-auto grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 auto-rows-[320px] place-items-center gap-6 sm:gap-8 lg:gap-12">
+      <div className="grid w-full max-w-7xl mx-auto grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 auto-rows-auto place-items-center gap-8 sm:gap-10 lg:gap-14 py-6">
         {cards.map(card => (
           <div
             key={card.key}
-            className={`group relative flex flex-col bg-gradient-to-br ${card.color} rounded-2xl border shadow-lg p-4 sm:p-6 lg:p-8 transition-all duration-200 cursor-pointer hover:scale-[1.03] hover:shadow-2xl hover:border-[#FF4500] focus-within:ring-2 focus-within:ring-[#FF4500] min-h-[220px] sm:min-h-[260px] lg:min-h-[320px] w-full max-w-[98vw] sm:max-w-[500px] lg:max-w-[560px] xl:max-w-[620px] min-w-[220px]`}
+            className={`group relative flex flex-col bg-gradient-to-br ${card.color} rounded-2xl border shadow-lg p-8 sm:p-10 lg:p-12 transition-all duration-200 cursor-pointer hover:scale-[1.03] hover:shadow-2xl hover:border-[#FF4500] focus-within:ring-2 focus-within:ring-[#FF4500] min-h-[220px] sm:min-h-[260px] lg:min-h-[320px] w-full max-w-[98vw] sm:max-w-[500px] lg:max-w-[560px] xl:max-w-[620px] min-w-[220px]`}
             tabIndex={0}
             onClick={() => setModal(card)}
             onKeyDown={e => { if (e.key === 'Enter') setModal(card); }}
           >
             {card.video}
-            <div className="flex flex-col flex-grow justify-end h-full pt-4">
-              <div className="flex items-center gap-2 mb-1">
+            <div className="flex flex-col flex-grow justify-end h-full pt-6">
+              <div className="flex items-center gap-3 mb-3">
                 <span className="text-2xl sm:text-3xl">{card.icon}</span>
-                <span className="bg-[#FF4500]/10 text-[#FF4500] rounded-full px-2 py-0.5 text-xs font-bold tracking-wide">{card.badge}</span>
+                <span className="bg-[#FF4500]/10 text-[#FF4500] rounded-full px-3 py-1 text-xs font-bold tracking-wide">{card.badge}</span>
               </div>
-              <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 mb-1 leading-tight">{card.title}</h3>
-              <p className="text-slate-600 text-sm sm:text-base mb-1 flex-1 leading-snug">{card.desc}</p>
-              {card.content && <div className="mt-2">{card.content}</div>}
+              <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 mb-2 leading-tight">{card.title}</h3>
+              <p className="text-slate-600 text-sm sm:text-base mb-2 flex-1 leading-snug">{card.desc}</p>
+              {card.content && <div className="mt-3">{card.content}</div>}
             </div>
             <div className="absolute inset-0 rounded-2xl border-2 border-transparent group-hover:border-[#FF4500] transition-all duration-200 pointer-events-none"></div>
           </div>
@@ -586,22 +586,22 @@ function BentoGrid() {
         {/* Modal for interactivity */}
         {modal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setModal(null)}>
-            <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full relative animate-fade-in" onClick={e => e.stopPropagation()}>
+            <div className="bg-white rounded-2xl shadow-2xl p-10 max-w-md w-full relative animate-fade-in" onClick={e => e.stopPropagation()}>
               <button className="absolute top-3 right-3 text-slate-400 hover:text-[#FF4500] text-2xl font-bold" onClick={() => setModal(null)}>&times;</button>
-              <div className="flex items-center gap-2 mb-3">
+              <div className="flex items-center gap-3 mb-4">
                 <span className="text-3xl">{modal.icon}</span>
                 <span className="bg-[#FF4500]/10 text-[#FF4500] rounded-full px-3 py-1 text-xs font-bold tracking-wide">{modal.badge}</span>
               </div>
-              <h3 className="text-2xl font-extrabold text-slate-900 mb-2">{modal.title}</h3>
-              <p className="text-slate-600 mb-4">{modal.modal}</p>
-              {modal.content && <div className="mb-2">{modal.content}</div>}
-              {modal.video && <div className="mb-2">{modal.video}</div>}
-              <button className="mt-4 w-full py-2 rounded-xl font-bold bg-[#FF4500] hover:bg-[#FF6B35] text-white shadow-md transition-all duration-200" onClick={() => setModal(null)}>Close</button>
+              <h3 className="text-2xl font-extrabold text-slate-900 mb-3">{modal.title}</h3>
+              <p className="text-slate-600 mb-5">{modal.modal}</p>
+              {modal.content && <div className="mb-3">{modal.content}</div>}
+              {modal.video && <div className="mb-3">{modal.video}</div>}
+              <button className="mt-6 w-full py-3 rounded-xl font-bold bg-[#FF4500] hover:bg-[#FF6B35] text-white shadow-md transition-all duration-200" onClick={() => setModal(null)}>Close</button>
             </div>
           </div>
         )}
       </div>
-      <div className="w-full flex justify-center mt-10">
+      <div className="w-full flex justify-center mt-12">
         <span className="text-base sm:text-lg font-semibold text-[#FF4500] bg-[#FF4500]/10 rounded-full px-6 py-3 shadow border border-[#FF4500]/20 animate-fade-slide">More coming soon...</span>
       </div>
     </>
