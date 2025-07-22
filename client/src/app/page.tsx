@@ -152,9 +152,9 @@ export default function Home() {
           </div>
         </div>
         
-        <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 w-full max-w-6xl">
+        <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 w-full max-w-7xl px-2">
           {/* Step 1 */}
-          <div className="flex flex-col items-center bg-white backdrop-blur-md rounded-3xl border border-slate-200/60 shadow-lg hover:shadow-xl p-8 transition-all duration-300 hover:-translate-y-2 group">
+          <div className="flex flex-col items-center w-full bg-white backdrop-blur-md rounded-3xl border border-slate-200/60 shadow-lg hover:shadow-xl p-6 xl:p-8 transition-all duration-300 hover:-translate-y-2 group min-w-0">
             <div className="mb-6 w-16 h-16 flex items-center justify-center bg-gradient-to-br from-[#FF4500]/10 to-[#FF6B35]/5 rounded-2xl text-5xl shadow-sm group-hover:shadow-md transition-all duration-300 relative">
               <span role='img' aria-label='connect' className="relative z-10">🔗</span>
               <div className="absolute inset-0 bg-gradient-to-br from-[#FF4500]/5 to-[#FF6B35]/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl"></div>
@@ -164,9 +164,8 @@ export default function Home() {
             <div className="w-12 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-4"></div>
             <p className="text-slate-600 text-center text-base">Securely link your Reddit account in seconds to unlock powerful tools.</p>
           </div>
-          
           {/* Step 2 */}
-          <div className="flex flex-col items-center bg-white backdrop-blur-md rounded-3xl border border-slate-200/60 shadow-lg hover:shadow-xl p-8 transition-all duration-300 hover:-translate-y-2 group">
+          <div className="flex flex-col items-center w-full bg-white backdrop-blur-md rounded-3xl border border-slate-200/60 shadow-lg hover:shadow-xl p-6 xl:p-8 transition-all duration-300 hover:-translate-y-2 group min-w-0">
             <div className="mb-6 w-16 h-16 flex items-center justify-center bg-gradient-to-br from-[#FF4500]/10 to-[#FF6B35]/5 rounded-2xl text-5xl shadow-sm group-hover:shadow-md transition-all duration-300 relative">
               <span role='img' aria-label='content' className="relative z-10">📝</span>
               <div className="absolute inset-0 bg-gradient-to-br from-[#FF4500]/5 to-[#FF6B35]/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl"></div>
@@ -176,9 +175,8 @@ export default function Home() {
             <div className="w-12 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-4"></div>
             <p className="text-slate-600 text-center text-base">Use AI to create posts and comments tailored to your community's interests.</p>
           </div>
-          
           {/* Step 3 */}
-          <div className="flex flex-col items-center bg-white backdrop-blur-md rounded-3xl border border-slate-200/60 shadow-lg hover:shadow-xl p-8 transition-all duration-300 hover:-translate-y-2 group">
+          <div className="flex flex-col items-center w-full bg-white backdrop-blur-md rounded-3xl border border-slate-200/60 shadow-lg hover:shadow-xl p-6 xl:p-8 transition-all duration-300 hover:-translate-y-2 group min-w-0">
             <div className="mb-6 w-16 h-16 flex items-center justify-center bg-gradient-to-br from-[#FF4500]/10 to-[#FF6B35]/5 rounded-2xl text-5xl shadow-sm group-hover:shadow-md transition-all duration-300 relative">
               <span role='img' aria-label='moderation' className="relative z-10">🤖</span>
               <div className="absolute inset-0 bg-gradient-to-br from-[#FF4500]/5 to-[#FF6B35]/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl"></div>
@@ -188,9 +186,8 @@ export default function Home() {
             <div className="w-12 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-4"></div>
             <p className="text-slate-600 text-center text-base">Let smart automations handle spam, rules, and repetitive tasks for you.</p>
           </div>
-          
           {/* Step 4 */}
-          <div className="flex flex-col items-center bg-white backdrop-blur-md rounded-3xl border border-slate-200/60 shadow-lg hover:shadow-xl p-8 transition-all duration-300 hover:-translate-y-2 group">
+          <div className="flex flex-col items-center w-full bg-white backdrop-blur-md rounded-3xl border border-slate-200/60 shadow-lg hover:shadow-xl p-6 xl:p-8 transition-all duration-300 hover:-translate-y-2 group min-w-0">
             <div className="mb-6 w-16 h-16 flex items-center justify-center bg-gradient-to-br from-[#FF4500]/10 to-[#FF6B35]/5 rounded-2xl text-5xl shadow-sm group-hover:shadow-md transition-all duration-300 relative">
               <span role='img' aria-label='analytics' className="relative z-10">📈</span>
               <div className="absolute inset-0 bg-gradient-to-br from-[#FF4500]/5 to-[#FF6B35]/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl"></div>
@@ -199,6 +196,17 @@ export default function Home() {
             <h3 className="font-bold text-xl text-slate-900 mb-3 text-center" style={{fontFamily: 'Plus Jakarta Sans'}}>Track Growth</h3>
             <div className="w-12 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-4"></div>
             <p className="text-slate-600 text-center text-base">Visualize your community's progress and optimize with actionable analytics.</p>
+          </div>
+          {/* Step 5: Keyword Tracking */}
+          <div className="flex flex-col items-center w-full bg-white backdrop-blur-md rounded-3xl border border-slate-200/60 shadow-lg hover:shadow-xl p-6 xl:p-8 transition-all duration-300 hover:-translate-y-2 group min-w-0">
+            <div className="mb-6 w-16 h-16 flex items-center justify-center bg-gradient-to-br from-blue-200/20 to-blue-100/10 rounded-2xl text-5xl shadow-sm group-hover:shadow-md transition-all duration-300 relative">
+              <span role='img' aria-label='keyword' className="relative z-10">🔍</span>
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-200/10 to-blue-100/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl"></div>
+            </div>
+            <div className="w-8 h-8 flex items-center justify-center bg-blue-200/20 rounded-full text-blue-600 font-bold text-lg mb-4">5</div>
+            <h3 className="font-bold text-xl text-slate-900 mb-3 text-center" style={{fontFamily: 'Plus Jakarta Sans'}}>Keyword Tracking</h3>
+            <div className="w-12 h-px bg-gradient-to-r from-transparent via-blue-200 to-transparent mb-4"></div>
+            <p className="text-slate-600 text-center text-base">Monitor Reddit for brand mentions, competitors, and trends with real-time alerts.</p>
           </div>
         </div>
         
