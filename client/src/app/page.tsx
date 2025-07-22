@@ -509,9 +509,18 @@ function BentoGrid() {
       </div>
     </div>
   );
-  const videoPlaceholder = (
-    <div className="w-full h-56 bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200">
-      <span className="text-slate-400 text-base">[Video Here]</span>
+  const schedulerVideo = (
+    <div className="w-full max-w-3xl aspect-video bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200 overflow-hidden mx-auto">
+      <div style={{padding:'56.25% 0 0 0',position:'relative',width:'100%'}}>
+        <iframe
+          src="https://player.vimeo.com/video/1103537598?background=1&autoplay=1&loop=1&muted=1"
+          frameBorder="0"
+          allow="autoplay; fullscreen"
+          referrerPolicy="strict-origin-when-cross-origin"
+          style={{position:'absolute',top:0,left:0,width:'100%',height:'100%'}}
+          title="superedditPostSchedulerDemo"
+        ></iframe>
+      </div>
     </div>
   );
   const keywordVideo = (
@@ -526,6 +535,11 @@ function BentoGrid() {
           title="superedditKeywordTrackingDemo"
         ></iframe>
       </div>
+    </div>
+  );
+  const videoPlaceholder = (
+    <div className="w-full h-56 bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200">
+      <span className="text-slate-400 text-base">[Video Here]</span>
     </div>
   );
   const cards: Card[] = [
@@ -549,7 +563,7 @@ function BentoGrid() {
       content: null,
       desc: 'Schedule posts to specific subreddits with a calendar interface.',
       modal: 'Plan your Reddit campaigns in advance and let Supereddit handle the posting.',
-      video: videoPlaceholder,
+      video: schedulerVideo,
     },
     {
       key: 'keyword',
