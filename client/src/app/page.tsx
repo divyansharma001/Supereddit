@@ -67,28 +67,6 @@ export default function Home() {
           <section className="w-full flex flex-col items-center justify-center mt-8">
             <DAUMAUChart />
           </section>
-          
-          {/* Social proof */}
-          <div className="mt-8 flex flex-wrap justify-center items-center gap-4 sm:gap-6 text-sm text-slate-500">
-            <div className="flex items-center gap-1">
-            <svg className="w-4 h-4 text-[#FF4500]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.999-6.001A6.004 6.004 0 0115 7z"></path>
-      </svg>
-              <span>Exclusive Early Access</span>
-            </div>
-            <div className="flex items-center gap-1">
-            <svg className="w-4 h-4 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
-        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-      </svg>
-      <span>No Credit Card Required</span>
-            </div>
-            <div className="flex items-center gap-1">
-            <svg className="w-4 h-4 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
-        <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-      </svg>
-      <span>Secure & Private by Design</span>
-            </div>
-          </div>
         </div>
         
         {/* This section with buttons is commented out, but links updated just in case. */}
@@ -396,6 +374,49 @@ export default function Home() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>
           </Link>
+        </div>
+      </section>
+      {/* Pricing Plans Section */}
+      <section className="w-full flex flex-col items-center justify-center py-16 px-4 sm:px-6 md:px-8 bg-gradient-to-b from-white via-[#FFF7F0] to-white border-t border-slate-100">
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-center text-slate-900 mb-10 animate-fade-slide" style={{fontFamily: 'Plus Jakarta Sans'}}>
+          Pricing Plans
+        </h2>
+        <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Free Plan */}
+          <div className="flex flex-col items-center bg-white rounded-3xl border border-slate-200 shadow-lg p-8 transition-all hover:shadow-xl animate-fade-slide">
+            <span className="text-lg font-bold text-[#FF4500] mb-2">FREE</span>
+            <div className="text-4xl font-extrabold text-slate-900 mb-4">$0</div>
+            <ul className="text-slate-700 text-base mb-6 space-y-2 text-center">
+              <li>✔️ Post Scheduler</li>
+              <li>✔️ Subreddit Analyser</li>
+              <li>✔️ Subreddit Finder</li>
+            </ul>
+            <button className="w-full py-3 px-6 rounded-xl font-bold bg-[#FF4500] hover:bg-[#FF6B35] text-white shadow-md transition-all duration-200 border-2 border-transparent hover:border-[#FF6B35] focus:outline-none focus:ring-2 focus:ring-[#FF4500]">Get Started Free</button>
+          </div>
+          {/* Pro Plan */}
+          <div className="flex flex-col items-center bg-gradient-to-br from-[#FF4500]/10 to-white rounded-3xl border-2 border-[#FF4500] shadow-xl p-8 scale-105 z-10 animate-fade-slide">
+            <span className="text-lg font-bold text-[#FF4500] mb-2">PRO</span>
+            <div className="text-4xl font-extrabold text-slate-900 mb-1">$14.99<span className="text-lg font-medium text-slate-500">/mo</span></div>
+            <div className="text-sm text-slate-500 mb-4">Billed monthly, cancel anytime</div>
+            <ul className="text-slate-700 text-base mb-6 space-y-2 text-center">
+              <li>✔️ Everything in Free</li>
+              <li>✔️ AI Post Writer</li>
+              <li>✔️ Keyword Tracker (up to 5 keywords)</li>
+            </ul>
+            <button className="w-full py-3 px-6 rounded-xl font-bold bg-[#FF4500] hover:bg-[#FF6B35] text-white shadow-md transition-all duration-200 border-2 border-transparent hover:border-[#FF6B35] focus:outline-none focus:ring-2 focus:ring-[#FF4500]">Start 7-Day Trial</button>
+          </div>
+          {/* Lifetime Plan */}
+          <div className="flex flex-col items-center bg-white rounded-3xl border border-slate-200 shadow-lg p-8 animate-fade-slide">
+            <span className="text-lg font-bold text-purple-700 mb-2">LIFETIME</span>
+            <div className="text-4xl font-extrabold text-slate-900 mb-1">$249</div>
+            <div className="text-sm text-slate-500 mb-4">One-time payment, all features forever</div>
+            <ul className="text-slate-700 text-base mb-6 space-y-2 text-center">
+              <li>✔️ Everything in Pro</li>
+              <li>✔️ Lifetime Access & Updates</li>
+              <li>✔️ Priority Support</li>
+            </ul>
+            <button className="w-full py-3 px-6 rounded-xl font-bold bg-purple-700 hover:bg-purple-800 text-white shadow-md transition-all duration-200 border-2 border-transparent hover:border-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-700">Go Lifetime</button>
+          </div>
         </div>
       </section>
       {/* FAQ Section */}
