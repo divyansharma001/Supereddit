@@ -25,17 +25,17 @@ export class AIController {
    */
   static async generateDraft(req: Request, res: Response): Promise<void> {
     try {
-      const { keywords, tone } = req.body;
+      const { keywords, tone, customPrompt } = req.body;
 
       // Validate input
-      if (!keywords || !tone) {
-        res.status(400).json({ error: 'Keywords and tone are required' });
+      if (!keywords || !tone || (tone === 'custom' && !customPrompt)) {
+        res.status(400).json({ error: 'Keywords and tone are required. If using custom, provide a prompt.' });
         return;
       }
 
-      const validTones = ['story', 'question', 'experience'];
+      const validTones = ['story', 'question', 'experience', 'custom'];
       if (!validTones.includes(tone)) {
-        res.status(400).json({ error: 'Tone must be one of: story, question, experience' });
+        res.status(400).json({ error: 'Tone must be one of: story, question, experience, custom' });
         return;
       }
 
@@ -45,18 +45,22 @@ export class AIController {
 
       // Construct prompt based on tone
       let prompt: string;
-      switch (tone) {
-        case 'story':
-          prompt = `Generate a Reddit post about "${keywords}". Write it as a personal story or anecdote. The post should be engaging, relatable, and encourage discussion. Format the response as JSON with "title" and "body" fields. Keep the title under 300 characters and the body between 200-2000 characters. The body should be at least 100 words.`;
-          break;
-        case 'question':
-          prompt = `Generate a Reddit post about "${keywords}". Write it as an engaging question that encourages community discussion. The post should be thought-provoking and invite responses. Format the response as JSON with "title" and "body" fields. Keep the title under 300 characters and the body between 200-2000 characters. The body should be at least 100 words.`;
-          break;
-        case 'experience':
-          prompt = `Generate a Reddit post about "${keywords}". Write it as a personal experience or observation that others can relate to. The post should be authentic and encourage sharing of similar experiences. Format the response as JSON with "title" and "body" fields. Keep the title under 300 characters and the body between 200-2000 characters. The body should be at least 100 words.`;
-          break;
-        default:
-          prompt = `Generate a Reddit post about "${keywords}". Write it in a conversational tone that encourages engagement. Format the response as JSON with "title" and "body" fields. Keep the title under 300 characters and the body between 200-2000 characters. The body should be at least 100 words.`;
+      if (tone === 'custom' && customPrompt) {
+        prompt = `Generate a Reddit post about "${keywords}". ${customPrompt} Format the response as JSON with "title" and "body" fields. Keep the title under 300 characters and the body between 200-2000 characters. The body should be at least 100 words.`;
+      } else {
+        switch (tone) {
+          case 'story':
+            prompt = `Generate a Reddit post about "${keywords}". Write it as a personal story or anecdote. The post should be engaging, relatable, and encourage discussion. Format the response as JSON with "title" and "body" fields. Keep the title under 300 characters and the body between 200-2000 characters. The body should be at least 100 words.`;
+            break;
+          case 'question':
+            prompt = `Generate a Reddit post about "${keywords}". Write it as an engaging question that encourages community discussion. The post should be thought-provoking and invite responses. Format the response as JSON with "title" and "body" fields. Keep the title under 300 characters and the body between 200-2000 characters. The body should be at least 100 words.`;
+            break;
+          case 'experience':
+            prompt = `Generate a Reddit post about "${keywords}". Write it as a personal experience or observation that others can relate to. The post should be authentic and encourage sharing of similar experiences. Format the response as JSON with "title" and "body" fields. Keep the title under 300 characters and the body between 200-2000 characters. The body should be at least 100 words.`;
+            break;
+          default:
+            prompt = `Generate a Reddit post about "${keywords}". Write it in a conversational tone that encourages engagement. Format the response as JSON with "title" and "body" fields. Keep the title under 300 characters and the body between 200-2000 characters. The body should be at least 100 words.`;
+        }
       }
 
       // Use LangChain's prompt template and Gemini LLM
@@ -153,6 +157,11 @@ export class AIController {
           value: 'experience',
           label: 'Experience Share',
           description: 'Share an observation or experience for others to relate to'
+        },
+        {
+          value: 'custom',
+          label: 'Custom (write your own prompt)',
+          description: 'Write your own custom prompt or style for the AI to use'
         }
       ];
 

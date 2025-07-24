@@ -25,6 +25,7 @@ export default function AIPage() {
   );
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [customPrompt, setCustomPrompt] = useState("");
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -52,15 +53,15 @@ export default function AIPage() {
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!keywords || !tone) {
-      setError("Please enter keywords and select a tone.");
+    if (!keywords || !tone || (tone === "custom" && !customPrompt)) {
+      setError("Please enter keywords and select a tone. If using custom, provide a prompt.");
       return;
     }
     setError("");
     setResult(null);
     setGenerating(true);
     try {
-      const res = await api.post<{ title: string; body: string }>("/api/ai/draft", { keywords, tone });
+      const res = await api.post<{ title: string; body: string }>("/api/ai/draft", { keywords, tone, customPrompt: tone === "custom" ? customPrompt : undefined });
       setResult({ title: res.data.title, body: res.data.body });
     } catch (err: unknown) {
       setError(
@@ -166,7 +167,19 @@ export default function AIPage() {
                       {t.label}
                     </option>
                   ))}
+                  <option value="custom">Custom (write your own prompt)</option>
                 </select>
+                {tone === "custom" && (
+                  <input
+                    id="customPrompt"
+                    type="text"
+                    placeholder="Describe your custom tone or prompt (e.g., 'Write as a sarcastic expert')"
+                    className="w-full mt-2 px-4 py-2 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    value={customPrompt}
+                    onChange={(e) => setCustomPrompt(e.target.value)}
+                    required={tone === "custom"}
+                  />
+                )}
               </div>
 
               <button
