@@ -11,9 +11,18 @@ interface RedditAccount {
   reddit_username: string;
 }
 
+// Add User type for the API response
+interface User {
+  id: string;
+  email: string;
+  role: string;
+  clientId: string;
+  clientName: string;
+}
+
 // The main component logic
 function RedditConnectContent() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, login: authLogin } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -68,9 +77,9 @@ function RedditConnectContent() {
       const handleCallback = async () => {
         try {
           // Call the new public callback endpoint
-          const res = await api.get<{ token: string; user: any }>(`/api/auth/reddit/oauth/login/callback?code=${code}&state=${state || ""}`);
+          const res = await api.get<{ token: string; user: User }>(`/api/auth/reddit/oauth/login/callback?code=${code}&state=${state || ""}`);
           // Store JWT and user info
-          await useAuth().login(res.data.token);
+          await authLogin(res.data.token);
           setSuccess("Success! Logged in with Reddit. Redirecting...");
           setTimeout(() => router.push("/dashboard"), 1200);
         } catch (err: unknown) {
@@ -85,7 +94,7 @@ function RedditConnectContent() {
       };
       handleCallback();
     }
-  }, [searchParams, callbackHandled, router]);
+  }, [searchParams, callbackHandled, router, authLogin]);
 
 
   const handleInitiateConnect = async () => {
