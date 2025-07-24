@@ -310,6 +310,125 @@ export class AuthController {
     }
   }
 
+  /**
+   * Get Reddit OAuth URL for login/signup (public, no JWT required)
+   */
+  static async redditLoginOAuthUrl(req: Request, res: Response): Promise<void> {
+    try {
+      const clientId = process.env.REDDIT_CLIENT_ID;
+      const redirectUri = process.env.REDDIT_REDIRECT_URI;
+      if (!clientId || !redirectUri) {
+        res.status(500).json({ error: 'Reddit OAuth not configured' });
+        return;
+      }
+      const scopes = ['identity', 'submit', 'read'];
+      const state = Math.random().toString(36).substring(7);
+      const authUrl = `https://www.reddit.com/api/v1/authorize?client_id=${clientId}&response_type=code&state=${state}&redirect_uri=${encodeURIComponent(redirectUri)}&duration=permanent&scope=${scopes.join(',')}`;
+      res.json({ authUrl });
+    } catch (error) {
+      console.error('Reddit OAuth URL error:', error);
+      res.status(500).json({ error: 'Failed to generate OAuth URL' });
+    }
+  }
 
- 
+  /**
+   * Handle Reddit OAuth callback for login/signup (public, no JWT required)
+   */
+  static async redditLoginOAuthCallback(req: Request, res: Response): Promise<void> {
+    try {
+      const { code, state } = req.query;
+      if (!code || typeof code !== 'string') {
+        res.status(400).json({ error: 'Authorization code is required' });
+        return;
+      }
+      const clientId = process.env.REDDIT_CLIENT_ID;
+      const clientSecret = process.env.REDDIT_CLIENT_SECRET;
+      const redirectUri = process.env.REDDIT_REDIRECT_URI;
+      const jwtSecret = process.env.JWT_SECRET;
+      if (!clientId || !clientSecret || !redirectUri || !jwtSecret) {
+        res.status(500).json({ error: 'Reddit OAuth or JWT not configured' });
+        return;
+      }
+      // Exchange code for tokens
+      const tokenResponse = await axios.post('https://www.reddit.com/api/v1/access_token',
+        `grant_type=authorization_code&code=${code}&redirect_uri=${encodeURIComponent(redirectUri)}`,
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`
+          }
+        }
+      );
+      const { access_token, refresh_token, expires_in } = tokenResponse.data;
+      // Get Reddit user info
+      const userResponse = await axios.get('https://oauth.reddit.com/api/v1/me', {
+        headers: {
+          'Authorization': `Bearer ${access_token}`,
+          'User-Agent': 'RedditPostManager/1.0'
+        }
+      });
+      const redditUsername = userResponse.data.name;
+      // Use Reddit username as email (or create a pseudo-email)
+      const email = userResponse.data.email || `${redditUsername}@reddit.com`;
+      // Find or create user
+      let user = await prisma.user.findUnique({ where: { email } });
+      let clientRecord;
+      if (!user) {
+        clientRecord = await prisma.client.create({ data: { name: redditUsername } });
+        user = await prisma.user.create({
+          data: {
+            email,
+            password: '', // No password for Reddit users
+            clientId: clientRecord.id,
+            role: 'CLIENT_USER',
+          },
+        });
+      } else {
+        clientRecord = await prisma.client.findUnique({ where: { id: user.clientId } });
+      }
+      // Save Reddit account (if not already saved)
+      const existingAccount = await prisma.redditAccount.findFirst({
+        where: { clientId: user.clientId, reddit_username: redditUsername }
+      });
+      const tokenExpiresAt = new Date(Date.now() + expires_in * 1000);
+      const encryptedAccessToken = encryptionService.encrypt(access_token);
+      const encryptedRefreshToken = encryptionService.encrypt(refresh_token);
+      if (!existingAccount) {
+        await prisma.redditAccount.create({
+          data: {
+            reddit_username: redditUsername,
+            access_token: encryptedAccessToken,
+            refresh_token: encryptedRefreshToken,
+            token_expires_at: tokenExpiresAt,
+            clientId: user.clientId
+          }
+        });
+      }
+      // Generate JWT token
+      const token = jwt.sign(
+        {
+          userId: user.id,
+          clientId: user.clientId,
+          role: user.role,
+        },
+        jwtSecret,
+        { expiresIn: '24h' }
+      );
+      res.json({
+        token,
+        user: {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          clientId: user.clientId,
+          clientName: clientRecord?.name || '',
+        },
+      });
+    } catch (error) {
+      console.error('Reddit login OAuth callback error:', error);
+      res.status(500).json({ error: 'Failed to login with Reddit' });
+    }
+  }
+
+
 } 

@@ -133,7 +133,7 @@ function LoginContent() {
                 setError("");
                 setIsSubmitting(true);
                 try {
-                  const { data } = await api.post<{ authUrl: string }>("/api/auth/reddit/oauth/connect");
+                  const { data } = await api.post<{ authUrl: string }>("/api/auth/reddit/oauth/login");
                   window.location.href = data.authUrl;
                 } catch (err) {
                   setError("Failed to initiate Reddit login. Please try again.");

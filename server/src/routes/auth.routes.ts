@@ -48,4 +48,18 @@ router.get('/reddit/oauth/callback', authenticateToken, AuthController.handleRed
  */
 router.get('/reddit/accounts', authenticateToken, AuthController.getRedditAccounts);
 
+/**
+ * @route POST /api/auth/reddit/oauth/login
+ * @desc Get Reddit OAuth URL for login/signup (no JWT required)
+ * @access Public
+ */
+router.post('/reddit/oauth/login', AuthController.redditLoginOAuthUrl);
+
+/**
+ * @route GET /api/auth/reddit/oauth/login/callback
+ * @desc Handle Reddit OAuth callback for login/signup (no JWT required)
+ * @access Public
+ */
+router.get('/reddit/oauth/login/callback', AuthController.redditLoginOAuthCallback);
+
 export default router; 

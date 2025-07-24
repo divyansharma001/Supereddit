@@ -54,7 +54,8 @@ function RedditConnectContent() {
 
   // --- Effect 3: Handle the OAuth callback from Reddit ---
   useEffect(() => {
-    if (!user || callbackHandled) return;
+    // Remove user check: this is for login/signup, so user may not exist yet
+    if (callbackHandled) return;
     const code = searchParams.get("code");
     const state = searchParams.get("state");
 
@@ -66,15 +67,17 @@ function RedditConnectContent() {
 
       const handleCallback = async () => {
         try {
-          const res = await api.get<{ redditUsername: string }>(`/api/auth/reddit/oauth/callback?code=${code}&state=${state || ""}`);
-          setSuccess(`Success! Connected as ${res.data.redditUsername}. Redirecting...`);
-          // --- Improvement: Redirect to dashboard after success ---
-          setTimeout(() => router.push("/dashboard"), 2000);
+          // Call the new public callback endpoint
+          const res = await api.get<{ token: string; user: any }>(`/api/auth/reddit/oauth/login/callback?code=${code}&state=${state || ""}`);
+          // Store JWT and user info
+          await useAuth().login(res.data.token);
+          setSuccess("Success! Logged in with Reddit. Redirecting...");
+          setTimeout(() => router.push("/dashboard"), 1200);
         } catch (err: unknown) {
           setError(
             (err && typeof err === "object" && "response" in err && err.response && typeof err.response === "object" && "data" in err.response && err.response.data && typeof err.response.data === "object" && "error" in err.response.data)
               ? (err.response.data.error as string)
-              : (err instanceof Error ? err.message : "Failed to connect Reddit account.")
+              : (err instanceof Error ? err.message : "Failed to login with Reddit.")
           );
         } finally {
           setIsConnecting(false);
@@ -82,7 +85,7 @@ function RedditConnectContent() {
       };
       handleCallback();
     }
-  }, [user, searchParams, callbackHandled, router]);
+  }, [searchParams, callbackHandled, router]);
 
 
   const handleInitiateConnect = async () => {
