@@ -126,6 +126,31 @@ function LoginContent() {
               {isSubmitting ? "Signing In..." : "Sign In"}
             </button>
           </form>
+          <div className="mt-6">
+            <button
+              type="button"
+              onClick={async () => {
+                setError("");
+                setIsSubmitting(true);
+                try {
+                  const { data } = await api.post<{ authUrl: string }>("/api/auth/reddit/oauth/connect");
+                  window.location.href = data.authUrl;
+                } catch (err) {
+                  setError("Failed to initiate Reddit login. Please try again.");
+                  setIsSubmitting(false);
+                }
+              }}
+              disabled={isSubmitting}
+              className="w-full flex justify-center items-center px-4 py-2.5 font-semibold text-white bg-[#FF4500] rounded-lg hover:bg-[#FF6B35] disabled:bg-slate-400 transition-colors mt-2"
+            >
+              {isSubmitting ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+              ) : (
+                <img src="/reddit-logo.png" alt="Reddit logo" className="w-5 h-5 mr-2" width={20} height={20} />
+              )}
+              {isSubmitting ? "Redirecting..." : "Sign in with Reddit"}
+            </button>
+          </div>
         </div>
         
         <div className="text-center text-sm text-slate-600 mt-6">
