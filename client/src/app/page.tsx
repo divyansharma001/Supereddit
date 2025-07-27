@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import WaitlistHero from '../components/WaitlistHero'; // Correctly imported from its new file
 import { DAUMAUChart, EarningsPotentialChart, RedditDAUChart, EngagementChart } from '../components/PostAnalyticsChart';
+import { PricingPlans } from '../components/PricingPlans';
 import { useState } from 'react';
 import Script from 'next/script';
 
@@ -220,6 +221,10 @@ export default function Home() {
           </Link>
         </div>
       </section>
+      
+      {/* Pricing Plans Section */}
+      <PricingPlans />
+      
       {/* FAQ Section */}
       <section id="faq" className="relative w-full flex flex-col items-center px-4 sm:px-6 md:px-8 py-20 bg-gradient-to-b from-white via-[#FFF7F0] to-white border-t border-slate-100 overflow-hidden">
         {/* Decorative background shapes */}

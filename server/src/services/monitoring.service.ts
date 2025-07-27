@@ -136,6 +136,6 @@ const runMonitoringJob = async () => {
   }
 };
 
-cron.schedule('*/1 * * * *', runMonitoringJob);
+cron.schedule('*/5 * * * *', runMonitoringJob);
 
 export const triggerMonitoringJob = runMonitoringJob;

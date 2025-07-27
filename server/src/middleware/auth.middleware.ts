@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../utils/prisma';
+import { Plan } from '@prisma/client';
 
 // Extend Express Request interface to include user data
 declare global {
@@ -96,5 +97,22 @@ export const requireAdmin = (
     return;
   }
 
+  next();
+};
+
+export const requireProPlan = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  if (!req.user) {
+    res.status(401).json({ error: 'Authentication required' });
+    return;
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
+
+  // Allow access if the user has a PRO or LIFETIME plan
+  if (!user || (user.plan !== Plan.PRO && user.plan !== Plan.LIFETIME)) {
+    res.status(403).json({ error: 'This feature requires a PRO or LIFETIME plan. Please upgrade.' });
+    return;
+  }
+  
   next();
 }; 

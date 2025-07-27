@@ -28,6 +28,7 @@
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "date-fns": "^4.1.0",
+    "dodopayments": "^1.43.1",
     "dotenv": "^17.2.0",
     "express": "^5.1.0",
     "google-auth-library": "^10.1.0",
@@ -38,6 +39,7 @@
     "openai": "^5.9.0",
     "prisma": "^6.11.1",
     "socket.io": "^4.8.1",
+    "standardwebhooks": "^1.0.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   },

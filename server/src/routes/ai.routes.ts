@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { AIController } from '../controllers/ai.controller';
-import { authenticateToken } from '../middleware/auth.middleware';
+import { authenticateToken, requireProPlan } from '../middleware/auth.middleware';
 
 const router = Router();
 
@@ -12,7 +12,7 @@ router.use(authenticateToken);
  * @desc Generate a Reddit post draft using AI
  * @access Private
  */
-router.post('/draft', AIController.generateDraft);
+router.post('/draft', requireProPlan, AIController.generateDraft);
 
 /**
  * @route GET /api/ai/tones
