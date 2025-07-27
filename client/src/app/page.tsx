@@ -522,6 +522,15 @@ function BentoGrid() {
       </div>
     </div>
   );
+  const comingSoonVideo = (
+    <div className="w-full max-w-3xl aspect-video bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200 overflow-hidden mx-auto">
+      <div style={{padding:'56.25% 0 0 0',position:'relative',width:'100%'}}>
+        <div style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',background:'linear-gradient(135deg, #f97316 0%, #ea580c 100%)'}}>
+          <span className="text-white text-2xl font-bold">Coming Soon</span>
+        </div>
+      </div>
+    </div>
+  );
 
   const cards: Card[] = [
     {
@@ -580,6 +589,17 @@ function BentoGrid() {
       modal: 'Get insights into your posts, engagement, and growth. Export PDF reports for clients or your own review.',
       video: analyticsVideo,
     },
+    {
+      key: 'coming-soon',
+      title: 'More Features',
+      icon: '🚀',
+      badge: 'SOON',
+      color: 'from-orange-50 to-orange-100 border-orange-200',
+      content: null,
+      desc: 'Exciting new features are in development.',
+      modal: 'We\'re constantly working on new features to enhance your Reddit marketing experience.',
+      video: comingSoonVideo,
+    },
   ];
   return (
     <>
@@ -623,9 +643,6 @@ function BentoGrid() {
             </div>
           </div>
         )}
-      </div>
-      <div className="w-full flex justify-center mt-12">
-        <span className="text-base sm:text-lg font-semibold text-[#FF4500] bg-[#FF4500]/10 rounded-full px-6 py-3 shadow border border-[#FF4500]/20 animate-fade-slide">More coming soon...</span>
       </div>
     </>
   );
