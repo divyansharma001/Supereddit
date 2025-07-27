@@ -33,7 +33,6 @@ model Client {
   posts           Post[]
   keywords        Keyword[]
   mentions        Mention[]
-  voteOrderLogs   VoteOrderLog[] // Add this relation
 
   @@map("clients")
 }
@@ -50,7 +49,6 @@ model User {
   clientId String
 
   posts         Post[]
-  voteOrderLogs VoteOrderLog[] // Add this relation
 
   @@map("users")
 }
@@ -101,7 +99,6 @@ model Post {
   redditAccount   RedditAccount? @relation(fields: [redditAccountId], references: [id])
   redditAccountId String?
 
-  voteOrderLogs   VoteOrderLog[] // Add this relation
   postAnalytics   PostAnalytics[]
 
   @@map("posts")
@@ -145,25 +142,7 @@ model Mention {
   @@map("mentions")
 }
 
-// --- PHASE 3: NEW MODEL ---
-model VoteOrderLog {
-  id           String   @id @default(cuid())
-  service      String   // e.g., "upvote.shop"
-  amount       Int      // Number of upvotes ordered
-  external_ref String?  // Optional: Order ID from the external service
-  created_at   DateTime @default(now())
 
-  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
-  postId String
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String
-
-  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  clientId String
-
-  @@map("vote_order_logs")
-}
 
 model PostAnalytics {
   id        String   @id @default(cuid())

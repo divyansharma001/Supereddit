@@ -60,24 +60,19 @@
   - Alert history log
   - Mute/unmute functionality
 
-### D. Upvote & Comment Coordination
-**Purpose**: Coordinate engagement activities
+### D. Engagement Coordination
+**Purpose**: Track and manage post engagement activities
 **Frontend Requirements**:
-- **Command Interface**:
-  - Trigger buttons for upvote/comment actions
-  - Target post selection
-  - Action confirmation dialogs
-  - Real-time status updates
-- **Activity Tracking**:
-  - Command execution logs
-  - Success/failure indicators
-  - Performance metrics
+- **Engagement Dashboard**:
+  - Post performance tracking
+  - Engagement metrics visualization
   - Activity timeline
-- **Dashboard Features**:
-  - Action summary statistics
+  - Performance analytics
+- **Analytics Features**:
   - Engagement rate tracking
   - Historical activity graphs
   - Export functionality
+  - Real-time updates
 
 ### E. Client Dashboard
 **Purpose**: Secure client access with analytics
@@ -179,7 +174,7 @@
 4. **Dashboard**: Main client interface
 5. **Analytics**: Performance tracking and reporting
 6. **Keyword Monitoring**: Real-time mention tracking
-7. **Engagement Tools**: Upvote/comment coordination
+7. **Engagement Tools**: Engagement coordination and analytics
 8. **Reporting**: PDF export and analytics
 
 ## Environment Configuration

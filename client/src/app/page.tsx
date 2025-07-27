@@ -28,7 +28,7 @@ export default function Home() {
     },
     {
       q: "How does the coordination feature work?",
-      a: "Trigger comment or upvote boosts via our platform. We track all activity and provide analytics on engagement performance."
+      a: "Track and manage post engagement activities with built-in analytics dashboard for performance insights."
     }
   ];
   return (
@@ -522,13 +522,7 @@ function BentoGrid() {
       </div>
     </div>
   );
-  const upvotesComingSoon = (
-    <div className="w-full h-56 bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200 relative overflow-hidden">
-      <div className="absolute inset-0 bg-white/80 backdrop-blur-md flex items-center justify-center z-10">
-        <span className="text-xl font-bold text-slate-400">Coming Soon</span>
-      </div>
-    </div>
-  );
+
   const cards: Card[] = [
     {
       key: 'ai',
@@ -574,17 +568,7 @@ function BentoGrid() {
       modal: 'Use the Subreddit Finder to identify the most relevant and high-potential communities for your posts.',
       video: finderVideo,
     },
-    {
-      key: 'upvotes',
-      title: 'Upvotes Buying',
-      icon: '⬆️',
-      badge: 'UPVOTES',
-      color: 'from-orange-50 to-white border-orange-200',
-      content: null,
-      desc: 'Boost your posts with coordinated upvotes for maximum reach.',
-      modal: 'Purchase upvotes to give your posts an initial boost and increase visibility on Reddit.',
-      video: upvotesComingSoon,
-    },
+
     {
       key: 'analytics',
       title: 'Analytics & Reporting',

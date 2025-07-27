@@ -24,7 +24,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Supereddit",
-  description: "Supereddit: AI Reddit Post Writing, Smart Scheduler, Keyword Tracking, Upvote Coordination, Analytics, and more for agencies & brands.",
+  description: "Supereddit: AI Reddit Post Writing, Smart Scheduler, Keyword Tracking, Engagement Coordination, Analytics, and more for agencies & brands.",
 };
 
 export default function RootLayout({

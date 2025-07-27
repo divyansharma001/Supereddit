@@ -1,16 +1,16 @@
 # Supereddit - Backend
 
-A robust, scalable backend for Supereddit: AI Reddit Post Writing, Smart Scheduler, Keyword Tracking, Upvote Coordination, Analytics, and more for agencies & brands.
+A robust, scalable backend for Supereddit: AI Reddit Post Writing, Smart Scheduler, Keyword Tracking, Engagement Coordination, Analytics, and more for agencies & brands.
 
 ## 🚀 Features
 
 - **AI Reddit Post Writing**: AI-generated post drafts based on user prompt or keywords; customize tone (story, question, experience); pre-fill titles and body for approval/edit
 - **Smart Post Scheduler**: Schedule posts to specific subreddits; calendar interface; label posts by status: Draft, Scheduled, Posted
 - **Keyword Tracking**: Monitor Reddit for keyword mentions (brand, competitors, trends); push real-time alerts to user dashboard; tag mentions by sentiment (positive/neutral/negative)
-- **Upvote & Comment Coordination**: Let users trigger comment or upvote boosts; server tracks all command activity; built-in tracking dashboard for action logs
+- **Engagement Coordination**: Track and manage post engagement activities with built-in analytics dashboard
 - **Client Dashboard**: Each client gets secure access; visual calendar to see upcoming/past posts; read-only analytics (views, engagement, keyword mentions); optional comment visibility
 - **Reporting & Analytics**: Post performance (views, upvotes, CTR); comments per post + engagement graph; keyword trigger logs; exportable PDF reports for client review
-- **Reddit API Integration**: OAuth-based access for scheduling & post tracking; API for upvotes automation
+- **Reddit API Integration**: OAuth-based access for scheduling & post tracking
 
 ## 🛠 Tech Stack
 

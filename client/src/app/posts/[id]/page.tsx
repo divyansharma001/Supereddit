@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth";
 import api from "@/lib/axios";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
-import { CoordinationPanel } from "@/components/CoordinationPanel";
+
 import { generatePostReport } from "@/lib/reporting";
 import { PostAnalyticsChart } from "@/components/PostAnalyticsChart";
 
@@ -336,9 +336,6 @@ export default function PostDetailPage() {
                 <PostAnalyticsChart postId={post.id} />
               </div>
             )}
-
-            {/* Coordination Panel */}
-            {isPosted && <CoordinationPanel />}
 
             {/* Schedule Form (only for Draft, not editing) */}
             {post.status === "Draft" && !isEditing && (
