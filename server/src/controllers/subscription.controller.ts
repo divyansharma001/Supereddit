@@ -156,10 +156,8 @@ export class SubscriptionController {
             bodyLength: req.body ? (typeof req.body === 'string' ? req.body.length : JSON.stringify(req.body).length) : 0
           });
           
-          // In development, allow the webhook to proceed even if signature verification fails
           if (process.env.NODE_ENV === 'development') {
-            console.log('Development mode: Proceeding with webhook despite signature verification failure');
-            // Parse the Buffer to JSON if needed
+            console.log('Development mode: Proceeding with webhook despite signature verification failure');          
             if (Buffer.isBuffer(req.body)) {
               console.log('🔧 Converting Buffer to JSON in error fallback...');
               payload = JSON.parse(req.body.toString());
@@ -178,16 +176,31 @@ export class SubscriptionController {
 
       const successfulPaymentEvents = [
         "subscription.payment_succeeded",
-        "subscription.renewed",           
-        "payment.succeeded"               
+        "subscription.renewed",
+        "payment.succeeded"
       ];
 
       if (successfulPaymentEvents.includes(payload.type)) {
         
         const eventData = payload.data; 
-
         const customerId = eventData.customer.customer_id;
-        const productId = eventData.product_id;
+
+
+        let productId: string | undefined;
+
+        if (payload.type === 'payment.succeeded') {
+          if (eventData.product_cart && eventData.product_cart.length > 0) {
+            productId = eventData.product_cart[0].product_id;
+          }
+        } else {
+          productId = eventData.product_id;
+        }
+        
+        if (!productId) {
+          console.log(`❌ Could not determine product ID from webhook type: ${payload.type}`);
+          return res.status(200).json({ received: true, message: 'Webhook processed, but no product ID found.' });
+        }
+
 
         console.log(`💰 Processing payment success for customer: ${customerId}, product: ${productId}`);
 
