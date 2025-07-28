@@ -176,52 +176,51 @@ export class SubscriptionController {
 
       console.log('🔍 Processing webhook payload:', JSON.stringify(payload, null, 2));
 
-      if (payload.event_type === "subscription.payment_succeeded") {
-        const customerId = payload.customer_id;
-        const productId = payload.product_id;
+      const successfulPaymentEvents = [
+        "subscription.payment_succeeded",
+        "subscription.renewed",           
+        "payment.succeeded"               
+      ];
+
+      if (successfulPaymentEvents.includes(payload.type)) {
+        
+        const eventData = payload.data; 
+
+        const customerId = eventData.customer.customer_id;
+        const productId = eventData.product_id;
 
         console.log(`💰 Processing payment success for customer: ${customerId}, product: ${productId}`);
 
         const user = await prisma.user.findFirst({ where: { dodoCustomerId: customerId } });
-        console.log('👤 Found user:', user ? `${user.email} (ID: ${user.id})` : 'No user found');
         
         if (user) {
           let newPlan: Plan = Plan.FREE;
-          console.log('🔧 Checking product ID against environment variables:');
-          console.log('   Product ID from webhook:', productId);
-          console.log('   DODO_PRO_PLAN_ID:', process.env.DODO_PRO_PLAN_ID);
-          console.log('   DODO_LIFETIME_PLAN_ID:', process.env.DODO_LIFETIME_PLAN_ID);
           
           if (productId === process.env.DODO_PRO_PLAN_ID) {
             newPlan = Plan.PRO;
-            console.log('✅ Matched PRO plan');
           } else if (productId === process.env.DODO_LIFETIME_PLAN_ID) {
             newPlan = Plan.LIFETIME;
-            console.log('✅ Matched LIFETIME plan');
-          } else {
-            console.log('❌ No plan match found');
           }
 
           if (newPlan !== Plan.FREE) {
-            const updatedUser = await prisma.user.update({
+            await prisma.user.update({
               where: { id: user.id },
               data: { plan: newPlan },
             });
-            console.log(`🎉 User ${user.email} successfully upgraded from ${user.plan} to ${newPlan}`);
-            console.log('📝 Updated user:', JSON.stringify(updatedUser, null, 2));
+            console.log(`🎉 User ${user.email} successfully upgraded/renewed to ${newPlan}`);
           } else {
-            console.log(`⚠️ Unknown product ID: ${productId}, keeping user on current plan: ${user.plan}`);
+            console.log(`⚠️ Unknown product ID in webhook: ${productId}`);
           }
         } else {
           console.log(`❌ No user found for customer ID: ${customerId}`);
         }
       } else {
-        console.log(`🤷 Unhandled webhook event type: ${payload.event_type}`);
-        console.log('Available event types we handle: subscription.payment_succeeded');
+        console.log(`🤷 Unhandled webhook event type: ${payload.type}`);
       }
 
       console.log('✅ Webhook processing completed successfully');
       return res.status(200).json({ received: true, message: 'Webhook processed successfully' });
+
     } catch (err: any) {
       console.error(`❌ Webhook processing failed:`, {
         error: err.message,
