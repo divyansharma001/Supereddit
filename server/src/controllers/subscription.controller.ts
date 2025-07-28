@@ -4,16 +4,16 @@ import { prisma } from '../utils/prisma';
 import DodoPayments from 'dodopayments';
 import { Webhook } from "standardwebhooks";
 import { Plan } from '@prisma/client';
+import { CountryCode } from 'dodopayments/resources/misc';
 
 export class SubscriptionController {
   
-  // Method to create the checkout session (payment link)
   static async createCheckoutSession(req: Request, res: Response) {
     try {
       const { productId } = req.body;
       const user = req.user!;
 
-      if (!process.env.DODO_PAYMENT_API_KEY || !process.env.FRONTEND_URL) {
+      if (!process.env.DODO_PAYMENT_API_KEY || !process.env.FRONTEND_URL || !process.env.DODO_PRO_PLAN_ID || !process.env.DODO_LIFETIME_PLAN_ID) {
         return res.status(500).json({ error: 'Server configuration missing.' });
       }
 
@@ -25,7 +25,7 @@ export class SubscriptionController {
 
       const dodo = new DodoPayments({
         bearerToken: process.env.DODO_PAYMENT_API_KEY,
-        environment: 'test_mode', // Use 'test_mode' for development
+        environment: 'test_mode',
       });
 
       let dodoCustomerId = dbUser.dodoCustomerId;
@@ -35,22 +35,60 @@ export class SubscriptionController {
         await prisma.user.update({ where: { id: dbUser.id }, data: { dodoCustomerId } });
       }
 
-      const payment = await dodo.payments.create({
-        customer: { customer_id: dodoCustomerId },
-        product_cart: [{ product_id: productId, quantity: 1 }],
-        payment_link: true,
-        return_url: `${process.env.FRONTEND_URL}/dashboard?payment=success`,
-        billing: {
-            street: "123 App Street", city: "SaaSville", state: "CA",
-            zipcode: "90210", country: "US"
-        },
-      });
+      let checkoutUrl: string | undefined;
+
+     
+      if (productId === process.env.DODO_PRO_PLAN_ID) {
+        console.log("Creating a SUBSCRIPTION checkout for the PRO plan...");
+
+        const subscription = await dodo.subscriptions.create({
+          product_id: productId,
+          quantity: 1,
+          customer: { customer_id: dodoCustomerId },
+          billing: {
+              street: "123 App Street", city: "SaaSville", state: "CA",
+              zipcode: "90210", country: "US" as any
+          },
+          payment_link: true,          
+          return_url: `${process.env.FRONTEND_URL}/dashboard?payment=success`,
+        });
+        
+        console.log("Dodo Payments SUBSCRIPTION response:", JSON.stringify(subscription, null, 2));
+        
+        checkoutUrl = subscription.payment_link ?? undefined;
+        
+      } else if (productId === process.env.DODO_LIFETIME_PLAN_ID) {
+        console.log("Creating a one-time PAYMENT checkout for the LIFETIME plan...");
+        
+        const payment = await dodo.payments.create({
+          customer: { customer_id: dodoCustomerId },
+          product_cart: [{ product_id: productId, quantity: 1 }],
+          payment_link: true,
+          return_url: `${process.env.FRONTEND_URL}/dashboard?payment=success`,
+          billing: {
+              street: "123 App Street", city: "SaaSville", state: "CA",
+              zipcode: "90210", country: "US" as any
+          },
+        });        
+        console.log("Dodo Payments PAYMENT response:", JSON.stringify(payment, null, 2))                
+        checkoutUrl = payment.payment_link ?? undefined;      
+      } 
+        
+        
+      else {
+        return res.status(400).json({ error: 'Invalid product ID provided.' });
+      }
       
-      return res.json({ url: payment.payment_link });
+      if (!checkoutUrl) {
+        console.error('Failed to get a checkout URL from Dodo Payments.');
+        return res.status(500).json({ error: 'Could not generate payment link.' });
+      }
+
+      return res.json({ url: checkoutUrl });
 
     } catch (error) {
       if (error instanceof DodoPayments.APIError) {
-        console.error(`Dodo Payments API Error: ${error.status} ${error.name}`, error);
+        console.error(`Dodo Payments API Error: ${error.status} ${error.name}`, error.error); 
         return res.status(error.status || 500).json({ error: 'Payment provider error.' });
       }
       console.error('Checkout error:', error);
@@ -58,7 +96,6 @@ export class SubscriptionController {
     }
   }
 
-  // Method to handle incoming webhooks from Dodo Payments
   static async handleWebhook(req: Request, res: Response) {
     try {
       console.log('🎯 === WEBHOOK RECEIVED ===');
