@@ -92,7 +92,6 @@ export default function AIPage() {
     );
   };
 
-  // --- Improvement: Consistent loading state with the dashboard ---
   if (authLoading || !user) {
     return (
       <main className="flex items-center justify-center min-h-screen bg-slate-50">
