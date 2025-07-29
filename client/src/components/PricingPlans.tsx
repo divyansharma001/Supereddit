@@ -52,7 +52,11 @@ export function PricingPlans() {
 
   const handleCheckout = async (productId: string | undefined) => {
     if (!productId) {
-      alert("This plan is not available for purchase at the moment.");
+      console.error("Product ID is undefined. Check environment variables:", {
+        NEXT_PUBLIC_DODO_PRO_PLAN_ID: process.env.NEXT_PUBLIC_DODO_PRO_PLAN_ID,
+        NEXT_PUBLIC_DODO_LIFETIME_PLAN_ID: process.env.NEXT_PUBLIC_DODO_LIFETIME_PLAN_ID
+      });
+      alert("This plan is not available for purchase at the moment. Please check configuration.");
       return;
     }
 

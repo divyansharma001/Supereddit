@@ -7,6 +7,8 @@
 
 [build.environment]
   NETLIFY_NEXT_PLUGIN_SKIP = "true"
+  NEXT_PUBLIC_DODO_PRO_PLAN_ID = "pdt_pNqmwOEqcLe231IGqYids"
+  NEXT_PUBLIC_DODO_LIFETIME_PLAN_ID = "pdt_AeRlEu7RWxEiWHEJzZHjH"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
