@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import api from '@/lib/axios'; // Ensure this is your configured axios instance
 import { useAuth } from '@/lib/auth';
+import { logger } from '@/lib/logger';
 
 export function PricingPlans() {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
@@ -52,7 +53,7 @@ export function PricingPlans() {
 
   const handleCheckout = async (productId: string | undefined) => {
     if (!productId) {
-      console.error("Product ID is undefined. Check environment variables:", {
+      logger.error("Product ID is undefined. Check environment variables:", {
         NEXT_PUBLIC_DODO_PRO_PLAN_ID: process.env.NEXT_PUBLIC_DODO_PRO_PLAN_ID,
         NEXT_PUBLIC_DODO_LIFETIME_PLAN_ID: process.env.NEXT_PUBLIC_DODO_LIFETIME_PLAN_ID
       });
@@ -72,7 +73,7 @@ export function PricingPlans() {
       const { data } = await api.post<{ url: string }>('/api/subscriptions/checkout', { productId });
       window.location.href = data.url; // Redirect user to Dodo Payments checkout page
     } catch (error) {
-      console.error("Checkout failed", error);
+      logger.error("Checkout failed", { error, productId });
       alert("Could not initiate checkout. Please try again or contact support.");
       setLoadingPlan(null);
     }
