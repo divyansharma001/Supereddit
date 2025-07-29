@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth";
 import api from "@/lib/axios";
 import ReactMarkdown from "react-markdown";
 
-// --- Improvement: Type-safe data model based on your API docs ---
+
 interface AITone {
   value: string;
   label: string;
