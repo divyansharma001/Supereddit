@@ -2,12 +2,13 @@
 
 import { Router } from 'express';
 import { getMentions } from '../controllers/mention.controller';
-import { authenticateToken } from '../middleware/auth.middleware';
+import { authenticateToken, requireProPlan } from '../middleware/auth.middleware';
 
 const router = Router();
 
 router.use(authenticateToken);
 
-router.get('/', getMentions);
+// Mentions could be a PRO feature for advanced monitoring
+router.get('/', requireProPlan, getMentions);
 
 export default router;

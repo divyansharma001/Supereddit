@@ -3,6 +3,8 @@ import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import api from "@/lib/axios";
 import { useAuth } from "@/lib/auth";
+import { handleAPIError } from "@/lib/error-handling";
+import { UpgradePrompt } from "@/components/UpgradePrompt";
 
 interface SubredditDetails {
   name: string;
@@ -44,6 +46,7 @@ export default function SubredditDetailPage() {
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [analyticsRequiresUpgrade, setAnalyticsRequiresUpgrade] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -70,9 +73,16 @@ export default function SubredditDetailPage() {
         try {
           const analyticsRes = await api.get<{ analytics: Analytics }>(`/api/subreddits/${name}/analytics`);
           setAnalytics(analyticsRes.data.analytics);
+          setAnalyticsRequiresUpgrade(false);
         } catch (analyticsError) {
-          setError('Failed to load subreddit analytics.');
-          setAnalytics(null);
+          const apiError = handleAPIError(analyticsError);
+          if (apiError.isUpgradeRequired) {
+            setAnalyticsRequiresUpgrade(true);
+            setAnalytics(null);
+          } else {
+            setError('Failed to load subreddit analytics.');
+            setAnalytics(null);
+          }
         }
         
       } catch (err: unknown) {
@@ -229,7 +239,14 @@ export default function SubredditDetailPage() {
         </div>
 
         {/* Analytics Overview */}
-        {analytics && (
+        {analyticsRequiresUpgrade ? (
+          <div className="max-w-4xl mx-auto">
+            <UpgradePrompt 
+              featureName="Subreddit Analytics" 
+              description="Get detailed insights into subreddit engagement patterns, peak hours, trending keywords, and growth metrics."
+            />
+          </div>
+        ) : analytics ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-white rounded-xl p-6 shadow-sm h-full flex flex-col justify-center">
               <div className="flex items-center gap-3 mb-2">
@@ -270,10 +287,10 @@ export default function SubredditDetailPage() {
               <p className="text-sm text-slate-500">optimal posting</p>
             </div>
           </div>
-        )}
+        ) : null}
 
         {/* Charts Section */}
-        {analytics && (
+        {analyticsRequiresUpgrade ? null : analytics && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Activity Chart */}
             <div className="bg-white rounded-2xl p-6 shadow-sm h-full">

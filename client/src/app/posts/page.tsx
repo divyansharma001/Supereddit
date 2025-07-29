@@ -2,6 +2,7 @@
 import React, { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth";
+import { PlanBadge } from "@/components/PlanBadge";
 import api from "@/lib/axios";
 import Link from "next/link";
 
@@ -131,12 +132,28 @@ function PostsPageContent() {
             <span className="w-2 h-2 bg-blue-500 rounded-full mr-2 animate-pulse"></span>
             <span className="text-sm font-medium text-slate-700">Reddit Post Management</span>
           </div>
+          
+          {/* Plan Badge */}
+          {user && (
+            <div className="mb-4">
+              <PlanBadge plan={user.plan} showUpgradeLink={user.plan === 'FREE'} />
+            </div>
+          )}
+          
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight text-slate-900 mb-3 tracking-tight" style={{fontFamily: 'Plus Jakarta Sans'}}>
             Your Reddit Content Hub
           </h1>
           <p className="text-slate-700 text-lg sm:text-xl font-medium mb-2" style={{fontFamily: 'Plus Jakarta Sans'}}>
             Create, schedule, and manage all your Reddit posts in one place
           </p>
+          
+          {/* Show post limits for FREE users */}
+          {user && user.plan === 'FREE' && (
+            <div className="mb-4 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm max-w-lg">
+              <strong>FREE Plan:</strong> Limited to 10 scheduled posts. Upgrade to PRO for unlimited post scheduling.
+            </div>
+          )}
+          
           <Link href="/posts/new" className="mt-4 px-6 py-3 text-base font-semibold text-white bg-blue-600 rounded-xl shadow-lg hover:bg-blue-700 transition-all">
             + Create New Post
           </Link>

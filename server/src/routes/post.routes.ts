@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { PostController } from '../controllers/post.controller';
-import { authenticateToken } from '../middleware/auth.middleware';
+import { authenticateToken, requireProPlan } from '../middleware/auth.middleware';
 
 const router = Router();
 
@@ -29,7 +29,9 @@ router.get('/', PostController.getPosts);
  * @access Private
  */
 router.get('/:id', PostController.getPost);
-router.get('/:id/analytics', PostController.getPostAnalytics);
+
+// Post analytics could be a PRO feature
+router.get('/:id/analytics', requireProPlan, PostController.getPostAnalytics);
 
 /**
  * @route PUT /api/posts/:id

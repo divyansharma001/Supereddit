@@ -7,6 +7,9 @@ import { useAuth } from '@/lib/auth';
 import api from '@/lib/axios';
 import { useRouter } from 'next/navigation';
 import { useSocketContext } from '@/contexts/SocketContext';
+import { handleAPIError } from '@/lib/error-handling';
+import { UpgradePrompt } from '@/components/UpgradePrompt';
+import { PlanBadge } from '@/components/PlanBadge';
 import Link from 'next/link';
 import ReactMarkdown from "react-markdown";
 
@@ -62,11 +65,13 @@ export default function KeywordsPage() {
     const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
+    const [requiresUpgrade, setRequiresUpgrade] = useState(false);
 
     const fetchInitialData = useCallback(async () => {
         if (!user) return;
         setLoading(true);
         setError('');
+        setRequiresUpgrade(false);
         try {
             const [keywordsRes, mentionsRes]: [
                 { data: Keyword[] },
@@ -77,8 +82,13 @@ export default function KeywordsPage() {
             ]);
             setKeywords(keywordsRes.data);
             setMentions(mentionsRes.data.mentions);
-        } catch {
-            setError('Failed to load initial data. Please refresh the page.');
+        } catch (err) {
+            const apiError = handleAPIError(err);
+            if (apiError.isUpgradeRequired) {
+                setRequiresUpgrade(true);
+            } else {
+                setError(apiError.message || 'Failed to load initial data. Please refresh the page.');
+            }
         } finally {
             setLoading(false);
         }
@@ -111,10 +121,11 @@ export default function KeywordsPage() {
             setKeywords(prev => [newKw, ...prev].sort((a, b) => a.term.localeCompare(b.term)));
             setNewKeyword('');
         } catch (err: unknown) {
-            if (err && typeof err === "object" && "response" in err && err.response && typeof err.response === "object" && "data" in err.response && err.response.data && typeof err.response.data === "object" && "error" in err.response.data) {
-                setError((err.response.data as { error?: string }).error || 'Failed to add keyword.');
+            const apiError = handleAPIError(err);
+            if (apiError.isUpgradeRequired) {
+                setRequiresUpgrade(true);
             } else {
-                setError('Failed to add keyword.');
+                setError(apiError.message);
             }
         } finally {
             setIsSubmitting(false);
@@ -166,6 +177,42 @@ export default function KeywordsPage() {
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-6">
                 {error && <div className="mb-4 p-4 text-sm text-red-800 bg-red-100 border border-red-200 rounded-lg">{error}</div>}
+                
+                {/* Plan Status Banner */}
+                {user && (
+                    <div className="mb-6 p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <span className="text-sm text-slate-600">Your Plan:</span>
+                                <PlanBadge plan={user.plan} />
+                                {user.plan === 'FREE' && (
+                                    <span className="text-xs text-slate-500">• Limited to 3 keywords</span>
+                                )}
+                                {user.plan === 'PRO' && (
+                                    <span className="text-xs text-slate-500">• Up to 5 keywords</span>
+                                )}
+                                {user.plan === 'LIFETIME' && (
+                                    <span className="text-xs text-slate-500">• Unlimited keywords</span>
+                                )}
+                            </div>
+                            {user.plan === 'FREE' && (
+                                <Link
+                                    href="/dashboard#pricing"
+                                    className="text-sm bg-gradient-to-r from-[#FF4500] to-orange-600 text-white px-3 py-1.5 rounded-lg hover:from-[#FF4500]/90 hover:to-orange-600/90 transition-all duration-200 font-medium"
+                                >
+                                    Upgrade for More
+                                </Link>
+                            )}
+                        </div>
+                    </div>
+                )}
+                
+                {requiresUpgrade ? (
+                    <UpgradePrompt 
+                        featureName="Keyword Monitoring" 
+                        description="Track brand mentions, competitors, and trending topics across Reddit with real-time alerts and sentiment analysis."
+                    />
+                ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                     {/* Left Column: Keyword Management */}
                     <div className="lg:col-span-1 space-y-6">
@@ -252,6 +299,7 @@ export default function KeywordsPage() {
                         </div>
                     </div>
                 </div>
+                )}
             </div>
         </main>
     );

@@ -300,6 +300,7 @@ export class AuthController {
           id: user.id,
           email: user.email,
           role: user.role,
+          plan: user.plan,
           clientId: user.clientId,
           clientName: user.client.name
         }

@@ -25,7 +25,7 @@ export class SubscriptionController {
 
       const dodo = new DodoPayments({
         bearerToken: process.env.DODO_PAYMENT_API_KEY,
-        environment: 'test_mode',
+        environment: 'live_mode'
       });
 
       let dodoCustomerId = dbUser.dodoCustomerId;

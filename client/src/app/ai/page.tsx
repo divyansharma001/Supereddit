@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
+import { PlanBadge } from "@/components/PlanBadge";
 import api from "@/lib/axios";
 import ReactMarkdown from "react-markdown";
 
@@ -118,12 +119,25 @@ export default function AIPage() {
             <span className="w-2 h-2 bg-purple-500 rounded-full mr-2 animate-pulse"></span>
             <span className="text-sm font-medium text-slate-700">AI Reddit Post Generator</span>
           </div>
+          
+          {/* Plan Badge for AI Generator */}
+          <div className="mb-4">
+            <PlanBadge plan={user.plan} showUpgradeLink={user.plan === 'FREE'} />
+          </div>
+          
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight text-slate-900 mb-3 tracking-tight" style={{fontFamily: 'Plus Jakarta Sans'}}>
             Generate Viral Reddit Posts with AI
           </h1>
           <p className="text-slate-700 text-lg sm:text-xl font-medium mb-2" style={{fontFamily: 'Plus Jakarta Sans'}}>
             Create engaging content that dominates any subreddit with custom tone and style
           </p>
+          
+          {/* Show limitations for FREE users */}
+          {user.plan === 'FREE' && (
+            <div className="mt-4 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm max-w-lg">
+              <strong>FREE Plan:</strong> Limited to 5 AI generations per day. Upgrade to PRO for unlimited AI content generation.
+            </div>
+          )}
         </div>
       </div>
 

@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import api from "@/lib/axios";
+import { handleAPIError } from "@/lib/error-handling";
+import { UpgradePrompt } from "./UpgradePrompt";
 import {
   LineChart,
   Line,
@@ -28,19 +30,23 @@ export function PostAnalyticsChart({ postId }: { postId: string }) {
   const [data, setData] = useState<AnalyticsDataPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [requiresUpgrade, setRequiresUpgrade] = useState(false);
 
   useEffect(() => {
     if (!postId) return;
     const fetchAnalytics = async () => {
       setLoading(true);
       setError(null);
+      setRequiresUpgrade(false);
       try {
         const res = await api.get<{ analytics: AnalyticsDataPoint[] }>(
           `/api/posts/${postId}/analytics`
         );
         setData(res.data.analytics);
       } catch (err) {
-        setError("Failed to load analytics data.");
+        const apiError = handleAPIError(err);
+        setError(apiError.message);
+        setRequiresUpgrade(apiError.isUpgradeRequired);
       } finally {
         setLoading(false);
       }
@@ -59,10 +65,24 @@ export function PostAnalyticsChart({ postId }: { postId: string }) {
     );
   }
 
+  if (requiresUpgrade) {
+    return (
+      <div className="p-6">
+        <UpgradePrompt 
+          featureName="Post Analytics" 
+          description="Get detailed insights into your post performance, engagement metrics, and growth trends."
+        />
+      </div>
+    );
+  }
+
   if (error) {
     return (
       <div className="flex items-center justify-center h-64 text-red-500 bg-red-50 rounded-lg">
-        <p>{error}</p>
+        <div className="text-center">
+          <p className="font-semibold">{error}</p>
+          <p className="text-sm mt-1 text-red-400">Please try again or contact support if the issue persists.</p>
+        </div>
       </div>
     );
   }

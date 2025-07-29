@@ -4,6 +4,8 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
+import { PricingPlans } from "@/components/PricingPlans";
+import { PlanBadge } from "@/components/PlanBadge";
 import api from "@/lib/axios";
 import Link from "next/link";
 import dayjs from "dayjs";
@@ -148,6 +150,12 @@ export default function DashboardPage() {
             <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
             <span className="text-sm font-medium text-slate-700">Reddit Automation Dashboard</span>
           </div>
+          
+          {/* Plan Badge */}
+          <div className="mb-4">
+            <PlanBadge plan={user.plan} showUpgradeLink={true} />
+          </div>
+          
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight text-slate-900 mb-3 tracking-tight" style={{fontFamily: 'Plus Jakarta Sans'}}>
             Your Reddit Command Center
           </h1>
@@ -664,6 +672,21 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Pricing Section */}
+      <div id="pricing" className="bg-slate-50 py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-slate-900 mb-4" style={{fontFamily: 'Plus Jakarta Sans'}}>
+              Unlock Advanced Features
+            </h2>
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+              Get access to AI post generation, keyword monitoring, analytics, and more with our PRO plans.
+            </p>
+          </div>
+          <PricingPlans />
         </div>
       </div>
     </main>

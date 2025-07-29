@@ -6,6 +6,7 @@ interface User {
   id: string;
   email: string;
   role: string;
+  plan: 'FREE' | 'PRO' | 'LIFETIME';
   clientId: string;
   clientName: string;
 }
