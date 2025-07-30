@@ -4,7 +4,6 @@ import { prisma } from '../utils/prisma';
 import DodoPayments from 'dodopayments';
 import { Webhook } from "standardwebhooks";
 import { Plan } from '@prisma/client';
-import { CountryCode } from 'dodopayments/resources/misc';
 
 export class SubscriptionController {
   
@@ -25,7 +24,7 @@ export class SubscriptionController {
 
       const dodo = new DodoPayments({
         bearerToken: process.env.DODO_PAYMENT_API_KEY,
-        environment: 'live_mode'
+        environment: 'test_mode'
       });
 
       let dodoCustomerId = dbUser.dodoCustomerId;
