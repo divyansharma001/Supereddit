@@ -27,11 +27,17 @@ import { SubscriptionController } from './controllers/subscription.controller'; 
 // Load environment variables
 dotenv.config();
 
+const allowedOrigins = [
+  'https://supereddit.com',
+  'https://www.supereddit.com',
+  'http://localhost:5173'
+];
+
 const app = express();
 const server = createServer(app);
 const io = new SocketIOServer(server, {
   cors: {
-    origin: ['https://supereddit.com','https://www.supereddit.com', 'http://localhost:5173'],
+    origin: allowedOrigins,
     credentials: true,
   },
 });
@@ -66,7 +72,7 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors({
-  origin: ['https://supereddit.com','https://www.supereddit.com', 'http://localhost:5173'],
+  origin: allowedOrigins,
   credentials: true
 }));
 
